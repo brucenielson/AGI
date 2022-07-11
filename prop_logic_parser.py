@@ -217,7 +217,7 @@ class PropLogicParser:
         if self.current_token_type == PLTokenType.NOT:
             self.consume_token(PLTokenType.NOT)
             term: Sentence = self.term()
-            return Sentence(term, negated=False)
+            return Sentence().negate_sentence(term)
         elif self.current_token_type == PLTokenType.LPAREN:
             self.consume_token(PLTokenType.LPAREN)
             logical_sentence: Sentence = self.logical_sentence()
