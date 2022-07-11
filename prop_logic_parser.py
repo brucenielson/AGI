@@ -298,7 +298,7 @@ class Sentence:
         else:
             raise SentenceError("Illegal parameters. Operator cannot be 'None' and Tokens cannot be blank.")
 
-    def sentence_from_sentences(self, sentence1: Sentence, operator: LogicOperatorTypes, sentence2: Sentence):
+    def sentence_from_sentences(self, sentence1: Sentence, operator: LogicOperatorTypes, sentence2: Sentence) -> None:
         if not (operator == LogicOperatorTypes.NoOperator or sentence1 is None or sentence2 is None):
             self._logic_operator = operator
             self._negation = False
