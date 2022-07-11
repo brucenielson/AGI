@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pyparsing import alphas, alphanums, Word, ZeroOrMore, Forward, OneOrMore, Group, exceptions
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 # Original Grammar for the Propositional Logic Parser
 #
@@ -77,6 +77,7 @@ class PropLogicParser:
         self._token_list = self._tokens.asList()
         self._current_line = self._token_list[0]
         self._current_token = self._current_line[0]
+        self._sentences: List[Sentence] = []
 
     @staticmethod
     def _str_to_token_type(str_token: str) -> PLTokenType:
@@ -126,6 +127,10 @@ class PropLogicParser:
             return "a symbol"
 
     @property
+    def current_token_type(self) -> PLTokenType:
+        return self._str_to_token_type(self.current_token)
+
+    @property
     def current_token(self) -> str:
         self._current_line = self._token_list[0]
         self._current_token = self._current_line[0]
@@ -162,24 +167,65 @@ class PropLogicParser:
     def get_original_token_list(self) -> list:
         return self._tokens.asList()
 
-    # def sentence_from_input(self, token_list: list) -> None:
-    #     if token_list is None:
-    #         raise SentenceError("Illegal parameter. The input string must not be null or empty.")
-    #     for line in token_list:
-    #         pass
-    #         self.sentence_from_line(line)
-    #
-    # def sentence_from_line(self, line: list) -> Sentence:
-    #     sentence: Sentence = self.logical_sentence(line)
-    #     return sentence
-    #
-    # def logical_sentence(self, line: list) -> Sentence:
-    #     or_and_operands: Sentence = self.or_and_operands(line)
-    #     return or_and_operands
-    #
-    # def or_and_operands(self, line: list) -> Sentence:
-    #     and_operands: Sentence = self.and_operands
-    #     if not self.is_end_of_sub_sentence():
+    def is_end_of_file(self):
+        return PropLogicParser._str_to_token_type(self.current_token) == PLTokenType.EOF
+
+    def parse_input(self) -> List[Sentence]:
+        while not self.is_end_of_file():
+            self._sentences.append(self.parse_line())
+        return self._sentences
+
+    def parse_line(self) -> Sentence:
+        if self.is_end_of_file():
+            raise ParseError("No Line Found.")
+        return self.line()
+
+    def line(self) -> Sentence:
+        line: Sentence = self.logical_sentence()
+        self.consume_token(PLTokenType.ENDLINE)
+        return line
+
+    def logical_sentence(self) -> Sentence:
+        or_and_operand: Sentence = self.or_operands()
+        if self.current_token_type == PLTokenType.IMPLIES:
+            self.consume_token(PLTokenType.IMPLIES)
+            return Sentence().sentence_from_sentences(or_and_operand, LogicOperatorTypes.Implies, self.or_operands())
+        elif self.current_token_type == PLTokenType.BICONDITIONAL:
+            self.consume_token(PLTokenType.BICONDITIONAL)
+            return Sentence().sentence_from_sentences(or_and_operand, LogicOperatorTypes.Biconditional, self.or_operands())
+        else:
+            raise ParseError("Not a logical sentence")
+
+    def or_operands(self) -> Sentence:
+        operand1: Sentence = self.and_operands()
+        self.consume_token(PLTokenType.OR)
+        return Sentence().sentence_from_sentences(operand1, LogicOperatorTypes.Or, self.more_or_operators())
+
+    def more_or_operators(self) -> Sentence:
+        while self.current_token_type == PLTokenType.OR:
+            self.consume_token(PLTokenType.OR)
+            operand1: Sentence = self.and_operands()
+            return Sentence().sentence_from_sentences(operand1, LogicOperatorTypes.Or, self.more_or_operators())
+        return self.and_operands()
+
+    def and_operands(self) -> Sentence:
+        term1: Sentence = self.term()
+        self.consume_token(PLTokenType.AND)
+        return Sentence().sentence_from_sentences(term1, LogicOperatorTypes.And, self.more_or_operators())
+
+    def term(self) -> Sentence:
+        if self.current_token_type == PLTokenType.NOT:
+            self.consume_token(PLTokenType.NOT)
+            term: Sentence = self.term()
+            return Sentence(term, negated=False)
+        elif self.current_token_type == PLTokenType.LPAREN:
+            self.consume_token(PLTokenType.LPAREN)
+            logical_sentence: Sentence = self.logical_sentence()
+            self.consume_token(PLTokenType.RPAREN)
+            return logical_sentence
+        else:
+            symbol: str = self.consume_token(PLTokenType.SYMBOL)
+            return Sentence(symbol)
 
 
 class Sentence:
