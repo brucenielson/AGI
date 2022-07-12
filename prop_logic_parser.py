@@ -1,5 +1,5 @@
 from __future__ import annotations
-from pyparsing import alphas, alphanums, Word, ZeroOrMore, Forward, OneOrMore, Group, exceptions
+from pyparsing import alphas, alphanums, Word, ZeroOrMore, Forward, OneOrMore, Group, exceptions, oneOf
 from enum import Enum
 from typing import Optional, List
 
@@ -63,17 +63,17 @@ class PropLogicParser:
         symbol = Word(alphas.upper(), alphanums.upper())
         logical_sentence = Forward()
         term = "~" + symbol | symbol | "(" + logical_sentence + ")"
-        and_operands = term + ZeroOrMore("AND" + term)
-        or_and_operands = and_operands + ZeroOrMore("OR" + and_operands)
-        logical_sentence << (or_and_operands + "=>" + or_and_operands
-                             | or_and_operands + "<=>" + or_and_operands
-                             | or_and_operands)
+        or_and_operator = oneOf(["AND", "OR"])
+        or_and_phrase = term + ZeroOrMore(or_and_operator + term)
+        logical_sentence << (or_and_phrase + "=>" + or_and_phrase
+                             | or_and_phrase + "<=>" + or_and_phrase
+                             | or_and_phrase)
         line = logical_sentence + "\n" | logical_sentence
         self.lines = OneOrMore(Group(line))
         try:
             self._tokens = self.lines.parse_string(input_str, parse_all=True)
         except exceptions.ParseException:
-            raise ParseError
+            raise ParseError("Incorrect syntax")
         self._token_list = self._tokens.asList()
         self._current_line = self._token_list[0]
         self._current_token = self._current_line[0]
@@ -204,14 +204,21 @@ class PropLogicParser:
     def more_or_operators(self) -> Sentence:
         while self.current_token_type == PLTokenType.OR:
             self.consume_token(PLTokenType.OR)
-            operand1: Sentence = self.and_operands()
+            operand1: Sentence = self.or_operands()
             return Sentence().sentence_from_sentences(operand1, LogicOperatorTypes.Or, self.more_or_operators())
+        return self.or_operands()
+
+    def more_and_operators(self) -> Sentence:
+        while self.current_token_type == PLTokenType.AND:
+            self.consume_token(PLTokenType.AND)
+            operand1: Sentence = self.and_operands()
+            return Sentence().sentence_from_sentences(operand1, LogicOperatorTypes.And, self.more_and_operators())
         return self.and_operands()
 
     def and_operands(self) -> Sentence:
         term1: Sentence = self.term()
         self.consume_token(PLTokenType.AND)
-        return Sentence().sentence_from_sentences(term1, LogicOperatorTypes.And, self.more_or_operators())
+        return Sentence().sentence_from_sentences(term1, LogicOperatorTypes.And, self.more_and_operators())
 
     def term(self) -> Sentence:
         if self.current_token_type == PLTokenType.NOT:
