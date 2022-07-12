@@ -90,7 +90,7 @@ class PropLogicParser:
             return PLTokenType.AND
         elif str_token == "OR":
             return PLTokenType.OR
-        elif str_token == "NOT":
+        elif str_token == "~":
             return PLTokenType.NOT
         elif str_token == "=>":
             return PLTokenType.IMPLIES
@@ -114,7 +114,7 @@ class PropLogicParser:
         elif token_type == PLTokenType.OR:
             return "OR"
         elif token_type == PLTokenType.NOT:
-            return "NOT"
+            return "~"
         elif token_type == PLTokenType.IMPLIES:
             return "=>"
         elif token_type == PLTokenType.BICONDITIONAL:
@@ -132,8 +132,16 @@ class PropLogicParser:
 
     @property
     def current_token(self) -> str:
-        self._current_line = self._token_list[0]
-        self._current_token = self._current_line[0]
+
+        if len(self._token_list[0]) > 0:
+            self._current_line = self._token_list[0]
+            if len(self._current_line) > 0:
+                self._current_token = self._current_line[0]
+            else:
+                self._current_token = "END LINE"
+        else:
+            self._current_token = "EOF"
+
         return self._current_token
 
     def consume_token(self, check: PLTokenType = None) -> str:
@@ -182,49 +190,56 @@ class PropLogicParser:
 
     def line(self) -> Sentence:
         line: Sentence = self.logical_sentence()
-        self.consume_token(PLTokenType.ENDLINE)
+        if self.current_token_type == PLTokenType.ENDLINE:
+            self.consume_token(PLTokenType.ENDLINE)
+        elif self.current_token_type == PLTokenType.EOF:
+            self.consume_token(PLTokenType.EOF)
+        else:
+            raise ParseError("Expected EOF or End Line")
         return line
 
     def logical_sentence(self) -> Sentence:
-        or_and_operand: Sentence = self.or_operands()
+        or_and_phrase: Sentence = self.or_and_phrase()
         if self.current_token_type == PLTokenType.IMPLIES:
             self.consume_token(PLTokenType.IMPLIES)
-            return Sentence().sentence_from_sentences(or_and_operand, LogicOperatorTypes.Implies, self.or_operands())
+            # TODO: I dislike this syntax
+            sentence: Sentence = Sentence()
+            sentence.sentence_from_sentences(or_and_phrase, LogicOperatorTypes.Implies, self.or_and_phrase())
+            return sentence
         elif self.current_token_type == PLTokenType.BICONDITIONAL:
             self.consume_token(PLTokenType.BICONDITIONAL)
-            return Sentence().sentence_from_sentences(or_and_operand, LogicOperatorTypes.Biconditional, self.or_operands())
+            # TODO: I dislike this syntax
+            sentence: Sentence = Sentence()
+            sentence.sentence_from_sentences(or_and_phrase, LogicOperatorTypes.Biconditional, self.or_and_phrase())
+            return sentence
         else:
-            raise ParseError("Not a logical sentence")
+            return or_and_phrase
 
-    def or_operands(self) -> Sentence:
-        operand1: Sentence = self.and_operands()
-        self.consume_token(PLTokenType.OR)
-        return Sentence().sentence_from_sentences(operand1, LogicOperatorTypes.Or, self.more_or_operators())
-
-    def more_or_operators(self) -> Sentence:
-        while self.current_token_type == PLTokenType.OR:
-            self.consume_token(PLTokenType.OR)
-            operand1: Sentence = self.or_operands()
-            return Sentence().sentence_from_sentences(operand1, LogicOperatorTypes.Or, self.more_or_operators())
-        return self.or_operands()
-
-    def more_and_operators(self) -> Sentence:
-        while self.current_token_type == PLTokenType.AND:
-            self.consume_token(PLTokenType.AND)
-            operand1: Sentence = self.and_operands()
-            return Sentence().sentence_from_sentences(operand1, LogicOperatorTypes.And, self.more_and_operators())
-        return self.and_operands()
-
-    def and_operands(self) -> Sentence:
+    def or_and_phrase(self) -> Sentence:
         term1: Sentence = self.term()
-        self.consume_token(PLTokenType.AND)
-        return Sentence().sentence_from_sentences(term1, LogicOperatorTypes.And, self.more_and_operators())
+        if self.current_token_type == PLTokenType.AND:
+            self.consume_token(PLTokenType.AND)
+            # TODO: I dislike this syntax
+            sentence: Sentence = Sentence()
+            sentence.sentence_from_sentences(term1, LogicOperatorTypes.And, self.or_and_phrase())
+            return sentence
+        elif self.current_token_type == PLTokenType.OR:
+            self.consume_token(PLTokenType.OR)
+            # TODO: I dislike this syntax
+            sentence: Sentence = Sentence()
+            sentence.sentence_from_sentences(term1, LogicOperatorTypes.Or, self.or_and_phrase())
+            return sentence
+        else:
+            return term1
 
     def term(self) -> Sentence:
         if self.current_token_type == PLTokenType.NOT:
             self.consume_token(PLTokenType.NOT)
             term: Sentence = self.term()
-            return Sentence().negate_sentence(term)
+            # TODO: I dislike this syntax
+            sentence: Sentence = Sentence()
+            sentence.negate_sentence(term)
+            return sentence
         elif self.current_token_type == PLTokenType.LPAREN:
             self.consume_token(PLTokenType.LPAREN)
             logical_sentence: Sentence = self.logical_sentence()

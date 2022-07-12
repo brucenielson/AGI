@@ -49,10 +49,10 @@ class TestPropLogicParser(TestCase):
         self.assertEqual('EOF', parser.consume_token())
         self.assertEqual('EOF', parser.consume_token())
 
-    # def test_parse_line(self):
-    #     parser = PropLogicParser("P1U87 AND P2 AND ~P3 OR A94P => P4 AND (P6 OR P8)")
-    #     sentence = parser.parse_line()
-    #     pass
+    def test_parse_line(self):
+        parser = PropLogicParser("P1U87 AND P2 AND ~P3 OR A94P => P4 AND (P6 OR P8)")
+        sentence = parser.parse_line()
+        pass
 
 
 class TestSentence(TestCase):
