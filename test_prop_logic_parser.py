@@ -512,7 +512,58 @@ class TestPropLogicParser(TestCase):
     def test_parse_line(self):
         parser = PropLogicParser("P1U87 AND P2 AND ~P3 OR A94P => P4 AND (P6 OR P8)")
         sentence = parser.parse_line()
-        pass
+        # Top level
+        self.assertEqual(None, sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
+        self.assertEqual(False, sentence.negation)
+        # First Sentence
+        self.assertEqual(None, sentence.first_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.Or, sentence.first_sentence.logic_operator)
+        self.assertEqual(False, sentence.first_sentence.negation)
+        # First - First
+        self.assertEqual(None, sentence.first_sentence.first_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.And, sentence.first_sentence.first_sentence.logic_operator)
+        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        # First - First - First
+        self.assertEqual('P1U87', sentence.first_sentence.first_sentence.first_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator,
+                         sentence.first_sentence.first_sentence.first_sentence.logic_operator)
+        self.assertEqual(False, sentence.first_sentence.first_sentence.first_sentence.negation)
+        # First - First - Second
+        self.assertEqual(None, sentence.first_sentence.first_sentence.second_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.And, sentence.first_sentence.first_sentence.second_sentence.logic_operator)
+        self.assertEqual(False, sentence.first_sentence.first_sentence.second_sentence.negation)
+        # First - First - Second - First
+        self.assertEqual('P2', sentence.first_sentence.first_sentence.second_sentence.first_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator,
+                         sentence.first_sentence.first_sentence.second_sentence.first_sentence.logic_operator)
+        self.assertEqual(False, sentence.first_sentence.first_sentence.second_sentence.negation)
+        # First - First - Second - Second
+        self.assertEqual('P3', sentence.first_sentence.first_sentence.second_sentence.second_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator,
+                         sentence.first_sentence.first_sentence.second_sentence.second_sentence.logic_operator)
+        self.assertEqual(True, sentence.first_sentence.first_sentence.second_sentence.second_sentence.negation)
+        # First - Second
+        self.assertEqual('A94P', sentence.first_sentence.second_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.second_sentence.logic_operator)
+        self.assertEqual(False, sentence.first_sentence.second_sentence.negation)
+        # Second Sentence
+        self.assertEqual(None, sentence.second_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.And, sentence.second_sentence.logic_operator)
+        self.assertEqual(False, sentence.second_sentence.negation)
+        # Second - First
+        self.assertEqual('P4', sentence.second_sentence.first_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.first_sentence.logic_operator)
+        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        # Second - Second
+        self.assertEqual(None, sentence.second_sentence.second_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.Or, sentence.second_sentence.second_sentence.logic_operator)
+        self.assertEqual(False, sentence.second_sentence.second_sentence.negation)
+        self.assertEqual('P6', sentence.second_sentence.second_sentence.first_sentence.symbol)
+        self.assertEqual('P8', sentence.second_sentence.second_sentence.second_sentence.symbol)
+
+
+
 
 
 class TestSentence(TestCase):
