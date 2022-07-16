@@ -1,5 +1,5 @@
 from __future__ import annotations
-from pyparsing import alphas, alphanums, Word, ZeroOrMore, Forward, OneOrMore, Group, exceptions, oneOf
+from pyparsing import alphas, alphanums, Word, ZeroOrMore, Forward, OneOrMore, Group, exceptions, oneOf, Literal
 from enum import Enum
 from typing import Optional, List
 
@@ -37,11 +37,6 @@ class PLTokenType(Enum):
     ENDLINE = 10
 
 
-class SentenceType(Enum):
-    AtomicSentence = 1
-    ComplexSentence = 2
-
-
 class LogicOperatorTypes(Enum):
     NoOperator = 1
     And = 2
@@ -59,10 +54,11 @@ class SentenceError(Exception):
 
 class PropLogicParser:
     def __init__(self, input_str: str) -> None:
+        not_sign = Literal('~')
         input_str = input_str.upper()
         symbol = Word(alphas.upper(), alphanums.upper())
         logical_sentence = Forward()
-        term = "~" + symbol | symbol | "(" + logical_sentence + ")"
+        term = not_sign + symbol | symbol | not_sign + "(" + logical_sentence + ")" | "(" + logical_sentence + ")"
         or_and_operator = oneOf(["AND", "OR"])
         or_and_phrase = term + ZeroOrMore(or_and_operator + term)
         logical_sentence << (or_and_phrase + "=>" + or_and_phrase
@@ -132,7 +128,6 @@ class PropLogicParser:
 
     @property
     def current_token(self) -> str:
-
         if len(self._token_list[0]) > 0:
             self._current_line = self._token_list[0]
             if len(self._current_line) > 0:
@@ -143,6 +138,11 @@ class PropLogicParser:
             self._current_token = "EOF"
 
         return self._current_token
+
+    def token_look_head(self, look_ahead: int) -> PLTokenType:
+        if len(self._token_list[0]) <= look_ahead:
+            return None
+        return self._str_to_token_type(self._current_line[look_ahead])
 
     def consume_token(self, check: PLTokenType = None) -> str:
         # Note: passing in a 'check' value will verify that the token you are about to consume was of the expected type
@@ -216,38 +216,65 @@ class PropLogicParser:
             return or_and_phrase
 
     def or_and_phrase(self) -> Sentence:
+        sentence1: Sentence = None
+        # First try to process an and phrase
+        if self.current_token_type != PLTokenType.OR:
+            sentence1: Sentence = self.and_phrase()
+
+        # After processing an and phrase, try to process an or phrase
+        if sentence1 is not None and self.current_token_type == PLTokenType.OR:
+            self.consume_token(PLTokenType.OR)
+            # TODO: I dislike this syntax
+            sentence: Sentence = Sentence()
+            sentence.sentence_from_sentences(sentence1, LogicOperatorTypes.Or, self.or_and_phrase())
+            return sentence
+        # elif self.token_look_head(1) == PLTokenType.OR:
+        #     term1: Sentence = self.term()
+        #     self.consume_token(PLTokenType.OR)
+        #     # TODO: I dislike this syntax
+        #     sentence: Sentence = Sentence()
+        #     sentence.sentence_from_sentences(term1, LogicOperatorTypes.Or, self.or_and_phrase())
+        #     return sentence
+        # elif self.current_token_type == PLTokenType.SYMBOL:
+        #     return self.term()
+        else:
+            return sentence1
+
+    def and_phrase(self) -> Sentence:
         term1: Sentence = self.term()
         if self.current_token_type == PLTokenType.AND:
             self.consume_token(PLTokenType.AND)
             # TODO: I dislike this syntax
             sentence: Sentence = Sentence()
-            sentence.sentence_from_sentences(term1, LogicOperatorTypes.And, self.or_and_phrase())
-            return sentence
-        elif self.current_token_type == PLTokenType.OR:
-            self.consume_token(PLTokenType.OR)
-            # TODO: I dislike this syntax
-            sentence: Sentence = Sentence()
-            sentence.sentence_from_sentences(term1, LogicOperatorTypes.Or, self.or_and_phrase())
+            sentence.sentence_from_sentences(term1, LogicOperatorTypes.And, self.and_phrase())
             return sentence
         else:
             return term1
 
     def term(self) -> Sentence:
+        sentence: Sentence
+        negate_sentence: bool = False
+
+        # Deal with a not symbol
         if self.current_token_type == PLTokenType.NOT:
             self.consume_token(PLTokenType.NOT)
-            term: Sentence = self.term()
-            # TODO: I dislike this syntax
-            sentence: Sentence = Sentence()
-            sentence.negate_sentence(term)
-            return sentence
-        elif self.current_token_type == PLTokenType.LPAREN:
+            negate_sentence = True
+        # Is this a single symbol or a parenthetical sentence?
+        if self.current_token_type == PLTokenType.LPAREN:
+            # This is a parenthetical sentence
             self.consume_token(PLTokenType.LPAREN)
-            logical_sentence: Sentence = self.logical_sentence()
+            sentence = self.logical_sentence()
             self.consume_token(PLTokenType.RPAREN)
-            return logical_sentence
         else:
+            # This must be a symbol
             symbol: str = self.consume_token(PLTokenType.SYMBOL)
-            return Sentence(symbol)
+            sentence: Sentence = Sentence(symbol)
+
+        # Deal with the negation if there was one
+        if negate_sentence:
+            sentence.negation = True
+
+        return sentence
 
 
 class Sentence:
@@ -258,7 +285,6 @@ class Sentence:
         self._logic_operator: LogicOperatorTypes = LogicOperatorTypes.NoOperator
         self._negation: bool = negated
         self._symbol: str = symbol
-        self._sentence_type: SentenceType = SentenceType.AtomicSentence
         self._first_sentence: Optional[Sentence] = None
         self._second_sentence: Optional[Sentence] = None
         self._parent_sentence: Optional[Sentence] = None
@@ -286,14 +312,6 @@ class Sentence:
     @symbol.setter
     def symbol(self, value: str) -> None:
         self._symbol = value
-
-    @property
-    def sentence_type(self) -> SentenceType:
-        return self._sentence_type
-
-    @sentence_type.setter
-    def sentence_type(self, value: SentenceType) -> None:
-        self._sentence_type = value
 
     @property
     def first_sentence(self) -> Sentence:
@@ -325,7 +343,6 @@ class Sentence:
             self._logic_operator = operator
             self._negation = False
             self._symbol = None
-            self._sentence_type = SentenceType.ComplexSentence
             self._first_sentence = sentence1
             self._second_sentence = sentence2
         else:
@@ -337,7 +354,6 @@ class Sentence:
         self._negation = True
         self._logic_operator = LogicOperatorTypes.NoOperator
         self._symbol = None
-        self._sentence_type = SentenceType.ComplexSentence
         self._first_sentence = sentence
         self._second_sentence = None
 
