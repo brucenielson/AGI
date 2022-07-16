@@ -128,7 +128,7 @@ class PropLogicParser:
 
     @property
     def current_token(self) -> str:
-        if len(self._token_list[0]) > 0:
+        if len(self._token_list) > 0 or len(self._current_line) > 0:
             self._current_line = self._token_list[0]
             if len(self._current_line) > 0:
                 self._current_token = self._current_line[0]
@@ -152,21 +152,20 @@ class PropLogicParser:
                 raise ParseError("Expected EOF")
             return "EOF"
         self._current_line = self._token_list[0]
-        if len(self._current_line) == 0:
-            self._token_list.pop(0)
-            if len(self._token_list) == 0:
-                if check is not None and check != PLTokenType.EOF:
-                    raise ParseError("Expected EOF")
-                return "EOF"
-            self._current_line = self._token_list[0]
-            if check is not None and check != PLTokenType.ENDLINE:
+        if len(self._current_line) == 0 and len(self._token_list) == 0:
+            if check is not None and check != PLTokenType.EOF:
                 raise ParseError("Expected EOF")
+            return "EOF"
+        elif len(self._current_line) == 0:
+            if check is not None and check != PLTokenType.ENDLINE:
+                raise ParseError("Expected END LINE")
+            self._token_list.pop(0)
             return "END LINE"
-
-        current_token: str = self._current_line.pop(0)
-        if check is not None and PropLogicParser._str_to_token_type(current_token) != check:
-            raise ParseError("Expected " + PropLogicParser._token_type_to_str(check))
-        return current_token
+        else:
+            current_token: str = self._current_line.pop(0)
+            if check is not None and PropLogicParser._str_to_token_type(current_token) != check:
+                raise ParseError("Expected " + PropLogicParser._token_type_to_str(check))
+            return current_token
 
     @property
     def token_list(self) -> list:
