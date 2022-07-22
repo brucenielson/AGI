@@ -646,8 +646,7 @@ class TestSentence(TestCase):
         self.assertEqual(True, atomic_sentence2.negation)
 
         # Test creation of negation of a sentence
-        negated_sentence = Sentence()
-        negated_sentence.negate_sentence(atomic_sentence2)
+        negated_sentence = Sentence(atomic_sentence2, negated=True)
         self.assertEqual(None, negated_sentence.symbol)
         self.assertEqual(atomic_sentence2, negated_sentence.first_sentence)
         self.assertEqual(None, negated_sentence.second_sentence)
@@ -661,8 +660,7 @@ class TestSentence(TestCase):
         self.assertEqual(True, negated_sentence.first_sentence.negation)
 
         # Test creation of a complex sentence using two string tokens
-        complex_sentence1 = Sentence()
-        complex_sentence1.sentence_from_tokens('Q1', LogicOperatorTypes.And, 'Q2')
+        complex_sentence1 = Sentence('Q1', LogicOperatorTypes.And, 'Q2')
         self.assertEqual(None, complex_sentence1.symbol)
         self.assertNotEqual(None, complex_sentence1.first_sentence)
         self.assertNotEqual(None, complex_sentence1.second_sentence)
@@ -681,8 +679,7 @@ class TestSentence(TestCase):
         self.assertEqual(False, complex_sentence1.second_sentence.negation)
 
         # Test creation of a complex sentence using two sentences
-        complex_sentence2 = Sentence()
-        complex_sentence2.sentence_from_sentences(atomic_sentence1, LogicOperatorTypes.Or, atomic_sentence2)
+        complex_sentence2 = Sentence(atomic_sentence1, LogicOperatorTypes.Or, atomic_sentence2)
         self.assertEqual(None, complex_sentence2.symbol)
         self.assertEqual(atomic_sentence1, complex_sentence2.first_sentence)
         self.assertEqual(atomic_sentence2, complex_sentence2.second_sentence)

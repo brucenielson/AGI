@@ -3,7 +3,7 @@ from pyparsing import alphas, alphanums, Word, ZeroOrMore, Forward, OneOrMore, G
 from enum import Enum
 from typing import Optional, List
 
-# Original Grammar for the Propositional Logic Parser
+# Original Grammar for the Propositional Logic Parser (I've changed it a bit since)
 #
 # Line -> LogicalSentence EndOfLine
 # LogicalSentence -> OrAndOperands => OrAndOperands | OrAndOperands <=> OrAndOperands
@@ -202,14 +202,12 @@ class PropLogicParser:
         if self.current_token_type == PLTokenType.IMPLIES:
             self.consume_token(PLTokenType.IMPLIES)
             # TODO: I dislike this syntax
-            sentence: Sentence = Sentence()
-            sentence.sentence_from_sentences(or_and_phrase, LogicOperatorTypes.Implies, self.or_and_phrase())
+            sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.Implies, self.or_and_phrase())
             return sentence
         elif self.current_token_type == PLTokenType.BICONDITIONAL:
             self.consume_token(PLTokenType.BICONDITIONAL)
             # TODO: I dislike this syntax
-            sentence: Sentence = Sentence()
-            sentence.sentence_from_sentences(or_and_phrase, LogicOperatorTypes.Biconditional, self.or_and_phrase())
+            sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.Biconditional, self.or_and_phrase())
             return sentence
         else:
             return or_and_phrase
@@ -224,8 +222,7 @@ class PropLogicParser:
         if sentence1 is not None and self.current_token_type == PLTokenType.OR:
             self.consume_token(PLTokenType.OR)
             # TODO: I dislike this syntax
-            sentence: Sentence = Sentence()
-            sentence.sentence_from_sentences(sentence1, LogicOperatorTypes.Or, self.or_and_phrase())
+            sentence: Sentence = Sentence(sentence1, LogicOperatorTypes.Or, self.or_and_phrase())
             return sentence
         # elif self.token_look_head(1) == PLTokenType.OR:
         #     term1: Sentence = self.term()
@@ -244,8 +241,7 @@ class PropLogicParser:
         if self.current_token_type == PLTokenType.AND:
             self.consume_token(PLTokenType.AND)
             # TODO: I dislike this syntax
-            sentence: Sentence = Sentence()
-            sentence.sentence_from_sentences(term1, LogicOperatorTypes.And, self.and_phrase())
+            sentence: Sentence = Sentence(term1, LogicOperatorTypes.And, self.and_phrase())
             return sentence
         else:
             return term1
@@ -277,7 +273,7 @@ class PropLogicParser:
 
 
 class Sentence:
-    def __init__(self, symbol1_or_sentence1 = None, logical_operator: LogicOperatorTypes = None, sentence2 = None, negated: bool = False):
+    def __init__(self, symbol1_or_sentence1, logical_operator: LogicOperatorTypes = None, sentence2 = None, negated: bool = False):
         # set default values
         self._symbol: Optional[str] = None
         self._first_sentence: Optional[Sentence] = None
@@ -308,7 +304,7 @@ class Sentence:
             self._second_sentence = Sentence(sentence2)
         elif isinstance(sentence2, Sentence):
             # Do we have a second sentence that is of Sentence type? If so, plug it right into place
-            self._second_sentence = Sentence(sentence2)
+            self._second_sentence = sentence2
         elif sentence2 is None:
             # If sentence2 is None, do nothing (i.e. don't throw error)
             pass
@@ -329,8 +325,7 @@ class Sentence:
             self._first_sentence = symbol1_or_sentence1
         else:
             # We should never have a blank first sentence/symbol
-            pass
-            # raise SentenceError("The first parameter (symbol1_or_sentence1) must always be included.")
+            raise SentenceError("The first parameter (symbol1_or_sentence1) must always be included.")
 
     @property
     def logic_operator(self) -> LogicOperatorTypes:
