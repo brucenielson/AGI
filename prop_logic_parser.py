@@ -277,16 +277,60 @@ class PropLogicParser:
 
 
 class Sentence:
-    def __init__(self, symbol: str = None, negated: bool = False):
-        if symbol == "":
-            symbol = None
-        # Declare instance variables and set defaults
-        self._logic_operator: LogicOperatorTypes = LogicOperatorTypes.NoOperator
-        self._negation: bool = negated
-        self._symbol: str = symbol
+    def __init__(self, symbol1_or_sentence1 = None, logical_operator: LogicOperatorTypes = None, sentence2 = None, negated: bool = False):
+        # set default values
+        self._symbol: Optional[str] = None
         self._first_sentence: Optional[Sentence] = None
         self._second_sentence: Optional[Sentence] = None
         self._parent_sentence: Optional[Sentence] = None
+        self._logic_operator: LogicOperatorTypes = LogicOperatorTypes.NoOperator
+        # Set negation
+        self._negation: bool = negated
+
+        # A blank symbol should be treated as a None
+        if symbol1_or_sentence1 == "":
+            symbol1_or_sentence1 = None
+
+        # Handle logical operator
+        if sentence2 is not None and (logical_operator is None or logical_operator == LogicOperatorTypes.NoOperator):
+            # We have a sentence2 but no logical operator, which is illegal
+            SentenceError("You must have a logical operator if you have a second sentence in the constructor.")
+        elif logical_operator is None:
+            # No operator passed but also no sentence2 so just pass
+            pass
+        else:
+            # Store the logic operator passed
+            self._logic_operator = logical_operator
+
+        # Handle sentence2
+        if sentence2 is not None and isinstance(sentence2, str) and sentence2 != "":
+            # Do we have a second sentence that is a string? If so, create it as a Sentence type
+            self._second_sentence = Sentence(sentence2)
+        elif isinstance(sentence2, Sentence):
+            # Do we have a second sentence that is of Sentence type? If so, plug it right into place
+            self._second_sentence = Sentence(sentence2)
+        elif sentence2 is None:
+            # If sentence2 is None, do nothing (i.e. don't throw error)
+            pass
+        else:
+            # Something else entirely was passed, so throw an error
+            raise SentenceError("The second sentence (sentence2) just be a string symbol, a Sentence, or None.")
+
+        # Handle first sentence (or symbol)
+        if isinstance(symbol1_or_sentence1, str):
+            if self._second_sentence is None:
+                # This is a symbol, so store it directly at a symbol
+                self._symbol = symbol1_or_sentence1
+            else:
+                # This is not a lone symbol, so store it as a sentence
+                self._first_sentence = Sentence(symbol1_or_sentence1)
+        elif isinstance(symbol1_or_sentence1, Sentence):
+            # This is a sentence, so store it as a sentence
+            self._first_sentence = symbol1_or_sentence1
+        else:
+            # We should never have a blank first sentence/symbol
+            pass
+            # raise SentenceError("The first parameter (symbol1_or_sentence1) must always be included.")
 
     @property
     def logic_operator(self) -> LogicOperatorTypes:
