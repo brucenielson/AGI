@@ -53,9 +53,14 @@ class SentenceError(Exception):
 
 
 class PropLogicParser:
-    def __init__(self, input_str: str) -> None:
+    def __init__(self, input_str: str = None) -> None:
+        self._tokens = None
+        self._token_list: List = []
+        self._current_line: List = []
+        self._current_token: Optional[str] = None
+        self._sentences: List[Sentence] = []
+
         not_sign = Literal('~')
-        input_str = input_str.upper()
         symbol = Word(alphas.upper(), alphanums.upper())
         logical_sentence = Forward()
         term = not_sign + symbol | symbol | not_sign + "(" + logical_sentence + ")" | "(" + logical_sentence + ")"
@@ -66,13 +71,18 @@ class PropLogicParser:
                              | or_and_phrase)
         line = logical_sentence + "\n" | logical_sentence
         self.lines = OneOrMore(Group(line))
+        if input_str is not None:
+            self.set_input(input_str)
+
+    def set_input(self, input_str: str):
+        input_str = input_str.upper()
         try:
             self._tokens = self.lines.parse_string(input_str, parse_all=True)
         except exceptions.ParseException:
             raise ParseError("Incorrect syntax")
-        self._token_list = self._tokens.asList()
-        self._current_line = self._token_list[0]
-        self._current_token = self._current_line[0]
+        self._token_list: List = self._tokens.asList()
+        self._current_line: List = self._token_list[0]
+        self._current_token: str = self._current_line[0]
         self._sentences: List[Sentence] = []
 
     @staticmethod
@@ -139,7 +149,7 @@ class PropLogicParser:
 
         return self._current_token
 
-    def token_look_head(self, look_ahead: int) -> PLTokenType:
+    def token_look_head(self, look_ahead: int) -> Optional[PLTokenType]:
         if len(self._token_list[0]) <= look_ahead:
             return None
         return self._str_to_token_type(self._current_line[look_ahead])
@@ -201,38 +211,26 @@ class PropLogicParser:
         or_and_phrase: Sentence = self.or_and_phrase()
         if self.current_token_type == PLTokenType.IMPLIES:
             self.consume_token(PLTokenType.IMPLIES)
-            # TODO: I dislike this syntax
             sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.Implies, self.or_and_phrase())
             return sentence
         elif self.current_token_type == PLTokenType.BICONDITIONAL:
             self.consume_token(PLTokenType.BICONDITIONAL)
-            # TODO: I dislike this syntax
             sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.Biconditional, self.or_and_phrase())
             return sentence
         else:
             return or_and_phrase
 
-    def or_and_phrase(self) -> Sentence:
-        sentence1: Sentence = None
+    def or_and_phrase(self) -> Optional[Sentence]:
+        sentence1: Optional[Sentence] = None
         # First try to process an and phrase
         if self.current_token_type != PLTokenType.OR:
             sentence1: Sentence = self.and_phrase()
 
-        # After processing an and phrase, try to process an or phrase
+        # After processing an "and phrase", try to process an "or phrase"
         if sentence1 is not None and self.current_token_type == PLTokenType.OR:
             self.consume_token(PLTokenType.OR)
-            # TODO: I dislike this syntax
             sentence: Sentence = Sentence(sentence1, LogicOperatorTypes.Or, self.or_and_phrase())
             return sentence
-        # elif self.token_look_head(1) == PLTokenType.OR:
-        #     term1: Sentence = self.term()
-        #     self.consume_token(PLTokenType.OR)
-        #     # TODO: I dislike this syntax
-        #     sentence: Sentence = Sentence()
-        #     sentence.sentence_from_sentences(term1, LogicOperatorTypes.Or, self.or_and_phrase())
-        #     return sentence
-        # elif self.current_token_type == PLTokenType.SYMBOL:
-        #     return self.term()
         else:
             return sentence1
 
@@ -240,7 +238,6 @@ class PropLogicParser:
         term1: Sentence = self.term()
         if self.current_token_type == PLTokenType.AND:
             self.consume_token(PLTokenType.AND)
-            # TODO: I dislike this syntax
             sentence: Sentence = Sentence(term1, LogicOperatorTypes.And, self.and_phrase())
             return sentence
         else:
@@ -273,7 +270,8 @@ class PropLogicParser:
 
 
 class Sentence:
-    def __init__(self, symbol1_or_sentence1, logical_operator: LogicOperatorTypes = None, sentence2 = None, negated: bool = False):
+    def __init__(self, symbol1_or_sentence1, logical_operator: LogicOperatorTypes = None, sentence2: Sentence = None,
+                 negated: bool = False):
         # set default values
         self._symbol: Optional[str] = None
         self._first_sentence: Optional[Sentence] = None
@@ -397,4 +395,3 @@ class Sentence:
         self._symbol = None
         self._first_sentence = sentence
         self._second_sentence = None
-
