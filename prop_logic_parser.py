@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pyparsing import alphas, alphanums, Word, ZeroOrMore, Forward, OneOrMore, Group, exceptions, oneOf, Literal
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Union
 
 # Original Grammar for the Propositional Logic Parser (I've changed it a bit since)
 #
@@ -270,8 +270,8 @@ class PropLogicParser:
 
 
 class Sentence:
-    def __init__(self, symbol1_or_sentence1, logical_operator: LogicOperatorTypes = None, sentence2: Sentence = None,
-                 negated: bool = False):
+    def __init__(self, symbol1_or_sentence1, logical_operator: LogicOperatorTypes = None,
+                 sentence2: Union[Sentence, str] = None, negated: bool = False):
         # set default values
         self._symbol: Optional[str] = None
         self._first_sentence: Optional[Sentence] = None

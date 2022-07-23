@@ -700,100 +700,99 @@ class TestSentence(TestCase):
     def test_bad_create_sentence(self):
         failed: bool = False
 
-        failed = False
         try:
-            sentence = Sentence('P1')
+            Sentence('P1')
         except SentenceError:
             failed = True
         self.assertEqual(False, failed)
 
         failed = False
         try:
-            sentence = Sentence(None)
+            Sentence(None)
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence(failed)
+            Sentence(failed)
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence('P1', LogicOperatorTypes.NoOperator, 'P2')
+            Sentence('P1', LogicOperatorTypes.NoOperator, 'P2')
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence('P1', None, 'P2')
+            Sentence('P1', None, 'P2')
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence(Sentence('P1'), LogicOperatorTypes.NoOperator, Sentence('P2'))
+            Sentence(Sentence('P1'), LogicOperatorTypes.NoOperator, Sentence('P2'))
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence(Sentence('P1'), None, Sentence('P2'))
+            Sentence(Sentence('P1'), None, Sentence('P2'))
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence('P1', None, 'P2')
+            Sentence('P1', None, 'P2')
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence('P1', LogicOperatorTypes.And)
+            Sentence('P1', LogicOperatorTypes.And)
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence('P1', LogicOperatorTypes.And, None)
+            Sentence('P1', LogicOperatorTypes.And, None)
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence('P1', LogicOperatorTypes.And, False)
+            Sentence('P1', LogicOperatorTypes.And, False) # noqa
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence(Sentence("P1"), LogicOperatorTypes.And, None)
+            Sentence(Sentence("P1"), LogicOperatorTypes.And, None)
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence(Sentence("P1"), LogicOperatorTypes.And)
+            Sentence(Sentence("P1"), LogicOperatorTypes.And)
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
 
         failed = False
         try:
-            sentence = Sentence(Sentence("P1"), LogicOperatorTypes.And, False)
+            Sentence(Sentence("P1"), LogicOperatorTypes.And, False) # noqa
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
