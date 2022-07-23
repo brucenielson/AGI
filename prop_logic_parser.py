@@ -288,9 +288,12 @@ class Sentence:
             symbol1_or_sentence1 = None
 
         # Handle logical operator
+        if logical_operator is not None and sentence2 is None:
+            # We have a logical operator but no sentence2, which is illegal
+            raise SentenceError("You must have a second sentence if you have a logical operator.")
         if sentence2 is not None and (logical_operator is None or logical_operator == LogicOperatorTypes.NoOperator):
             # We have a sentence2 but no logical operator, which is illegal
-            SentenceError("You must have a logical operator if you have a second sentence in the constructor.")
+            raise SentenceError("You must have a logical operator if you have a second sentence in the constructor.")
         elif logical_operator is None:
             # No operator passed but also no sentence2 so just pass
             pass

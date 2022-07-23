@@ -1,5 +1,5 @@
 from unittest import TestCase
-from prop_logic_parser import PropLogicParser, Sentence, LogicOperatorTypes
+from prop_logic_parser import PropLogicParser, Sentence, LogicOperatorTypes, SentenceError
 
 
 class TestPropLogicParser(TestCase):
@@ -696,3 +696,104 @@ class TestSentence(TestCase):
         self.assertEqual(None, complex_sentence2.second_sentence.second_sentence)
         self.assertEqual(LogicOperatorTypes.NoOperator, complex_sentence2.second_sentence.logic_operator)
         self.assertEqual(True, complex_sentence2.second_sentence.negation)
+
+    def test_bad_create_sentence(self):
+        failed: bool = False
+
+        failed = False
+        try:
+            sentence = Sentence('P1')
+        except SentenceError:
+            failed = True
+        self.assertEqual(False, failed)
+
+        failed = False
+        try:
+            sentence = Sentence(None)
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence(failed)
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence('P1', LogicOperatorTypes.NoOperator, 'P2')
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence('P1', None, 'P2')
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence(Sentence('P1'), LogicOperatorTypes.NoOperator, Sentence('P2'))
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence(Sentence('P1'), None, Sentence('P2'))
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence('P1', None, 'P2')
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence('P1', LogicOperatorTypes.And)
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence('P1', LogicOperatorTypes.And, None)
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence('P1', LogicOperatorTypes.And, False)
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence(Sentence("P1"), LogicOperatorTypes.And, None)
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence(Sentence("P1"), LogicOperatorTypes.And)
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
+
+        failed = False
+        try:
+            sentence = Sentence(Sentence("P1"), LogicOperatorTypes.And, False)
+        except SentenceError:
+            failed = True
+        self.assertEqual(True, failed)
