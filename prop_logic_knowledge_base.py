@@ -84,14 +84,28 @@ class SymbolList:
         return self.find_with_index(symbol_name)[0]
 
     def find_with_index(self, symbol_name: str) -> (Optional[LogicSymbol], int):
-        # TODO: if the list is sorted, do a binary search instead of a full search
         symbol_name = symbol_name.upper()
         symbol: LogicSymbol
-        i: int = 0
-        for symbol in self._symbols:
-            if symbol.name == symbol_name:
-                return symbol, i
-            i += 1
+        if self._is_sorted:
+            # List is currently sorted so do binary search
+            low: int = 0
+            high: int = self.length - 1
+            while 0 <= low <= high < self.length:
+                mid: int = (low + high) // 2
+                if symbol_name == self._symbols[mid].name:
+                    return self._symbols[mid], mid
+                elif symbol_name > self._symbols[mid].name:
+                    low = mid + 1
+                else:
+                    high = mid - 1
+        else:
+            # List is currently unsorted so do full search
+            i: int = 0
+            for symbol in self._symbols:
+                if symbol.name == symbol_name:
+                    return symbol, i
+                i += 1
+        # Didn't find anything
         return None, -1
 
     def sort(self) -> None:
