@@ -10,17 +10,13 @@ class LogicValue(Enum):
 
 
 class LogicSymbol:
-    def __init__(self, name: str = None, value: LogicValue = LogicValue.UNDEFINED):
-        self.name = name
+    def __init__(self, name: str, value: LogicValue = LogicValue.UNDEFINED):
+        self._name = name
         self.value = value
 
     @property
     def name(self) -> str:
         return self._name
-
-    @name.setter
-    def name(self, name: str) -> None:
-        self._name = name.upper()
 
     @property
     def value(self) -> LogicValue:

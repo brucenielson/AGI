@@ -118,4 +118,3 @@ class TestSymbolList(TestCase):
         self.assertEqual(LogicValue.UNDEFINED, symbols.get_value('H356'))
         self.assertEqual(LogicValue.UNDEFINED, symbols.get_value('UA45'))
         self.assertIsNone(symbols.find('d'))
-        
