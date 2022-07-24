@@ -27,14 +27,27 @@ class LogicSymbol:
         return self._value
 
     @value.setter
-    def value(self, value: LogicValue) -> None:
-        self._value = value
+    def value(self, value: Union[LogicValue, bool]) -> None:
+        final_value: LogicValue
+        if isinstance(value, bool):
+            if value:
+                final_value = LogicValue.TRUE
+            else:
+                final_value = LogicValue.FALSE
+        else:
+            final_value = value
+        self._value = final_value
+
+
+class SymbolListError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class SymbolList:
     def __init__(self):
         self._symbols: List[LogicSymbol] = []
-        self._auto_sort: bool = False
+        self._auto_sort: bool = True
         self._is_sorted: bool = False
 
     def get_symbols(self) -> List[LogicSymbol]:
@@ -46,20 +59,44 @@ class SymbolList:
 
     @auto_sort.setter
     def auto_sort(self, auto_sort: bool) -> None:
-        self._auto_sort = auto_sort
+        if auto_sort:
+            self.sort()
+        else:
+            self._auto_sort = False
 
     @property
     def is_sorted(self) -> bool:
         return self._is_sorted
 
+    @property
+    def length(self) -> int:
+        return len(self._symbols)
+
+    def get_symbol(self, position: int) -> LogicSymbol:
+        if position > len(self._symbols) - 1 or position < 0:
+            raise SymbolListError("Call to get_symbol was out of bounds.")
+        return self._symbols[position]
+
+    def get_next_symbol(self) -> Optional[LogicSymbol]:
+        # This function returns the first symbol in the list while removing it
+        if len(self._symbols) == 0 or self._symbols is None:
+            return None
+        else:
+            return self._symbols.pop(0)
+
     def find(self, symbol_name: str) -> Optional[LogicSymbol]:
+        return self.find_with_index(symbol_name)[0]
+
+    def find_with_index(self, symbol_name: str) -> (Optional[LogicSymbol], int):
         # TODO: if the list is sorted, do a binary search instead of a full search
         symbol_name = symbol_name.upper()
         symbol: LogicSymbol
+        i: int = 0
         for symbol in self._symbols:
             if symbol.name == symbol_name:
-                return symbol
-        return None
+                return symbol, i
+            i += 1
+        return None, -1
 
     def sort(self) -> None:
         # Do a quick sort of the list of symbols
@@ -82,7 +119,7 @@ class SymbolList:
         pivot_symbol = self._symbols[middle]
 
         i: int
-        for i in range(left, right):
+        for i in range(left, right+1):
             # skip over the pivot point
             if i == middle:
                 continue
@@ -95,18 +132,18 @@ class SymbolList:
                 right_symbols.append(self._symbols[i])
                 right_counter -= 1
         # Create new list
-        self._symbols = left_symbols + [pivot_symbol] + right_symbols
+        self._symbols = self._symbols[:left] + left_symbols + [pivot_symbol] + right_symbols + self._symbols[right+1:]
         # Do recursive calls
         if left < left_counter - 1:
             self._quick_sort(left, left_counter-1)
         if left_counter + 1 < right:
             self._quick_sort(left_counter + 1, right)
 
-    def add(self, symbol_name: str) -> None:
+    def add(self, symbol_name: str, value: Union[LogicValue, bool] = LogicValue.UNDEFINED) -> None:
         symbol_name = symbol_name.upper()
         # Only add if this symbol is not already in the list
-        if self.find(symbol_name) is not None:
-            self._symbols.append(LogicSymbol(symbol_name))
+        if self.find(symbol_name) is None:
+            self._symbols.append(LogicSymbol(symbol_name, value))
         # TODO: I should insert this into the correct sorted location rather than calling sort
         if self._auto_sort:
             self.sort()
