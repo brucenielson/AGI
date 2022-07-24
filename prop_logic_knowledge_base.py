@@ -151,6 +151,14 @@ class SymbolList:
         else:
             self._is_sorted = False
 
+    def set_value(self, symbol_name: str, value: Union[LogicValue, bool]) -> None:
+        symbol: LogicSymbol = self.find(symbol_name)
+        symbol.value = value
+
+    def get_value(self, symbol_name: str) -> LogicValue:
+        symbol: LogicSymbol = self.find(symbol_name)
+        return symbol.value
+
 
 class PLKnowledgeBase:
     # Static parser -- so that Sentence can parse propositional logic text
