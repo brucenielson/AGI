@@ -101,7 +101,7 @@ class SymbolList:
                     low = mid + 1
                 else:
                     high = mid - 1
-
+            # If we aborted the search by going off the edge, so a correction to mid so we get insertion point right
             if low == self.length:
                 mid = low + 1
             elif high == 0:
