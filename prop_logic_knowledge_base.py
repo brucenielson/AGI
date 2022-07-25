@@ -84,6 +84,8 @@ class SymbolList:
         return self.find_with_index(symbol_name)[0]
 
     def find_with_index(self, symbol_name: str) -> (Optional[LogicSymbol], int):
+        # Finds the symbol you ask for with the index of where it was found
+        # If it doesn't find the symbol, it returns None for the symbol and the index value of where it would go
         symbol_name = symbol_name.upper()
         symbol: LogicSymbol
         mid: int = -1
@@ -158,27 +160,14 @@ class SymbolList:
         (found_symbol, index) = self.find_with_index(symbol_name)
         if found_symbol is None:
             if self._auto_sort:
-                low: int = 0
-                high: int = self.length - 1
-                mid: int = (low + high) // 2
-                if self.length == 0:
+                if index == -1:
+                    self._symbols.insert(0, symbol)
+                elif index == 0 and symbol_name > self._symbols[index].name:
+                    self._symbols.insert(1, symbol)
+                elif index == self.length - 1 and symbol_name > self._symbols[index].name:
                     self._symbols.append(symbol)
                 else:
-                    while low < high and low <= mid <= high:
-                        if symbol_name > self._symbols[mid].name:
-                            low = mid + 1
-                        elif symbol_name < self._symbols[mid].name:
-                            high = mid - 1
-                        mid = (low + high) // 2
-
-                    if mid == -1:
-                        self._symbols.insert(0, symbol)
-                    elif mid == 0 and symbol_name > self._symbols[mid].name:
-                        self._symbols.insert(1, symbol)
-                    elif mid == high and symbol_name > self._symbols[mid].name:
-                        self._symbols.append(symbol)
-                    else:
-                        self._symbols.insert(mid, symbol)
+                    self._symbols.insert(index, symbol)
                 self._is_sorted = True
             else:
                 self._symbols.append(symbol)
