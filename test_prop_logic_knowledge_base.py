@@ -33,6 +33,7 @@ class TestSymbolList(TestCase):
         symbols.add("b")
         self.assertEqual(1, symbols.length)
         symbols.add("c")
+        symbols.add("c")
         self.assertEqual(2, symbols.length)
         symbols.add("A")
         self.assertEqual(3, symbols.length)
@@ -54,6 +55,7 @@ class TestSymbolList(TestCase):
         symbols.add("c")
         self.assertEqual(2, symbols.length)
         symbols.add("A")
+        symbols.add("A")
         self.assertEqual(3, symbols.length)
 
         self.assertEqual(0, symbols.find_with_index('a')[1])
@@ -70,6 +72,7 @@ class TestSymbolList(TestCase):
         symbols.add("A2")
         symbols.add("H356")
         symbols.add("P2")
+        symbols.add("P4")
         symbols.add("UA45")
 
         self.assertEqual(0, symbols.find_with_index('a2')[1])

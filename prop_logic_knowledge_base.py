@@ -127,7 +127,6 @@ class SymbolList:
         left_counter: int = left
         right_counter: int = right
         pivot_symbol = self._symbols[middle]
-
         i: int
         for i in range(left, right+1):
             # skip over the pivot point
@@ -151,15 +150,35 @@ class SymbolList:
 
     def add(self, symbol_name: str, value: Union[LogicValue, bool] = LogicValue.UNDEFINED) -> None:
         symbol_name = symbol_name.upper()
+        symbol: LogicSymbol = LogicSymbol(symbol_name, value)
         # Only add if this symbol is not already in the list
         if self.find(symbol_name) is None:
-            self._symbols.append(LogicSymbol(symbol_name, value))
-        # TODO: I should insert this into the correct sorted location rather than calling sort
-        if self._auto_sort:
-            self.sort()
-            self._is_sorted = True
-        else:
-            self._is_sorted = False
+            if self._auto_sort:
+                low: int = 0
+                high: int = self.length - 1
+                mid: int = (low + high) // 2
+                if self.length == 0:
+                    self._symbols.append(symbol)
+                else:
+                    while low < high and low <= mid <= high:
+                        if symbol_name > self._symbols[mid].name:
+                            low = mid + 1
+                        elif symbol_name < self._symbols[mid].name:
+                            high = mid - 1
+                        mid = (low + high) // 2
+
+                    if mid == -1:
+                        self._symbols.insert(0, symbol)
+                    elif mid == 0 and symbol_name > self._symbols[mid].name:
+                        self._symbols.insert(1, symbol)
+                    elif mid == high and symbol_name > self._symbols[mid].name:
+                        self._symbols.append(symbol)
+                    else:
+                        self._symbols.insert(mid, symbol)
+                self._is_sorted = True
+            else:
+                self._symbols.append(symbol)
+                self._is_sorted = False
 
     def set_value(self, symbol_name: str, value: Union[LogicValue, bool]) -> None:
         symbol: LogicSymbol = self.find(symbol_name)
