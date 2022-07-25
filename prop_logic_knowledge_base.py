@@ -86,6 +86,7 @@ class SymbolList:
     def find_with_index(self, symbol_name: str) -> (Optional[LogicSymbol], int):
         symbol_name = symbol_name.upper()
         symbol: LogicSymbol
+        mid: int = -1
         if self._is_sorted:
             # List is currently sorted so do binary search
             low: int = 0
@@ -106,7 +107,7 @@ class SymbolList:
                     return symbol, i
                 i += 1
         # Didn't find anything
-        return None, -1
+        return None, mid
 
     def sort(self) -> None:
         # Do a quick sort of the list of symbols
@@ -151,8 +152,11 @@ class SymbolList:
     def add(self, symbol_name: str, value: Union[LogicValue, bool] = LogicValue.UNDEFINED) -> None:
         symbol_name = symbol_name.upper()
         symbol: LogicSymbol = LogicSymbol(symbol_name, value)
+        found_symbol: LogicSymbol
+        index: int
         # Only add if this symbol is not already in the list
-        if self.find(symbol_name) is None:
+        (found_symbol, index) = self.find_with_index(symbol_name)
+        if found_symbol is None:
             if self._auto_sort:
                 low: int = 0
                 high: int = self.length - 1
