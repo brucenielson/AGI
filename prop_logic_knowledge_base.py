@@ -88,7 +88,7 @@ class SymbolList:
         # If it doesn't find the symbol, it returns None for the symbol and the index value of where it would go
         symbol_name = symbol_name.upper()
         symbol: LogicSymbol
-        mid: int = -1
+        mid: int = 0
         if self._is_sorted:
             # List is currently sorted so do binary search
             low: int = 0
@@ -105,7 +105,7 @@ class SymbolList:
             if low == self.length:
                 mid = self.length
             elif high < 0:
-                mid = -1
+                mid = 0
             elif low > high:
                 mid = low
 
@@ -168,10 +168,7 @@ class SymbolList:
         (found_symbol, index) = self.find_with_index(symbol_name)
         if found_symbol is None:
             if self._auto_sort:
-                if index == -1:
-                    self._symbols.insert(0, symbol)
-                else:
-                    self._symbols.insert(index, symbol)
+                self._symbols.insert(index, symbol)
                 self._is_sorted = True
             else:
                 self._symbols.append(symbol)
