@@ -101,6 +101,10 @@ class SymbolList:
                     low = mid + 1
                 else:
                     high = mid - 1
+
+            if low == self.length:
+                mid = low + 1
+
         else:
             # List is currently unsorted so do full search
             i: int = 0
