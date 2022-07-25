@@ -104,6 +104,8 @@ class SymbolList:
 
             if low == self.length:
                 mid = low + 1
+            elif high == 0:
+                mid = low
 
         else:
             # List is currently unsorted so do full search
@@ -166,10 +168,6 @@ class SymbolList:
             if self._auto_sort:
                 if index == -1:
                     self._symbols.insert(0, symbol)
-                elif index == 0 and symbol_name > self._symbols[index].name:
-                    self._symbols.insert(1, symbol)
-                elif index == self.length - 1 and symbol_name > self._symbols[index].name:
-                    self._symbols.append(symbol)
                 else:
                     self._symbols.insert(index, symbol)
                 self._is_sorted = True
