@@ -48,8 +48,10 @@ class LogicOperatorTypes(Enum):
     Implies = 5
 
     def __lt__(self, other):
+        # Only work if both classes are the same
         if self.__class__ is other.__class__:
             return self.value < other.value
+        # Both classes are not the same, so throw an error
         return NotImplemented
 
 
