@@ -960,3 +960,11 @@ class TestSentence(TestCase):
         parser = PropLogicParser("P1 AND ~(U1 OR U2) => P2 OR ~(P3 AND P4)")
         sentence = parser.parse_line()
         self.assertEqual("P1 AND ~(U1 OR U2) => P2 OR ~(P3 AND P4)", sentence.to_string())
+
+        parser = PropLogicParser("P1 AND (U1 OR U2 => P2) OR P3 AND P4")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND (U1 OR U2 => P2) OR P3 AND P4", sentence.to_string())
+
+        parser = PropLogicParser("P1 AND ((U1 OR U2 => P2) OR P3) AND P4")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND ((U1 OR U2 => P2) OR P3) AND P4", sentence.to_string())
