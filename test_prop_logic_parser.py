@@ -862,3 +862,40 @@ class TestSentence(TestCase):
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
+
+    def test_is_atomic(self):
+        parser = PropLogicParser("P1")
+        sentence = parser.parse_line()
+        self.assertEqual(True, sentence.is_atomic)
+
+        parser = PropLogicParser("~P1")
+        sentence = parser.parse_line()
+        self.assertEqual(True, sentence.is_atomic)
+
+        parser = PropLogicParser("P1 OR P2")
+        sentence = parser.parse_line()
+        self.assertEqual(False, sentence.is_atomic)
+
+        parser = PropLogicParser("P1 AND P2")
+        sentence = parser.parse_line()
+        self.assertEqual(False, sentence.is_atomic)
+
+        parser = PropLogicParser("P1 => P2")
+        sentence = parser.parse_line()
+        self.assertEqual(False, sentence.is_atomic)
+
+        parser = PropLogicParser("P1 <=> P2")
+        sentence = parser.parse_line()
+        self.assertEqual(False, sentence.is_atomic)
+
+        parser = PropLogicParser("~P1 AND ~P2")
+        sentence = parser.parse_line()
+        self.assertEqual(False, sentence.is_atomic)
+
+        parser = PropLogicParser("~P1 OR ~P2")
+        sentence = parser.parse_line()
+        self.assertEqual(False, sentence.is_atomic)
+
+        parser = PropLogicParser("~P1 AND P2")
+        sentence = parser.parse_line()
+        self.assertEqual(False, sentence.is_atomic)

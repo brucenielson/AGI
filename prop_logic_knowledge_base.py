@@ -1,6 +1,7 @@
 from prop_logic_parser import PropLogicParser, Sentence
 from typing import Optional, List, Union
 from enum import Enum
+from copy import deepcopy
 
 
 class LogicValue(Enum):
@@ -36,6 +37,11 @@ class LogicSymbol:
 
 
 class SymbolListError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+class KnowledgeBaseError(Exception):
     def __init__(self, message):
         super().__init__(message)
 
@@ -207,5 +213,34 @@ class PLKnowledgeBase:
         self._sentences = []
         self._is_cnf = False
 
-    def add(self, sentence: Sentence):
-        pass
+    def exists(self, sentence: Sentence) -> bool:
+        if sentence in self._sentences:
+            return True
+        else:
+            return False
+
+    def add(self, sentence_or_list:  Union[Sentence, List[Sentence], str]) -> None:
+        if isinstance(sentence_or_list, str):
+            PLKnowledgeBase._prop_logic_parser.set_input(sentence_or_list)
+            sentence_list: List[Sentence] = PLKnowledgeBase._prop_logic_parser.parse_input()
+            self.add(sentence_list)
+        elif isinstance(sentence_or_list, Sentence):
+            if not self.exists(sentence_or_list):
+                self._sentences.append(sentence_or_list)
+            self._is_cnf = False
+        else:
+            for sentence in sentence_or_list:
+                self.add(sentence)
+
+    def count(self) -> int:
+        return len(self._sentences)
+
+    def get_sentence(self, index: int) -> Sentence:
+        if index <= len(self._sentences):
+            return self._sentences[index]
+        else:
+            raise KnowledgeBaseError("Attempted to use get_sentence(index) with index out of bounds.")
+
+    def clone(self):
+        return deepcopy(self)
+

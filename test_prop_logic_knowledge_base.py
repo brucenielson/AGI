@@ -1,5 +1,5 @@
 from unittest import TestCase
-from prop_logic_knowledge_base import LogicSymbol, LogicValue, SymbolList
+from prop_logic_knowledge_base import LogicSymbol, LogicValue, SymbolList, PLKnowledgeBase, Sentence, PropLogicParser
 
 
 class TestLogicSymbol(TestCase):
@@ -159,3 +159,15 @@ class TestSymbolList(TestCase):
         self.assertEqual(7, symbols.find_with_index('E1')[1])
         self.assertEqual(8, symbols.find_with_index('E2')[1])
         self.assertEqual(9, symbols.find_with_index('F')[1])
+
+
+class TestPLKnowledgeBase(TestCase):
+    def test_add_sentence_parentheses(self):
+        kb: PLKnowledgeBase = PLKnowledgeBase()
+        kb.add("a or b and c => d")
+        sentence = Sentence.string_to_sentence("c and a or d => b")
+        kb.add(sentence)
+
+        self.assertEqual("((A OR (B AND C)) => D)", kb.get_sentence(0).to_string(True))
+        self.assertEqual("(((C AND A) OR D) => B)", kb.get_sentence(1).to_string(True))
+

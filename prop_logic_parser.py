@@ -370,6 +370,17 @@ class Sentence:
         self._second_sentence = value
         self._second_sentence._parent_sentence = self
 
+    @property
+    def is_atomic(self):
+        # Returns True if this is a simple atomic sentence and False if it is a complex sentence
+        if self.symbol is not None and self.logic_operator == LogicOperatorTypes.NoOperator \
+                and self.first_sentence is None and self.second_sentence is None:
+            return True
+        elif self.logic_operator != LogicOperatorTypes.NoOperator and self.first_sentence is not None:
+            return False
+        else:
+            raise SentenceError("This sentence is in an illegal state because it is neither atomic or complex.")
+
     def sentence_from_tokens(self, token1: str, operator: LogicOperatorTypes, token2: str) -> None:
         if not (operator == LogicOperatorTypes.NoOperator or token1 == "" or token2 == ""
                 or token1 is None or token2 is None):
@@ -395,3 +406,43 @@ class Sentence:
         self._symbol = None
         self._first_sentence = sentence
         self._second_sentence = None
+
+    @classmethod
+    def logic_operator_to_string(cls, logic_operator: LogicOperatorTypes):
+        if logic_operator == LogicOperatorTypes.And:
+            return "AND"
+        elif logic_operator == LogicOperatorTypes.Or:
+            return "OR"
+        elif logic_operator == LogicOperatorTypes.Implies:
+            return "=>"
+        elif logic_operator == LogicOperatorTypes.Biconditional:
+            return "<=>"
+        else:
+            raise SentenceError("Error converting Sentence to a string. Illegal Operator type.")
+
+    @classmethod
+    def string_to_sentence(cls, input_str: str) -> Sentence:
+        parser: PropLogicParser = PropLogicParser(input_str)
+        return parser.parse_line()
+
+    def to_string(self, full_parentheses: bool = False) -> str:
+        ret_val: str = ""
+        if full_parentheses:
+            if self._negation:
+                ret_val += "~"
+            if self.is_atomic:
+                ret_val += self.symbol
+            else:  # sentence is complex
+                ret_val += "(" + self.first_sentence.to_string(True) + " " + \
+                           Sentence.logic_operator_to_string(self.logic_operator) + " " + \
+                           self.second_sentence.to_string(True) + ")"
+            return ret_val
+        # else:
+        #     if self.is_atomic:
+        #         ret_val += self.to_string(True)
+        #     else:  # sentence is complex
+        #         if self.negation:
+        #             if self.logic_operator == LogicOperatorTypes.NoOperator:
+        #                 ret_val += "~(" + self.first_sentence.to_string() + ")"
+        #             else:  # If we have some operator at this node, and thus two sentences
+        #                 ret_val += "~("
