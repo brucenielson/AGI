@@ -2,6 +2,7 @@ from __future__ import annotations
 from pyparsing import alphas, alphanums, Word, ZeroOrMore, Forward, OneOrMore, Group, exceptions, oneOf, Literal
 from enum import Enum
 from typing import Optional, List, Union
+from functools import total_ordering
 
 # Original Grammar for the Propositional Logic Parser (I've changed it a bit since)
 #
@@ -37,13 +38,19 @@ class PLTokenType(Enum):
     ENDLINE = 10
 
 
+@total_ordering
 class LogicOperatorTypes(Enum):
     NoOperator = 1
     And = 2
     Or = 3
-    Implies = 4
     # noinspection SpellCheckingInspection
-    Biconditional = 5
+    Biconditional = 4
+    Implies = 5
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
 
 
 class SentenceError(Exception):
@@ -426,6 +433,20 @@ class Sentence:
         return parser.parse_line()
 
     def to_string(self, full_parentheses: bool = False) -> str:
+        def to_string_sub_sentence(sub_sentence: Sentence):
+            if self.logic_operator != sub_sentence.logic_operator \
+                    and self.logic_operator < sub_sentence.logic_operator \
+                    and not sub_sentence.is_atomic \
+                    and not sub_sentence.negation:
+                # Include parentheses if:
+                # 1. The operators at this level is a lower priority than the one below
+                # 2. The next level down is a complex sentence
+                # 3. The next level down has no negation
+                return "(" + sub_sentence.to_string() + ")"
+            else:
+                # Otherwise, skip the parentheses
+                return sub_sentence.to_string()
+
         ret_val: str = ""
         if full_parentheses:
             if self._negation:
@@ -437,12 +458,21 @@ class Sentence:
                            Sentence.logic_operator_to_string(self.logic_operator) + " " + \
                            self.second_sentence.to_string(True) + ")"
             return ret_val
-        # else:
-        #     if self.is_atomic:
-        #         ret_val += self.to_string(True)
-        #     else:  # sentence is complex
-        #         if self.negation:
-        #             if self.logic_operator == LogicOperatorTypes.NoOperator:
-        #                 ret_val += "~(" + self.first_sentence.to_string() + ")"
-        #             else:  # If we have some operator at this node, and thus two sentences
-        #                 ret_val += "~("
+        else:
+            if self.is_atomic:
+                ret_val += self.to_string(True)
+            else:  # sentence is complex
+                # Start negation
+                if self.negation:
+                    ret_val += "~("
+                # First Sentence
+                ret_val += to_string_sub_sentence(self.first_sentence)
+                # Logical operator
+                ret_val += " " + Sentence.logic_operator_to_string(self.logic_operator) + " "
+                # Second Sentence
+                ret_val += to_string_sub_sentence(self.second_sentence)
+                # End negation
+                if self.negation:
+                    ret_val += ")"
+
+            return ret_val

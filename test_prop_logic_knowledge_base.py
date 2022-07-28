@@ -171,3 +171,12 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual("((A OR (B AND C)) => D)", kb.get_sentence(0).to_string(True))
         self.assertEqual("(((C AND A) OR D) => B)", kb.get_sentence(1).to_string(True))
 
+    def test_add_sentence(self):
+        kb: PLKnowledgeBase = PLKnowledgeBase()
+        kb.add("a or b and c => d")
+        sentence = Sentence.string_to_sentence("c and a or d => b")
+        kb.add(sentence)
+
+        self.assertEqual("A OR B AND C => D", kb.get_sentence(0).to_string())
+        self.assertEqual("C AND A OR D => B", kb.get_sentence(1).to_string())
+

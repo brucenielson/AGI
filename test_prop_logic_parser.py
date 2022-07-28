@@ -899,3 +899,64 @@ class TestSentence(TestCase):
         parser = PropLogicParser("~P1 AND P2")
         sentence = parser.parse_line()
         self.assertEqual(False, sentence.is_atomic)
+
+    def test_sentence_to_string(self):
+        parser = PropLogicParser("P1 AND P2 OR P3")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND P2 OR P3", sentence.to_string())
+
+        parser = PropLogicParser("P1 OR P2 AND P3")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 OR P2 AND P3", sentence.to_string())
+
+        parser = PropLogicParser("(P1 OR P2) AND P3")
+        sentence = parser.parse_line()
+        self.assertEqual("(P1 OR P2) AND P3", sentence.to_string())
+
+        parser = PropLogicParser("P1 AND (P2 OR P3)")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND (P2 OR P3)", sentence.to_string())
+
+        parser = PropLogicParser("(P1 AND P2) OR P3")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND P2 OR P3", sentence.to_string())
+
+        parser = PropLogicParser("~(P1 AND P2) OR P3")
+        sentence = parser.parse_line()
+        self.assertEqual("~(P1 AND P2) OR P3", sentence.to_string())
+
+        parser = PropLogicParser("P1 AND P2 OR (P3)")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND P2 OR P3", sentence.to_string())
+
+        parser = PropLogicParser("P1 AND P2 OR ~(P3)")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND P2 OR ~P3", sentence.to_string())
+
+        parser = PropLogicParser("(P1 => P2) AND P3")
+        sentence = parser.parse_line()
+        self.assertEqual("(P1 => P2) AND P3", sentence.to_string())
+
+        parser = PropLogicParser("P1 => P2 AND P3")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 => P2 AND P3", sentence.to_string())
+
+        parser = PropLogicParser("P1 => P2 OR P3")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 => P2 OR P3", sentence.to_string())
+
+        parser = PropLogicParser("P1 AND U1 OR U2 => P2 OR P3 AND P4")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND U1 OR U2 => P2 OR P3 AND P4", sentence.to_string())
+
+        parser = PropLogicParser("P1 AND U1 OR U2 <=> P2 OR P3 AND P4")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND U1 OR U2 <=> P2 OR P3 AND P4", sentence.to_string())
+
+        parser = PropLogicParser("P1 AND (U1 OR U2) => (P2 OR P3) AND P4")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND (U1 OR U2) => (P2 OR P3) AND P4", sentence.to_string())
+
+        parser = PropLogicParser("P1 AND ~(U1 OR U2) => P2 OR ~(P3 AND P4)")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND ~(U1 OR U2) => P2 OR ~(P3 AND P4)", sentence.to_string())
