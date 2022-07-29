@@ -180,6 +180,13 @@ class TestSymbolList(TestCase):
         self.assertEqual("F", symbol_list1.get_symbol(5).name)
         self.assertEqual("G", symbol_list1.get_symbol(6).name)
 
+    def test_repr_symbol_list(self):
+        sentence: Sentence = Sentence.string_to_sentence("a and c and b => d")
+        symbol_list: SymbolList = sentence.get_symbol_list()
+        self.assertEqual("A: Undefined; B: Undefined; C: Undefined; D: Undefined; ", repr(symbol_list))
+        symbol_list.set_value("A", True)
+        symbol_list.set_value("B", False)
+        self.assertEqual("A: True; B: False; C: Undefined; D: Undefined; ", repr(symbol_list))
 
 
 class TestPLKnowledgeBase(TestCase):
@@ -248,5 +255,4 @@ class TestPLKnowledgeBase(TestCase):
             message = err.args[0]
         self.assertEqual(True, fail)
         self.assertEqual("Call to 'exists' only works for a single logical line.", message)
-
 

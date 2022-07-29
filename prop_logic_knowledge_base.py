@@ -10,11 +10,22 @@ class LogicValue(Enum):
     TRUE = 1
     UNDEFINED = -1
 
+    def __repr__(self) -> str:
+        if self == LogicValue.UNDEFINED:
+            return "Undefined"
+        elif self == LogicValue.TRUE:
+            return "True"
+        elif self == LogicValue.FALSE:
+            return "False"
+
 
 class LogicSymbol:
     def __init__(self, name: str, value: LogicValue = LogicValue.UNDEFINED):
         self._name = name
         self.value = value
+
+    def __repr__(self) -> str:
+        return self.name + ": " + repr(self.value)
 
     @property
     def name(self) -> str:
@@ -55,6 +66,7 @@ class SymbolListIterator:
     def __next__(self):
         result: LogicSymbol
         if self._index < self._symbol_list.length:
+            # TODO: Fix this
             result = self._symbol_list._symbols[self._index]
             self._index += 1
             return result
@@ -68,8 +80,14 @@ class SymbolList:
         self._auto_sort: bool = True
         self._is_sorted: bool = False
 
-    def __iter__(self):
+    def __iter__(self) -> SymbolListIterator:
         return SymbolListIterator(self)
+
+    def __repr__(self) -> str:
+        repr_str: str = ""
+        for symbol in self._symbols:
+            repr_str += repr(symbol) + "; "
+        return repr_str
 
     def get_symbols(self) -> List[LogicSymbol]:
         return self._symbols
