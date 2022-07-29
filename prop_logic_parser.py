@@ -3,6 +3,7 @@ from pyparsing import alphas, alphanums, Word, ZeroOrMore, Forward, OneOrMore, G
 from enum import Enum
 from typing import Optional, List, Union
 from functools import total_ordering
+import prop_logic_knowledge_base as kb
 
 # Original Grammar for the Propositional Logic Parser (I've changed it a bit since)
 #
@@ -85,6 +86,7 @@ class PropLogicParser:
 
     def set_input(self, input_str: str):
         input_str = input_str.upper()
+        self._tokens = None
         try:
             self._tokens = self.lines.parse_string(input_str, parse_all=True)
         except exceptions.ParseException:
@@ -157,6 +159,10 @@ class PropLogicParser:
             self._current_token = "EOF"
 
         return self._current_token
+
+    @property
+    def line_count(self) -> int:
+        return len(self._token_list)
 
     def token_look_head(self, look_ahead: int) -> Optional[PLTokenType]:
         if len(self._token_list[0]) <= look_ahead:
@@ -478,3 +484,22 @@ class Sentence:
                     ret_val += ")"
 
             return ret_val
+
+    def get_symbol_list(self, temp_symbol_list: kb.SymbolList = None, sub_sentence: Sentence = None) -> kb.SymbolList:
+        #  For each symbol, check if it's already in the list and, if not, add it
+        #  then return the full list. It will default to value undefined for everything.
+        #  then handle the rest, i.e. atomic vs. complex
+        if temp_symbol_list is None:
+            temp_symbol_list = kb.SymbolList()
+        if sub_sentence is None:
+            sub_sentence = self
+
+        if sub_sentence.is_atomic:
+            temp_symbol_list.add(sub_sentence.symbol)
+        else:
+            # All complex sentences have at least one sentence
+            Sentence.get_symbol_list(sub_sentence.first_sentence, temp_symbol_list)
+            # If we have a second sentence, then process that
+            if sub_sentence.second_sentence is not None:
+                Sentence.get_symbol_list(sub_sentence.second_sentence, temp_symbol_list)
+        return temp_symbol_list

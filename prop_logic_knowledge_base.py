@@ -1,3 +1,4 @@
+from __future__ import annotations
 from prop_logic_parser import PropLogicParser, Sentence
 from typing import Optional, List, Union
 from enum import Enum
@@ -46,11 +47,29 @@ class KnowledgeBaseError(Exception):
         super().__init__(message)
 
 
+class SymbolListIterator:
+    def __init__(self, symbol_list: SymbolList):
+        self._symbol_list = symbol_list
+        self._index: int = 0
+
+    def __next__(self):
+        result: LogicSymbol
+        if self._index < self._symbol_list.length:
+            result = self._symbol_list._symbols[self._index]
+            self._index += 1
+            return result
+        else:
+            raise StopIteration
+
+
 class SymbolList:
     def __init__(self):
         self._symbols: List[LogicSymbol] = []
         self._auto_sort: bool = True
         self._is_sorted: bool = False
+
+    def __iter__(self):
+        return SymbolListIterator(self)
 
     def get_symbols(self) -> List[LogicSymbol]:
         return self._symbols
@@ -165,20 +184,34 @@ class SymbolList:
         if left_counter + 1 < right:
             self._quick_sort(left_counter + 1, right)
 
-    def add(self, symbol_name: str, value: Union[LogicValue, bool] = LogicValue.UNDEFINED) -> None:
-        symbol_name = symbol_name.upper()
-        symbol: LogicSymbol = LogicSymbol(symbol_name, value)
-        found_symbol: LogicSymbol
-        index: int
-        # Only add if this symbol is not already in the list
-        (found_symbol, index) = self.find_with_index(symbol_name)
-        if found_symbol is None:
-            if self._auto_sort:
-                self._symbols.insert(index, symbol)
-                self._is_sorted = True
+    def add(self, symbol_or_list: Union[str, LogicSymbol, SymbolList],
+            value: Union[LogicValue, bool] = LogicValue.UNDEFINED) -> None:
+        if isinstance(symbol_or_list, SymbolList):
+            # Concatenate the SymbolList into this SymbolList
+            symbol: LogicSymbol
+            for symbol in symbol_or_list:
+                self.add(symbol)
+        else:
+            symbol: LogicSymbol
+            if isinstance(symbol_or_list, str):
+                symbol_or_list = symbol_or_list.upper()
+                symbol = LogicSymbol(symbol_or_list, value)
+            elif isinstance(symbol_or_list, LogicSymbol):
+                symbol = symbol_or_list
             else:
-                self._symbols.append(symbol)
-                self._is_sorted = False
+                raise SymbolListError("The 'add' command requires a string symbol, LogicSymbol, or a SymbolList")
+            # Add the symbol to this list
+            found_symbol: LogicSymbol
+            index: int
+            # Only add if this symbol is not already in the list
+            (found_symbol, index) = self.find_with_index(symbol.name)
+            if found_symbol is None:
+                if self._auto_sort:
+                    self._symbols.insert(index, symbol)
+                    self._is_sorted = True
+                else:
+                    self._symbols.append(symbol)
+                    self._is_sorted = False
 
     def set_value(self, symbol_name: str, value: Union[LogicValue, bool]) -> None:
         symbol: LogicSymbol = self.find(symbol_name)
@@ -191,7 +224,7 @@ class SymbolList:
 
 class PLKnowledgeBase:
     # Static parser -- so that Sentence can parse propositional logic text
-    _prop_logic_parser: PropLogicParser = PropLogicParser()
+    _parser: PropLogicParser = PropLogicParser()
 
     def __init__(self) -> None:
         # A propositional logic knowledge base is really just an array of propositional logic sentences
@@ -213,16 +246,25 @@ class PLKnowledgeBase:
         self._sentences = []
         self._is_cnf = False
 
-    def exists(self, sentence: Sentence) -> bool:
-        if sentence in self._sentences:
-            return True
-        else:
+    def exists(self, sentence: Union[Sentence, str]) -> bool:
+        if isinstance(sentence, Sentence):
+            for a_sentence in self._sentences:
+                if a_sentence.to_string(True) == sentence.to_string(True):
+                    return True
             return False
+        elif isinstance(sentence, str):
+            self._parser.set_input(sentence)
+            new_sentence: Sentence = self._parser.parse_line()
+            if self._parser.line_count > 0:
+                raise KnowledgeBaseError("Call to 'exists' only works for a single logical line.")
+            return self.exists(new_sentence)
+        else:
+            raise KnowledgeBaseError("Call to 'exists' call requires a Sentence or string.")
 
     def add(self, sentence_or_list:  Union[Sentence, List[Sentence], str]) -> None:
         if isinstance(sentence_or_list, str):
-            PLKnowledgeBase._prop_logic_parser.set_input(sentence_or_list)
-            sentence_list: List[Sentence] = PLKnowledgeBase._prop_logic_parser.parse_input()
+            PLKnowledgeBase._parser.set_input(sentence_or_list)
+            sentence_list: List[Sentence] = PLKnowledgeBase._parser.parse_input()
             self.add(sentence_list)
         elif isinstance(sentence_or_list, Sentence):
             if not self.exists(sentence_or_list):
@@ -243,4 +285,3 @@ class PLKnowledgeBase:
 
     def clone(self):
         return deepcopy(self)
-

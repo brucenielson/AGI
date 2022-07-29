@@ -1,5 +1,6 @@
 from unittest import TestCase
-from prop_logic_knowledge_base import LogicSymbol, LogicValue, SymbolList, PLKnowledgeBase, Sentence, PropLogicParser
+from prop_logic_knowledge_base import LogicSymbol, LogicValue, PLKnowledgeBase, Sentence, \
+    KnowledgeBaseError, SymbolList
 
 
 class TestLogicSymbol(TestCase):
@@ -160,6 +161,26 @@ class TestSymbolList(TestCase):
         self.assertEqual(8, symbols.find_with_index('E2')[1])
         self.assertEqual(9, symbols.find_with_index('F')[1])
 
+    def test_add_symbol_list_via_sentence(self):
+        sentence1: Sentence = Sentence.string_to_sentence("a and c and b => d")
+        sentence2: Sentence = Sentence.string_to_sentence("e and c and f => b and g")
+        symbol_list1: SymbolList = sentence1.get_symbol_list()
+        # Test first sentence
+        self.assertEqual("A", symbol_list1.get_symbol(0).name)
+        self.assertEqual("B", symbol_list1.get_symbol(1).name)
+        self.assertEqual("C", symbol_list1.get_symbol(2).name)
+        self.assertEqual("D", symbol_list1.get_symbol(3).name)
+        # Test second sentence
+        symbol_list1.add(sentence2.get_symbol_list())
+        self.assertEqual("A", symbol_list1.get_symbol(0).name)
+        self.assertEqual("B", symbol_list1.get_symbol(1).name)
+        self.assertEqual("C", symbol_list1.get_symbol(2).name)
+        self.assertEqual("D", symbol_list1.get_symbol(3).name)
+        self.assertEqual("E", symbol_list1.get_symbol(4).name)
+        self.assertEqual("F", symbol_list1.get_symbol(5).name)
+        self.assertEqual("G", symbol_list1.get_symbol(6).name)
+
+
 
 class TestPLKnowledgeBase(TestCase):
     def test_add_sentence_parentheses(self):
@@ -171,7 +192,7 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual("((A OR (B AND C)) => D)", kb.get_sentence(0).to_string(True))
         self.assertEqual("(((C AND A) OR D) => B)", kb.get_sentence(1).to_string(True))
 
-    def test_add_sentence(self):
+    def test_add_and_get_sentence(self):
         kb: PLKnowledgeBase = PLKnowledgeBase()
         kb.add("a or b and c => d")
         sentence = Sentence.string_to_sentence("c and a or d => b")
@@ -179,4 +200,53 @@ class TestPLKnowledgeBase(TestCase):
 
         self.assertEqual("A OR B AND C => D", kb.get_sentence(0).to_string())
         self.assertEqual("C AND A OR D => B", kb.get_sentence(1).to_string())
+        # Test count
+        self.assertEqual(2, kb.count())
+        # Test exists
+        self.assertEqual(True, kb.exists(sentence))
+        self.assertEqual(True, kb.exists("a or b and c => d"))
+        # Test clear
+        kb.clear()
+        self.assertEqual(0, kb.count())
+
+    def test_kb_clone(self):
+        kb1: PLKnowledgeBase = PLKnowledgeBase()
+        kb1.add("a or b and c => d")
+        sentence = Sentence.string_to_sentence("c and a or d => b")
+        kb1.add(sentence)
+        kb2: PLKnowledgeBase = kb1.clone()
+
+        self.assertEqual(False, kb1 == kb2)
+        self.assertEqual("A OR B AND C => D", kb2.get_sentence(0).to_string())
+        self.assertEqual("C AND A OR D => B", kb2.get_sentence(1).to_string())
+        # Test count
+        self.assertEqual(2, kb2.count())
+        # Test exists
+        self.assertEqual(True, kb2.exists(sentence))
+        self.assertEqual(True, kb2.exists("a or b and c => d"))
+        # Test clear
+        kb2.clear()
+        self.assertEqual(0, kb2.count())
+
+    def test_kb_exists(self):
+        kb: PLKnowledgeBase = PLKnowledgeBase()
+        kb.add("a or b and c => d")
+        sentence = Sentence.string_to_sentence("c and a or d => b")
+        kb.add(sentence)
+        # Test count
+        self.assertEqual(2, kb.count())
+        # Test exists
+        self.assertEqual(True, kb.exists(sentence))
+        self.assertEqual(True, kb.exists("a or b and c => d"))
+        # Test illegal call
+        fail: bool = False
+        message: str = ""
+        try:
+            self.assertEqual(True, kb.exists("a or b and c => d\nc or d"))
+        except KnowledgeBaseError as err:
+            fail = True
+            message = err.args[0]
+        self.assertEqual(True, fail)
+        self.assertEqual("Call to 'exists' only works for a single logical line.", message)
+
 
