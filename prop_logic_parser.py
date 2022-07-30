@@ -56,6 +56,34 @@ class LogicOperatorTypes(Enum):
         return NotImplemented
 
 
+def apply_operator(value1: kb.LogicValue, value2: kb.LogicValue, operator: LogicOperatorTypes):
+    final_value: kb.LogicValue
+    if operator == LogicOperatorTypes.NoOperator:
+        return value1
+    elif operator == LogicOperatorTypes.And:
+        if value1 == kb.LogicValue.TRUE and value2 == kb.LogicValue.TRUE:
+            return kb.LogicValue.TRUE
+        elif value1 == kb.LogicValue.FALSE or value2.FALSE:
+            return kb.LogicValue.FALSE
+    elif operator == LogicOperatorTypes.Or:
+        if value1 == kb.LogicValue.TRUE or value2 == kb.LogicValue.TRUE:
+            return kb.LogicValue.TRUE
+        elif value1 == kb.LogicValue.FALSE and value2.FALSE:
+            return kb.LogicValue.FALSE
+    elif operator == LogicOperatorTypes.Implies:
+        # a => b means ~a or b
+        if value1 == kb.LogicValue.FALSE or value2 == kb.LogicValue.TRUE:
+            return kb.LogicValue.TRUE
+        # ~(~a or b) = a and ~b
+        elif value1 == kb.LogicValue.TRUE and value2 == kb.LogicValue.FALSE:
+            return kb.LogicValue.FALSE
+    elif operator == LogicOperatorTypes.Biconditional:
+        # Bi-conditional is just implies going both ways connected by an And operator
+        value3: kb.LogicValue = apply_operator(value1, value2, LogicOperatorTypes.Implies)
+        value4: kb.LogicValue = apply_operator(value2, value1, LogicOperatorTypes.Implies)
+        return apply_operator(value3, value4, LogicOperatorTypes.And)
+
+
 class SentenceError(Exception):
     def __init__(self, message=None):
         self.message = message
@@ -514,6 +542,13 @@ class Sentence:
         return self._traverse_and_evaluate(model) == kb.LogicValue.TRUE
 
     def _traverse_and_evaluate(self, model: kb.SymbolList) -> kb.LogicValue:
-        
-
-
+        if self.is_atomic:
+            return model.get_value(self.symbol)
+        else:
+            sub_evaluate1: kb.LogicValue
+            sub_evaluate2: kb.LogicValue
+            # There should always be a first sentence
+            sub_evaluate1 = self.first_sentence._traverse_and_evaluate(model)
+            # If there is a second sentence evaluate it next
+            sub_evaluate2 = self.second_sentence._traverse_and_evaluate(model)
+            return apply_operator(sub_evaluate1, sub_evaluate2, self.logic_operator)

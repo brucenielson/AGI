@@ -5,6 +5,37 @@ from enum import Enum
 from copy import deepcopy
 
 
+def slice_to_ints(a_slice: slice, max_index: int):
+    start: int = 0
+    stop: int = max_index
+    step: int = 1
+    if a_slice.step is not None:
+        step = a_slice.step
+    if a_slice.start is not None:
+        start = a_slice.start
+    if a_slice.stop is not None:
+        stop = a_slice.stop
+    keys: range = range(start, stop, step)
+    index_list = list(keys)
+    return index_list
+
+
+def create_index(indexes: list, max_index: int) -> List[int]:
+    index_list: List[int] = []
+    if isinstance(indexes, int):
+        index_list.append(indexes)
+    elif isinstance(indexes, slice):
+        index_list: List[int] = slice_to_ints(indexes, max_index)
+    else:
+        # Mixture of both integers and slices
+        for i in indexes:
+            if isinstance(i, int):
+                index_list.append(i)
+            elif isinstance(i, slice):
+                index_list.extend(slice_to_ints(i, max_index))
+    return index_list
+
+
 class LogicValue(Enum):
     FALSE = 0
     TRUE = 1
@@ -71,37 +102,6 @@ class SymbolListIterator:
             return result
         else:
             raise StopIteration
-
-
-def slice_to_ints(a_slice: slice, max_index: int):
-    start: int = 0
-    stop: int = max_index
-    step: int = 1
-    if a_slice.step is not None:
-        step = a_slice.step
-    if a_slice.start is not None:
-        start = a_slice.start
-    if a_slice.stop is not None:
-        stop = a_slice.stop
-    keys: range = range(start, stop, step)
-    index_list = list(keys)
-    return index_list
-
-
-def create_index(indexes: list, max_index: int) -> List[int]:
-    index_list: List[int] = []
-    if isinstance(indexes, int):
-        index_list.append(indexes)
-    elif isinstance(indexes, slice):
-        index_list: List[int] = slice_to_ints(indexes, max_index)
-    else:
-        # Mixture of both integers and slices
-        for i in indexes:
-            if isinstance(i, int):
-                index_list.append(i)
-            elif isinstance(i, slice):
-                index_list.extend(slice_to_ints(i, max_index))
-    return index_list
 
 
 class SymbolList:
