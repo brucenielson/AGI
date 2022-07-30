@@ -66,8 +66,7 @@ class SymbolListIterator:
     def __next__(self):
         result: LogicSymbol
         if self._index < self._symbol_list.length:
-            # TODO: Fix this
-            result = self._symbol_list._symbols[self._index]
+            result = self._symbol_list.get_symbols()[self._index]
             self._index += 1
             return result
         else:
