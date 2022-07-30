@@ -211,7 +211,7 @@ class TestSymbolList(TestCase):
         self.assertEqual(LogicValue.TRUE, symbols[1].value)
         self.assertEqual("D", new_symbols[1].name)
         self.assertEqual(LogicValue.FALSE, symbols[2].value)
-        self.assertEqual(2,new_symbols.length)
+        self.assertEqual(2, new_symbols.length)
         new_symbols = symbols[1, 3]
         self.assertEqual("C", new_symbols[0].name)
         self.assertEqual(LogicValue.TRUE, symbols[1].value)
@@ -331,4 +331,3 @@ class TestPLKnowledgeBase(TestCase):
             message = err.args[0]
         self.assertEqual(True, fail)
         self.assertEqual("Call to 'exists' only works for a single logical line.", message)
-

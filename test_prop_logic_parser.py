@@ -17,13 +17,13 @@ class TestPropLogicParser(TestCase):
     def test_line_count(self):
         parser = PropLogicParser("P1")
         self.assertEqual(1, parser.line_count)
-        sentence = parser.parse_line()
+        parser.parse_line()
         self.assertEqual(0, parser.line_count)
         parser = PropLogicParser("P1U87 AND P2 AND ~P3 OR A94P => P4 AND (P6 OR P8)\nP5 AND P7")
         self.assertEqual(2, parser.line_count)
-        sentence = parser.parse_line()
+        parser.parse_line()
         self.assertEqual(1, parser.line_count)
-        sentence = parser.parse_line()
+        parser.parse_line()
         self.assertEqual(0, parser.line_count)
 
     def test_consume_token(self):

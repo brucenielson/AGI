@@ -73,9 +73,9 @@ class SymbolListIterator:
             raise StopIteration
 
 
-def slice_to_ints(a_slice: slice, max: int):
+def slice_to_ints(a_slice: slice, max_index: int):
     start: int = 0
-    stop: int = max
+    stop: int = max_index
     step: int = 1
     if a_slice.step is not None:
         step = a_slice.step
@@ -88,19 +88,19 @@ def slice_to_ints(a_slice: slice, max: int):
     return index_list
 
 
-def create_index(indexes: list, max: int) -> List[int]:
+def create_index(indexes: list, max_index: int) -> List[int]:
     index_list: List[int] = []
     if isinstance(indexes, int):
         index_list.append(indexes)
     elif isinstance(indexes, slice):
-        index_list: List[int] = slice_to_ints(indexes, max)
+        index_list: List[int] = slice_to_ints(indexes, max_index)
     else:
         # Mixture of both integers and slices
         for i in indexes:
             if isinstance(i, int):
                 index_list.append(i)
             elif isinstance(i, slice):
-                index_list.extend(slice_to_ints(i, max))
+                index_list.extend(slice_to_ints(i, max_index))
     return index_list
 
 
