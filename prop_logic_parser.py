@@ -56,19 +56,19 @@ class LogicOperatorTypes(Enum):
         return NotImplemented
 
 
-def apply_operator(value1: kb.LogicValue, value2: kb.LogicValue, operator: LogicOperatorTypes):
+def apply_operator(value1: kb.LogicValue, value2: kb.LogicValue, operator: LogicOperatorTypes) -> kb.LogicValue:
     final_value: kb.LogicValue
     if operator == LogicOperatorTypes.NoOperator:
         return value1
     elif operator == LogicOperatorTypes.And:
         if value1 == kb.LogicValue.TRUE and value2 == kb.LogicValue.TRUE:
             return kb.LogicValue.TRUE
-        elif value1 == kb.LogicValue.FALSE or value2.FALSE:
+        elif value1 == kb.LogicValue.FALSE or value2 == kb.LogicValue.FALSE:
             return kb.LogicValue.FALSE
     elif operator == LogicOperatorTypes.Or:
         if value1 == kb.LogicValue.TRUE or value2 == kb.LogicValue.TRUE:
             return kb.LogicValue.TRUE
-        elif value1 == kb.LogicValue.FALSE and value2.FALSE:
+        elif value1 == kb.LogicValue.FALSE and value2 == kb.LogicValue.FALSE:
             return kb.LogicValue.FALSE
     elif operator == LogicOperatorTypes.Implies:
         # a => b means ~a or b
@@ -82,6 +82,8 @@ def apply_operator(value1: kb.LogicValue, value2: kb.LogicValue, operator: Logic
         value3: kb.LogicValue = apply_operator(value1, value2, LogicOperatorTypes.Implies)
         value4: kb.LogicValue = apply_operator(value2, value1, LogicOperatorTypes.Implies)
         return apply_operator(value3, value4, LogicOperatorTypes.And)
+    # No evaluation, so must be UNDEFINED
+    return kb.LogicValue.UNDEFINED
 
 
 class SentenceError(Exception):

@@ -1,5 +1,6 @@
 from unittest import TestCase
 from prop_logic_parser import PropLogicParser, Sentence, LogicOperatorTypes, SentenceError
+from prop_logic_knowledge_base import SymbolList, LogicValue
 
 
 class TestPropLogicParser(TestCase):
@@ -984,3 +985,11 @@ class TestSentence(TestCase):
         parser = PropLogicParser("((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4)")
         sentence = parser.parse_line()
         self.assertEqual("P1 AND ((U1 OR U2 => P2) OR P3) AND P4", sentence.to_string())
+
+    def test_simple_evaluate(self):
+        parser = PropLogicParser("((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4)")
+        sentence = parser.parse_line()
+        self.assertEqual("P1 AND ((U1 OR U2 => P2) OR P3) AND P4", sentence.to_string())
+        model: SymbolList = sentence.get_symbol_list()
+        value: LogicValue = sentence.evaluate(model)
+        self.assertEqual(LogicValue.UNDEFINED, value)
