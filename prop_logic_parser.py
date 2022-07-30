@@ -544,13 +544,22 @@ class Sentence:
         return self._traverse_and_evaluate(model) == kb.LogicValue.TRUE
 
     def _traverse_and_evaluate(self, model: kb.SymbolList) -> kb.LogicValue:
-        if self.is_atomic:
-            return model.get_value(self.symbol)
+        if self.negation:
+            evaluate_negation: kb.LogicValue = self._traverse_and_evaluate(model)
+            if evaluate_negation == kb.LogicValue.TRUE:
+                return kb.LogicValue.FALSE
+            elif evaluate_negation == kb.LogicValue.FALSE:
+                return kb.LogicValue.TRUE
+            else:
+                return kb.LogicValue.UNDEFINED
         else:
-            sub_evaluate1: kb.LogicValue
-            sub_evaluate2: kb.LogicValue
-            # There should always be a first sentence
-            sub_evaluate1 = self.first_sentence._traverse_and_evaluate(model)
-            # If there is a second sentence evaluate it next
-            sub_evaluate2 = self.second_sentence._traverse_and_evaluate(model)
-            return apply_operator(sub_evaluate1, sub_evaluate2, self.logic_operator)
+            if self.is_atomic:
+                return model.get_value(self.symbol)
+            else:
+                sub_evaluate1: kb.LogicValue
+                sub_evaluate2: kb.LogicValue
+                # There should always be a first sentence
+                sub_evaluate1 = self.first_sentence._traverse_and_evaluate(model)
+                # If there is a second sentence evaluate it next
+                sub_evaluate2 = self.second_sentence._traverse_and_evaluate(model)
+                return apply_operator(sub_evaluate1, sub_evaluate2, self.logic_operator)

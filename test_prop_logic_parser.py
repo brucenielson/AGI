@@ -986,7 +986,7 @@ class TestSentence(TestCase):
         sentence = parser.parse_line()
         self.assertEqual("P1 AND ((U1 OR U2 => P2) OR P3) AND P4", sentence.to_string())
 
-    def test_evaluate(self):
+    def test_evaluate_sentence(self):
         parser = PropLogicParser("((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4)")
         sentence = parser.parse_line()
         self.assertEqual("P1 AND ((U1 OR U2 => P2) OR P3) AND P4", sentence.to_string())
