@@ -503,3 +503,17 @@ class Sentence:
             if sub_sentence.second_sentence is not None:
                 Sentence.get_symbol_list(sub_sentence.second_sentence, temp_symbol_list)
         return temp_symbol_list
+
+    def evaluate(self, model: kb.SymbolList) -> kb.LogicValue:
+        return self._traverse_and_evaluate(model)
+
+    def is_true(self, model: kb.SymbolList) -> bool:
+        return self._traverse_and_evaluate(model) == kb.LogicValue.TRUE
+
+    def is_false(self, model: kb.SymbolList) -> bool:
+        return self._traverse_and_evaluate(model) == kb.LogicValue.TRUE
+
+    def _traverse_and_evaluate(self, model: kb.SymbolList) -> kb.LogicValue:
+        
+
+
