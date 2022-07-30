@@ -73,6 +73,37 @@ class SymbolListIterator:
             raise StopIteration
 
 
+def slice_to_ints(a_slice: slice, max: int):
+    start: int = 0
+    stop: int = max
+    step: int = 1
+    if a_slice.step is not None:
+        step = a_slice.step
+    if a_slice.start is not None:
+        start = a_slice.start
+    if a_slice.stop is not None:
+        stop = a_slice.stop
+    keys: range = range(start, stop, step)
+    index_list = list(keys)
+    return index_list
+
+
+def create_index(indexes: list, max: int) -> List[int]:
+    index_list: List[int] = []
+    if isinstance(indexes, int):
+        index_list.append(indexes)
+    elif isinstance(indexes, slice):
+        index_list: List[int] = slice_to_ints(indexes, max)
+    else:
+        # Mixture of both integers and slices
+        for i in indexes:
+            if isinstance(i, int):
+                index_list.append(i)
+            elif isinstance(i, slice):
+                index_list.extend(slice_to_ints(i, max))
+    return index_list
+
+
 class SymbolList:
     # See https://riptutorial.com/python/example/1571/indexing-custom-classes----getitem------setitem---and---delitem--
     # for now to implement getitem setitem related stuff
@@ -90,35 +121,16 @@ class SymbolList:
             repr_str += repr(symbol) + "; "
         return repr_str
 
-    def __getitem__(self, key) -> Union[LogicSymbol, SymbolList]:
-        if isinstance(key, int):
-            return self.get_symbol(key)
-        elif isinstance(key, slice):
-            start: int = 1
-            stop: int = self.length
-            step: int = 1
-            if key.step is not None:
-                step = key.step
-            if key.start is not None:
-                start = key.start
-            if key.stop is not None:
-                stop = key.stop
-            keys: range = range(start, stop, step)
-            new_symbol_list: SymbolList = SymbolList()
-            copy_old_symbols = [self.get_symbol(i) for i in keys]
-            new_symbol_list._symbols = copy_old_symbols
-            return new_symbol_list
-        else:
-            # Mixture of both integers and slices
-            output: List[LogicSymbol] = []
-            for i in key:
-                if isinstance(i, int):
-                    output.append(self.__getitem__(i))
-                elif isinstance(i, slice):
-                    output.extend(self.__getitem__(i))
-            new_symbol_list: SymbolList = SymbolList()
-            new_symbol_list._symbols = output
-            return new_symbol_list
+    def __getitem__(self, indexes) -> Union[LogicSymbol, SymbolList]:
+        index_list: List[int] = create_index(indexes, self.length)
+        # If there is only one element in the index_list, then return a single LogicSymbol
+        if len(index_list) == 1:
+            return self.get_symbol(index_list[0])
+        # We have a list of indexes, now turn it into a new SymbolList
+        output: List[LogicSymbol] = [self.get_symbol(i) for i in index_list]
+        new_symbol_list: SymbolList = SymbolList()
+        new_symbol_list._symbols = output
+        return new_symbol_list
 
     def __setitem__(self, key, value):
         if isinstance(key, int):
@@ -126,6 +138,12 @@ class SymbolList:
         else:
             for i in key:
                 self.set_value(self.get_symbol(i).name, value)
+
+    def __delitem__(self, indexes):
+        index_list: List[int] = create_index(indexes, self.length)
+        index_list.reverse()
+        for i in index_list:
+            del self._symbols[i]
 
     def get_symbols(self) -> List[LogicSymbol]:
         return self._symbols

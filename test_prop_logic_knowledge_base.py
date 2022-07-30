@@ -218,7 +218,7 @@ class TestSymbolList(TestCase):
         self.assertEqual("E", new_symbols[1].name)
         self.assertEqual(LogicValue.FALSE, symbols[2].value)
         self.assertEqual(2, new_symbols.length)
-        # Set items
+        # Test set items
         symbols[1, 3] = True
         self.assertEqual("B", symbols[0].name)
         self.assertEqual(LogicValue.UNDEFINED, symbols[0].value)
@@ -228,6 +228,7 @@ class TestSymbolList(TestCase):
         self.assertEqual(LogicValue.FALSE, symbols[2].value)
         self.assertEqual("E", symbols[3].name)
         self.assertEqual(LogicValue.TRUE, symbols[3].value)
+        # Test set item
         symbols[1, 3] = False
         self.assertEqual("B", symbols[0].name)
         self.assertEqual(LogicValue.UNDEFINED, symbols[0].value)
@@ -237,6 +238,7 @@ class TestSymbolList(TestCase):
         self.assertEqual(LogicValue.FALSE, symbols[2].value)
         self.assertEqual("E", symbols[3].name)
         self.assertEqual(LogicValue.FALSE, symbols[3].value)
+        # Test slice to end
         new_symbols = symbols[0, 2:]
         self.assertEqual("B", new_symbols[0].name)
         self.assertEqual(LogicValue.UNDEFINED, symbols[0].value)
@@ -245,6 +247,22 @@ class TestSymbolList(TestCase):
         self.assertEqual("E", new_symbols[2].name)
         self.assertEqual(LogicValue.FALSE, symbols[2].value)
         self.assertEqual(3, new_symbols.length)
+        # Test slice from start
+        new_symbols = symbols[:2, 3]
+        self.assertEqual("B", new_symbols[0].name)
+        self.assertEqual(LogicValue.UNDEFINED, symbols[0].value)
+        self.assertEqual("C", new_symbols[1].name)
+        self.assertEqual(LogicValue.FALSE, symbols[2].value)
+        self.assertEqual("E", new_symbols[2].name)
+        self.assertEqual(LogicValue.FALSE, symbols[2].value)
+        self.assertEqual(3, new_symbols.length)
+        # Test del
+        del new_symbols[1]
+        self.assertEqual("B", new_symbols[0].name)
+        self.assertEqual(LogicValue.UNDEFINED, symbols[0].value)
+        self.assertEqual("E", new_symbols[1].name)
+        self.assertEqual(LogicValue.FALSE, symbols[1].value)
+        self.assertEqual(2, new_symbols.length)
 
 
 class TestPLKnowledgeBase(TestCase):
