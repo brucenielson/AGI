@@ -90,7 +90,7 @@ class SymbolList:
             repr_str += repr(symbol) + "; "
         return repr_str
 
-    def __getitem__(self, key) -> Union[LogicSymbol, List[LogicSymbol]]:
+    def __getitem__(self, key) -> Union[LogicSymbol, SymbolList]:
         if isinstance(key, int):
             return self.get_symbol(key)
         elif isinstance(key, slice):
@@ -104,7 +104,10 @@ class SymbolList:
             if key.stop is not None:
                 stop = key.stop
             keys: range = range(start, stop, step)
-            return [self.get_symbol(i) for i in keys]
+            new_symbol_list: SymbolList = SymbolList()
+            copy_old_symbols = [self.get_symbol(i) for i in keys]
+            new_symbol_list._symbols = copy_old_symbols
+            return new_symbol_list
         else:
             # Mixture of both integers and slices
             output: List[LogicSymbol] = []
@@ -113,7 +116,9 @@ class SymbolList:
                     output.append(self.__getitem__(i))
                 elif isinstance(i, slice):
                     output.extend(self.__getitem__(i))
-            return output
+            new_symbol_list: SymbolList = SymbolList()
+            new_symbol_list._symbols = output
+            return new_symbol_list
 
     def __setitem__(self, key, value):
         if isinstance(key, int):
@@ -326,7 +331,7 @@ class PLKnowledgeBase:
                 self.add(sentence)
 
     @property
-    def count(self) -> int:
+    def line_count(self) -> int:
         return len(self._sentences)
 
     def get_sentence(self, index: int) -> Sentence:

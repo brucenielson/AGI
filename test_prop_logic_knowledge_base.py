@@ -211,13 +211,13 @@ class TestSymbolList(TestCase):
         self.assertEqual(LogicValue.TRUE, symbols[1].value)
         self.assertEqual("D", new_symbols[1].name)
         self.assertEqual(LogicValue.FALSE, symbols[2].value)
-        self.assertEqual(2, len(new_symbols))
+        self.assertEqual(2,new_symbols.length)
         new_symbols = symbols[1, 3]
         self.assertEqual("C", new_symbols[0].name)
         self.assertEqual(LogicValue.TRUE, symbols[1].value)
         self.assertEqual("E", new_symbols[1].name)
         self.assertEqual(LogicValue.FALSE, symbols[2].value)
-        self.assertEqual(2, len(new_symbols))
+        self.assertEqual(2, new_symbols.length)
         # Set items
         symbols[1, 3] = True
         self.assertEqual("B", symbols[0].name)
@@ -244,7 +244,7 @@ class TestSymbolList(TestCase):
         self.assertEqual(LogicValue.FALSE, symbols[2].value)
         self.assertEqual("E", new_symbols[2].name)
         self.assertEqual(LogicValue.FALSE, symbols[2].value)
-        self.assertEqual(3, len(new_symbols))
+        self.assertEqual(3, new_symbols.length)
 
 
 class TestPLKnowledgeBase(TestCase):
@@ -266,13 +266,13 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual("A OR B AND C => D", kb.get_sentence(0).to_string())
         self.assertEqual("C AND A OR D => B", kb.get_sentence(1).to_string())
         # Test count
-        self.assertEqual(2, kb.count)
+        self.assertEqual(2, kb.line_count)
         # Test exists
         self.assertEqual(True, kb.exists(sentence))
         self.assertEqual(True, kb.exists("a or b and c => d"))
         # Test clear
         kb.clear()
-        self.assertEqual(0, kb.count)
+        self.assertEqual(0, kb.line_count)
 
     def test_kb_clone(self):
         kb1: PLKnowledgeBase = PLKnowledgeBase()
@@ -285,13 +285,13 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual("A OR B AND C => D", kb2.get_sentence(0).to_string())
         self.assertEqual("C AND A OR D => B", kb2.get_sentence(1).to_string())
         # Test count
-        self.assertEqual(2, kb2.count)
+        self.assertEqual(2, kb2.line_count)
         # Test exists
         self.assertEqual(True, kb2.exists(sentence))
         self.assertEqual(True, kb2.exists("a or b and c => d"))
         # Test clear
         kb2.clear()
-        self.assertEqual(0, kb2.count)
+        self.assertEqual(0, kb2.line_count)
 
     def test_kb_exists(self):
         kb: PLKnowledgeBase = PLKnowledgeBase()
@@ -299,7 +299,7 @@ class TestPLKnowledgeBase(TestCase):
         sentence = Sentence.string_to_sentence("c and a or d => b")
         kb.add(sentence)
         # Test count
-        self.assertEqual(2, kb.count)
+        self.assertEqual(2, kb.line_count)
         # Test exists
         self.assertEqual(True, kb.exists(sentence))
         self.assertEqual(True, kb.exists("a or b and c => d"))
