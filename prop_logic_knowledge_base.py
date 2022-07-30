@@ -74,6 +74,8 @@ class SymbolListIterator:
 
 
 class SymbolList:
+    # See https://riptutorial.com/python/example/1571/indexing-custom-classes----getitem------setitem---and---delitem--
+    # for now to implement getitem setitem related stuff
     def __init__(self):
         self._symbols: List[LogicSymbol] = []
         self._auto_sort: bool = True
@@ -310,6 +312,7 @@ class PLKnowledgeBase:
             for sentence in sentence_or_list:
                 self.add(sentence)
 
+    @property
     def count(self) -> int:
         return len(self._sentences)
 
