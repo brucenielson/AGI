@@ -94,13 +94,26 @@ class SymbolList:
         if isinstance(key, int):
             return self.get_symbol(key)
         elif isinstance(key, slice):
+            start: int = 1
+            stop: int = self.length
             step: int = 1
             if key.step is not None:
                 step = key.step
-            keys: range = range(key.start, key.stop, step)
+            if key.start is not None:
+                start = key.start
+            if key.stop is not None:
+                stop = key.stop
+            keys: range = range(start, stop, step)
             return [self.get_symbol(i) for i in keys]
         else:
-            return [self.get_symbol(i) for i in key]
+            # Mixture of both integers and slices
+            output: List[LogicSymbol] = []
+            for i in key:
+                if isinstance(i, int):
+                    output.append(self.__getitem__(i))
+                elif isinstance(i, slice):
+                    output.extend(self.__getitem__(i))
+            return output
 
     def __setitem__(self, key, value):
         if isinstance(key, int):
