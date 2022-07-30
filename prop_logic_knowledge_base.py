@@ -89,6 +89,25 @@ class SymbolList:
             repr_str += repr(symbol) + "; "
         return repr_str
 
+    def __getitem__(self, key) -> Union[LogicSymbol, List[LogicSymbol]]:
+        if isinstance(key, int):
+            return self.get_symbol(key)
+        elif isinstance(key, slice):
+            step: int = 1
+            if key.step is not None:
+                step = key.step
+            keys: range = range(key.start, key.stop, step)
+            return [self.get_symbol(i) for i in keys]
+        else:
+            return [self.get_symbol(i) for i in key]
+
+    def __setitem__(self, key, value):
+        if isinstance(key, int):
+            self.set_value(self.get_symbol(key).name, value)
+        else:
+            for i in key:
+                self.set_value(self.get_symbol(i).name, value)
+
     def get_symbols(self) -> List[LogicSymbol]:
         return self._symbols
 

@@ -188,6 +188,36 @@ class TestSymbolList(TestCase):
         symbol_list.set_value("B", False)
         self.assertEqual("A: True; B: False; C: Undefined; D: Undefined; ", repr(symbol_list))
 
+    def test_indexing_and_slicing(self):
+        symbols = SymbolList()
+        symbols.add("B")
+        symbols.add("D")
+        symbols.add("C")
+        symbols.add("E")
+        # Test Setting and Getting with an index
+        self.assertEqual("B", symbols[0].name)
+        self.assertEqual(LogicValue.UNDEFINED, symbols[0].value)
+        symbols[1] = True
+        self.assertEqual("C", symbols[1].name)
+        self.assertEqual(LogicValue.TRUE, symbols[1].value)
+        symbols[2] = False
+        self.assertEqual("D", symbols[2].name)
+        self.assertEqual(LogicValue.FALSE, symbols[2].value)
+        self.assertEqual("E", symbols[3].name)
+        # Test Setting and Getting with a slice
+        new_symbols = symbols[1:3]
+        self.assertEqual("C", new_symbols[0].name)
+        self.assertEqual(LogicValue.TRUE, symbols[1].value)
+        self.assertEqual("D", new_symbols[1].name)
+        self.assertEqual(LogicValue.FALSE, symbols[2].value)
+        self.assertEqual(2, len(new_symbols))
+        new_symbols = symbols[1, 3]
+        self.assertEqual("C", new_symbols[0].name)
+        self.assertEqual(LogicValue.TRUE, symbols[1].value)
+        self.assertEqual("E", new_symbols[1].name)
+        self.assertEqual(LogicValue.FALSE, symbols[2].value)
+        self.assertEqual(2, len(new_symbols))
+
 
 class TestPLKnowledgeBase(TestCase):
     def test_add_sentence_parentheses(self):
