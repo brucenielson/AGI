@@ -274,7 +274,6 @@ class TestPropLogicParser(TestCase):
         parser = PropLogicParser("(P1 AND P3) => (P2 AND P4)")
         sentence = parser.parse_line()
         self.assertEqual(None, sentence.first_sentence.symbol)
-        sentence.to_string(True)
         self.assertEqual(False, sentence.first_sentence.negation)
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
         self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
@@ -707,16 +706,15 @@ class TestPropLogicParser(TestCase):
         self.assertEqual(False, sentence.negation)
 
     def test_parsing_negations(self):
-        # parser = PropLogicParser("P1")
-        # sentence = parser.parse_line()
-        # self.assertEqual("P1", sentence.to_string(True))
-        # parser = PropLogicParser("~P1")
-        # sentence = parser.parse_line()
-        # self.assertEqual("~P1", sentence.to_string(True))
-        # parser = PropLogicParser("~(~P1)")
-        # sentence = parser.parse_line()
-        # self.assertEqual("~(~P1)", sentence.to_string(True))
-        pass
+        parser = PropLogicParser("P1")
+        sentence = parser.parse_line()
+        self.assertEqual("P1", sentence.to_string(True))
+        parser = PropLogicParser("~P1")
+        sentence = parser.parse_line()
+        self.assertEqual("~P1", sentence.to_string(True))
+        parser = PropLogicParser("~(~P1)")
+        sentence = parser.parse_line()
+        self.assertEqual("~(~P1)", sentence.to_string(True))
 
 
 class TestSentence(TestCase):
@@ -807,7 +805,7 @@ class TestSentence(TestCase):
 
         failed = False
         try:
-            Sentence(failed)
+            Sentence(failed) # noqa
         except SentenceError:
             failed = True
         self.assertEqual(True, failed)
@@ -1094,12 +1092,12 @@ class TestSentence(TestCase):
         self.assertEqual(LogicValue.FALSE, value)
 
     def test_is_equivalent(self):
-        # parser = PropLogicParser("~(~((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4))")
-        # sentence1 = parser.parse_line()
-        # self.assertEqual("((P1 AND (((U1 OR U2) => P2) OR P3)) AND P4)", sentence1.to_string(True))
-        # parser = PropLogicParser("((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4)")
-        # sentence2 = parser.parse_line()
-        # self.assertEqual("P1 AND ((U1 OR U2 => P2) OR P3) AND P4", sentence2.to_string())
-        # result = sentence1.is_equivalent(sentence2)
-        # self.assertEqual(True, result)
-        pass
+        parser = PropLogicParser("~(~((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4))")
+        sentence1 = parser.parse_line()
+        sentence1.to_string()
+        self.assertEqual("~(~((P1 AND (((U1 OR U2) => P2) OR P3)) AND P4))", sentence1.to_string(True))
+        parser = PropLogicParser("((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4)")
+        sentence2 = parser.parse_line()
+        self.assertEqual("P1 AND ((U1 OR U2 => P2) OR P3) AND P4", sentence2.to_string())
+        result = sentence1.is_equivalent(sentence2)
+        self.assertEqual(True, result)

@@ -58,6 +58,12 @@ class LogicSymbol:
     def __repr__(self) -> str:
         return self.name + ": " + repr(self.value)
 
+    def __eq__(self, other):
+        if type(self) == type(other) and self.name == other.name and self.value == other.value:
+            return True
+        else:
+            return False
+
     @property
     def name(self) -> str:
         return self._name

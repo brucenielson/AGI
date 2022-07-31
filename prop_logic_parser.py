@@ -437,7 +437,7 @@ class Sentence:
             return True
         elif self.first_sentence is not None and self.second_sentence is None and self.negation:
             # Lone negation with a sentence under it
-            return True
+            return False
         elif self.logic_operator != LogicOperatorTypes.NoOperator and self.first_sentence is not None:
             # Atomic sentence
             return False
@@ -580,8 +580,11 @@ class Sentence:
             # There should always be a first sentence
             sub_evaluate1 = self.first_sentence._traverse_and_evaluate(model)
             # If there is a second sentence evaluate it next
-            sub_evaluate2 = self.second_sentence._traverse_and_evaluate(model)
-            evaluate = apply_operator(sub_evaluate1, sub_evaluate2, self.logic_operator)
+            if self.second_sentence is not None:
+                sub_evaluate2 = self.second_sentence._traverse_and_evaluate(model)
+                evaluate = apply_operator(sub_evaluate1, sub_evaluate2, self.logic_operator)
+            else:
+                evaluate = sub_evaluate1
         # Handle negations
         if self.negation:
             if evaluate == kb.LogicValue.TRUE:
@@ -619,7 +622,7 @@ class Sentence:
             # The sentences can't be equivalent if they don't have the same number of symbols
             return False
         else:
-            for i in range(0,symbols1.length):
+            for i in range(0, symbols1.length):
                 # Abort if there is every a mismatch between symbol names because they can't be equivalent then
                 if symbols1[i] != symbols2[i]:
                     return False
