@@ -1195,19 +1195,12 @@ class TestSentence(TestCase):
         sentence2 = Sentence("c and a and b")
         self.assertTrue(sentence1.is_equivalent(sentence2))
 
-        # sentence1 = new
-        # Sentence("a => b");
-        # sentence2 = new
-        # Sentence("A => B");
-        #
-        # Assert.IsTrue(sentence1.AreEquivalent(sentence2));
-        # Assert.IsTrue(sentence1.AreEquivalent("a=>b"));
-        #
-        # sentence1 = new
-        # Sentence("a <=> b");
-        # sentence2 = new
-        # Sentence("a => b");
-        #
-        # Assert.IsFalse(sentence1.AreEquivalent(sentence2));
-        # Assert.IsFalse(sentence1.AreEquivalent("a=>b"));
-        pass
+        sentence1 = Sentence("a => b")
+        sentence2 = Sentence("A => B")
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence1.is_equivalent("a=>b"))
+
+        sentence1 = Sentence("a <=> b")
+        sentence2 = Sentence("A => B")
+        self.assertFalse(sentence1.is_equivalent(sentence2))
+        self.assertFalse(sentence1.is_equivalent("a=>b"))

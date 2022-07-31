@@ -645,7 +645,10 @@ class Sentence:
             check2: bool = self._truth_table_check_all(sentence, symbols.clone(), copy_model2)
             return check1 and check2
 
-    def is_equivalent(self, sentence: Sentence):
+    def is_equivalent(self, sentence: Union[Sentence, str]):
+        if isinstance(sentence, str):
+            sentence = Sentence(sentence)
+
         symbols1: kb.SymbolList = self.get_symbol_list()
         symbols2: kb.SymbolList = sentence.get_symbol_list()
         if symbols1.length != symbols2.length:
