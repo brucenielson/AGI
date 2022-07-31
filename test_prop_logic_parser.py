@@ -1197,10 +1197,10 @@ class TestSentence(TestCase):
 
         sentence1 = Sentence("a => b")
         sentence2 = Sentence("A => B")
-        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence1 == sentence2)
         self.assertTrue(sentence1.is_equivalent("a=>b"))
 
         sentence1 = Sentence("a <=> b")
         sentence2 = Sentence("A => B")
-        self.assertFalse(sentence1.is_equivalent(sentence2))
+        self.assertFalse(sentence1 == sentence2)
         self.assertFalse(sentence1.is_equivalent("a=>b"))

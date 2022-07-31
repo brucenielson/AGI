@@ -411,6 +411,15 @@ class Sentence:
     def __repr__(self) -> str:
         return self.to_string()
 
+    def __eq__(self, other: Sentence) -> bool:
+        if type(self) != type(other):
+            return False
+        else:
+            if self.is_equivalent(other):
+                return True
+            else:
+                return False
+
     @property
     def logic_operator(self) -> LogicOperatorTypes:
         return self._logic_operator
