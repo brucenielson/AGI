@@ -517,8 +517,7 @@ class Sentence:
 
     @classmethod
     def string_to_sentence(cls, input_str: str) -> Sentence:
-        parser: PropLogicParser = PropLogicParser(input_str)
-        return parser.parse_line()
+        return parse_sentence(input_str)
 
     def to_string(self, full_parentheses: bool = False) -> str:
         def to_string_sub_sentence(sub_sentence: Sentence):
