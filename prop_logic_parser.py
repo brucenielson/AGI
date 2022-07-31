@@ -340,11 +340,11 @@ class Sentence:
         self._logic_operator: LogicOperatorTypes = LogicOperatorTypes.NoOperator
         # Set negation
         self._negation: bool = negated
-
         # A blank symbol should be treated as a None
         if symbol1_or_sentence1 == "":
             symbol1_or_sentence1 = None
-
+        if sentence2 == "":
+            sentence2 = None
         # Handle logical operator
         if logical_operator is not None and sentence2 is None:
             # We have a logical operator but no sentence2, which is illegal
@@ -352,34 +352,41 @@ class Sentence:
         if sentence2 is not None and (logical_operator is None or logical_operator == LogicOperatorTypes.NoOperator):
             # We have a sentence2 but no logical operator, which is illegal
             raise SentenceError("You must have a logical operator if you have a second sentence in the constructor.")
-        elif logical_operator is None:
-            # No operator passed but also no sentence2 so just pass
-            pass
-        else:
+        elif logical_operator is not None:
             # Store the logic operator passed
             self._logic_operator = logical_operator
 
         # Handle sentence2
-        if sentence2 is not None and isinstance(sentence2, str) and sentence2 != "":
-            sentence2 = sentence2.upper()
-            # Do we have a second sentence that is a string? If so, create it as a Sentence type
-            self._second_sentence = Sentence(sentence2)
-        elif isinstance(sentence2, Sentence):
-            # Do we have a second sentence that is of Sentence type? If so, plug it right into place
-            self._second_sentence = sentence2
-        elif sentence2 is None:
-            # If sentence2 is None, do nothing (i.e. don't throw error)
-            pass
-        else:
-            # Something else entirely was passed, so throw an error
-            raise SentenceError("The second sentence (sentence2) just be a string symbol, a Sentence, or None.")
+        if sentence2 is not None:
+            if isinstance(sentence2, str):
+                sentence2 = sentence2.upper()
+                # Do we have a second sentence that is a string? If so, create it as a Sentence type
+                self._second_sentence = Sentence(sentence2)
+            elif isinstance(sentence2, Sentence):
+                # Do we have a second sentence that is of Sentence type? If so, plug it right into place
+                self._second_sentence = sentence2
+            else:
+                # Something illegal was passed, so throw an error
+                raise SentenceError("The second sentence (sentence2) must be a string symbol, a Sentence, or None.")
 
         # Handle first sentence (or symbol)
-        if isinstance(symbol1_or_sentence1, str):
+        if symbol1_or_sentence1 is None:
+            # Creating an empty Sentence, probably for a lone not
+            self._symbol = None
+        elif isinstance(symbol1_or_sentence1, Sentence):
+            # This is a Sentence, so store it as a Sentence
+            self._first_sentence = symbol1_or_sentence1
+        elif isinstance(symbol1_or_sentence1, str):
             symbol1_or_sentence1 = symbol1_or_sentence1.upper()
-            # A lone symbol might be a whole sentence to be parsed
-            if symbol1_or_sentence1 is not None and logical_operator is None and sentence2 is None:
+            # This is a string, so it could be a symbol or a string that is to be parsed to a Sentence
+            # Is this just a lone parameter 1 passed as a string?
+            if logical_operator is not None or sentence2 is not None:
+                # There is more than a single parameter being passed, so process this as first sentence
+                self._first_sentence = Sentence(symbol1_or_sentence1)
+            else:
+                # Only parameter 1 was passed, so check if it is a symbol or sentence needing parsing?
                 if symbol1_or_sentence1.isalnum() and symbol1_or_sentence1[0].isalpha():
+                    # This is a single symbol
                     self._symbol = symbol1_or_sentence1
                 elif symbol1_or_sentence1.isalnum() and symbol1_or_sentence1[0].isalpha():
                     # Invalid value for a symbol since it doesn't start with a letter
@@ -394,19 +401,10 @@ class Sentence:
                     self._first_sentence = result._first_sentence
                     self._second_sentence = result._second_sentence
                     self._logic_operator = result._logic_operator
-            else:
-                # This is not a lone symbol, so store it as a sentence
-                self._first_sentence = Sentence(symbol1_or_sentence1)
-        elif isinstance(symbol1_or_sentence1, Sentence):
-            # This is a sentence, so store it as a sentence
-            self._first_sentence = symbol1_or_sentence1
-        elif symbol1_or_sentence1 is None:
-            # This is a lone Not
-            self._symbol = None
+
         else:
-            # We should never have a blank first sentence/symbol
-            raise SentenceError("The first parameter (symbol1_or_sentence1) "
-                                "must always be included, except for lone negations.")
+            # Illegal input
+            raise SentenceError("Sentence constructor first parameter (symbol1_or_sentence1) not passed a legal type.")
 
     def __repr__(self) -> str:
         return self.to_string()
