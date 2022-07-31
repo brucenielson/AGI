@@ -735,7 +735,7 @@ class TestSentence(TestCase):
         self.assertEqual(False, atomic_sentence1.negation)
 
         # Test creation of a negated atomic sentence
-        atomic_sentence2 = Sentence('P2', negated=True)
+        atomic_sentence2 = Sentence('P2', negation=True)
         self.assertEqual('P2', atomic_sentence2.symbol)
         self.assertEqual(None, atomic_sentence2.first_sentence)
         self.assertEqual(None, atomic_sentence2.second_sentence)
@@ -743,7 +743,7 @@ class TestSentence(TestCase):
         self.assertEqual(True, atomic_sentence2.negation)
 
         # Test creation of negation of a sentence
-        negated_sentence = Sentence(atomic_sentence2, negated=True)
+        negated_sentence = Sentence(atomic_sentence2, negation=True)
         self.assertEqual(None, negated_sentence.symbol)
         self.assertEqual(atomic_sentence2, negated_sentence.first_sentence)
         self.assertEqual(None, negated_sentence.second_sentence)
@@ -898,36 +898,37 @@ class TestSentence(TestCase):
         parser = PropLogicParser("P1")
         sentence = parser.parse_line()
         self.assertEqual(True, sentence.is_atomic)
-
         parser = PropLogicParser("~P1")
         sentence = parser.parse_line()
         self.assertEqual(True, sentence.is_atomic)
-
         parser = PropLogicParser("P1 OR P2")
         sentence = parser.parse_line()
         self.assertEqual(False, sentence.is_atomic)
-
         parser = PropLogicParser("P1 AND P2")
         sentence = parser.parse_line()
         self.assertEqual(False, sentence.is_atomic)
-
         parser = PropLogicParser("P1 => P2")
         sentence = parser.parse_line()
         self.assertEqual(False, sentence.is_atomic)
-
         parser = PropLogicParser("P1 <=> P2")
         sentence = parser.parse_line()
         self.assertEqual(False, sentence.is_atomic)
-
         parser = PropLogicParser("~P1 AND ~P2")
         sentence = parser.parse_line()
         self.assertEqual(False, sentence.is_atomic)
-
         parser = PropLogicParser("~P1 OR ~P2")
         sentence = parser.parse_line()
         self.assertEqual(False, sentence.is_atomic)
-
         parser = PropLogicParser("~P1 AND P2")
+        sentence = parser.parse_line()
+        self.assertEqual(False, sentence.is_atomic)
+        parser = PropLogicParser("~(P1 AND P2)")
+        sentence = parser.parse_line()
+        self.assertEqual(False, sentence.is_atomic)
+        parser = PropLogicParser("~(P1)")
+        sentence = parser.parse_line()
+        self.assertEqual(True, sentence.is_atomic)
+        parser = PropLogicParser("~(~(P1))")
         sentence = parser.parse_line()
         self.assertEqual(False, sentence.is_atomic)
 
@@ -1208,3 +1209,89 @@ class TestSentence(TestCase):
         self.assertEqual('C', sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(True, sentence.second_sentence.second_sentence.is_atomic)
         self.assertEqual('D', sentence.second_sentence.second_sentence.symbol)
+
+    def test_atomic_sentence(self):
+        # Atomic sentence with one symbol
+        sentence = Sentence("Test")
+        self.assertTrue(sentence.is_atomic)
+        self.assertEqual("TEST", sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
+        self.assertEqual(False, sentence.negation)
+        self.assertEqual(None, sentence.first_sentence)
+        self.assertEqual(None, sentence.second_sentence)
+        # Atomic sentence with no symbols
+        sentence = Sentence()
+        self.assertTrue(sentence.is_atomic)
+        self.assertEqual(None, sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
+        self.assertEqual(False, sentence.negation)
+        self.assertEqual(None, sentence.first_sentence)
+        self.assertEqual(None, sentence.second_sentence)
+        # Complex sentence with no symbols
+        sentence = Sentence("Test1 and Test2")
+        self.assertFalse(sentence.is_atomic)
+        # Illegal attempt to create an Atomic Sentence
+        failed: bool = False
+        try:
+            sentence = Sentence(symbol1_or_sentence1=None, logical_operator=LogicOperatorTypes.And)
+        except SentenceError:
+            failed = True
+        self.assertTrue(failed)
+        failed = False
+        try:
+            sentence = Sentence(symbol1_or_sentence1=None, sentence2="Test")
+        except SentenceError:
+            failed = True
+        self.assertTrue(failed)
+
+    def test_negated_sentence_construction(self):
+        # Atomic negations
+        sentence = Sentence("Test", negation=True)
+        self.assertTrue(sentence.is_atomic)
+        self.assertEqual("TEST", sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
+        self.assertEqual(True, sentence.negation)
+        self.assertEqual(None, sentence.first_sentence)
+        self.assertEqual(None, sentence.second_sentence)
+        sentence = Sentence("~Test")
+        self.assertTrue(sentence.is_atomic)
+        self.assertEqual("TEST", sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
+        self.assertEqual(True, sentence.negation)
+        self.assertEqual(None, sentence.first_sentence)
+        self.assertEqual(None, sentence.second_sentence)
+        # Negations on no parameters
+        sentence = Sentence(negation=True)
+        self.assertTrue(sentence.is_atomic)
+        self.assertEqual(None, sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
+        self.assertEqual(True, sentence.negation)
+        self.assertEqual(None, sentence.first_sentence)
+        self.assertEqual(None, sentence.second_sentence)
+        sentence = Sentence()
+        sentence.negation = True
+        self.assertTrue(sentence.is_atomic)
+        self.assertEqual(None, sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
+        self.assertEqual(True, sentence.negation)
+        self.assertEqual(None, sentence.first_sentence)
+        self.assertEqual(None, sentence.second_sentence)
+        # Complex sentence negation
+        sentence = Sentence("Test1 AND TEst2", negation=True)
+        self.assertFalse(sentence.is_atomic)
+        self.assertEqual(None, sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
+        self.assertEqual(True, sentence.negation)
+        self.assertEqual("TEST1", sentence.first_sentence.to_string(True))
+        self.assertEqual("TEST2", sentence.second_sentence.to_string(True))
+        self.assertEqual("~(TEST1 AND TEST2)", sentence.to_string(True))
+        # If you set negation to True on an already negated sentence nothing changes
+        sentence = Sentence("~(Test1 AND TEst2)", negation=True)
+        self.assertFalse(sentence.is_atomic)
+        self.assertEqual(None, sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
+        self.assertEqual(True, sentence.negation)
+        self.assertEqual("TEST1", sentence.first_sentence.to_string(True))
+        self.assertEqual("TEST2", sentence.second_sentence.to_string(True))
+        self.assertEqual("~(TEST1 AND TEST2)", sentence.to_string(True))
+

@@ -331,7 +331,7 @@ class PropLogicParser:
 
 class Sentence:
     def __init__(self, symbol1_or_sentence1: Union[Sentence, str] = None, logical_operator: LogicOperatorTypes = None,
-                 sentence2: Union[Sentence, str] = None, negated: bool = False):
+                 sentence2: Union[Sentence, str] = None, negation: bool = False):
         # set default values
         self._symbol: Optional[str] = None
         self._first_sentence: Optional[Sentence] = None
@@ -339,7 +339,7 @@ class Sentence:
         self._parent_sentence: Optional[Sentence] = None
         self._logic_operator: LogicOperatorTypes = LogicOperatorTypes.NoOperator
         # Set negation
-        self._negation: bool = negated
+        self._negation: bool = negation
         # A blank symbol should be treated as a None
         if symbol1_or_sentence1 == "":
             symbol1_or_sentence1 = None
@@ -397,7 +397,7 @@ class Sentence:
                     # This was a full sentence, so set it to be the sentence
                     # Do a shallow copy
                     self._symbol = result._symbol
-                    self._negation = result._negation
+                    self._negation = result._negation or negation
                     self._first_sentence = result._first_sentence
                     self._second_sentence = result._second_sentence
                     self._logic_operator = result._logic_operator
@@ -463,9 +463,9 @@ class Sentence:
     @property
     def is_atomic(self):
         # Returns True if this is a simple atomic sentence and False if it is a complex sentence
-        if self.symbol is not None and self.logic_operator == LogicOperatorTypes.NoOperator \
+        if self.logic_operator == LogicOperatorTypes.NoOperator \
                 and self.first_sentence is None and self.second_sentence is None:
-            # Full complex sentence
+            # Simple atomic sentence with one symbol or no parameters at all
             return True
         elif self.first_sentence is not None and self.second_sentence is None and self.negation:
             # Lone negation with a sentence under it
