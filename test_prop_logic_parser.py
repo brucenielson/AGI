@@ -1098,7 +1098,7 @@ class TestSentence(TestCase):
         value: LogicValue = sentence.evaluate(model)
         self.assertEqual(LogicValue.FALSE, value)
 
-    def test_is_equivalent(self):
+    def test_is_equivalent_1(self):
         # Try negating a negation on a complex sentence
         parser = PropLogicParser("~(~((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4))")
         sentence1 = parser.parse_line()
@@ -1154,3 +1154,60 @@ class TestSentence(TestCase):
         self.assertEqual("((~A OR B) AND (~B OR A))", sentence2.to_string(True))
         result = sentence1.is_equivalent(sentence2)
         self.assertEqual(True, result)
+
+    def test_is_equivalent_2(self):
+        sentence1: Sentence
+        sentence2: Sentence
+
+        sentence1 = Sentence("a => b")
+        sentence2 = Sentence("A => B")
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+
+        sentence1 = Sentence("a => b")
+        sentence2 = Sentence("a or b")
+        self.assertFalse(sentence1.is_equivalent(sentence2))
+
+        sentence1 = Sentence("a => b")
+        sentence2 = Sentence("~a or b")
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+
+        sentence1 = Sentence("a <=> b")
+        sentence2 = Sentence("a => b")
+        self.assertFalse(sentence1.is_equivalent(sentence2))
+
+        sentence1 = Sentence("a <=> b")
+        sentence2 = Sentence("(a => b) AND (b => a)")
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+
+        sentence1 = Sentence("a")
+        sentence2 = Sentence("~(~a)")
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+
+        sentence1 = Sentence("~(a AND b)")
+        sentence2 = Sentence("~a OR ~b")
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+
+        sentence1 = Sentence("~(a OR b)")
+        sentence2 = Sentence("~a and ~b")
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+
+        sentence1 = Sentence("a and b and c")
+        sentence2 = Sentence("c and a and b")
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+
+        # sentence1 = new
+        # Sentence("a => b");
+        # sentence2 = new
+        # Sentence("A => B");
+        #
+        # Assert.IsTrue(sentence1.AreEquivalent(sentence2));
+        # Assert.IsTrue(sentence1.AreEquivalent("a=>b"));
+        #
+        # sentence1 = new
+        # Sentence("a <=> b");
+        # sentence2 = new
+        # Sentence("a => b");
+        #
+        # Assert.IsFalse(sentence1.AreEquivalent(sentence2));
+        # Assert.IsFalse(sentence1.AreEquivalent("a=>b"));
+        pass

@@ -92,6 +92,15 @@ class SentenceError(Exception):
         super().__init__(self.message)
 
 
+# Use this function to do a quick and dirty parse of a single sentence
+def parse_sentence(input_str: str) -> Sentence:
+    parser: PropLogicParser = PropLogicParser(input_str)
+    result: Sentence = parser.parse_line()
+    if parser.line_count > 0:
+        raise ParseError("Call to 'parse_sentence' takes only a single line of input.")
+    return result
+
+
 class PropLogicParser:
     def __init__(self, input_str: str = None) -> None:
         self._tokens = None
@@ -352,6 +361,7 @@ class Sentence:
 
         # Handle sentence2
         if sentence2 is not None and isinstance(sentence2, str) and sentence2 != "":
+            sentence2 = sentence2.upper()
             # Do we have a second sentence that is a string? If so, create it as a Sentence type
             self._second_sentence = Sentence(sentence2)
         elif isinstance(sentence2, Sentence):
@@ -366,9 +376,24 @@ class Sentence:
 
         # Handle first sentence (or symbol)
         if isinstance(symbol1_or_sentence1, str):
-            if self._second_sentence is None:
-                # This is a symbol, so store it directly at a symbol
-                self._symbol = symbol1_or_sentence1
+            symbol1_or_sentence1 = symbol1_or_sentence1.upper()
+            # A lone symbol might be a whole sentence to be parsed
+            if symbol1_or_sentence1 is not None and logical_operator is None and sentence2 is None:
+                if symbol1_or_sentence1.isalnum() and symbol1_or_sentence1[0].isalpha():
+                    self._symbol = symbol1_or_sentence1
+                elif symbol1_or_sentence1.isalnum() and symbol1_or_sentence1[0].isalpha():
+                    # Invalid value for a symbol since it doesn't start with a letter
+                    SentenceError("Symbols must start with a letter.")
+                else:
+                    # Only first parameter was passed and it wasn't alpha numeric, so is it a full sentence?
+                    result: Sentence = parse_sentence(symbol1_or_sentence1)
+                    # This was a full sentence, so set it to be the sentence
+                    # Do a shallow copy
+                    self._symbol = result._symbol
+                    self._negation = result._negation
+                    self._first_sentence = result._first_sentence
+                    self._second_sentence = result._second_sentence
+                    self._logic_operator = result._logic_operator
             else:
                 # This is not a lone symbol, so store it as a sentence
                 self._first_sentence = Sentence(symbol1_or_sentence1)
