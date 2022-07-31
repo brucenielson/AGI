@@ -523,7 +523,7 @@ class Sentence:
             if self.is_atomic:
                 ret_val += self.to_string(True)
             elif self.logic_operator == LogicOperatorTypes.NoOperator and self.negation \
-                    and self.first_sentence is not None:
+                    and self.first_sentence is not None and self.second_sentence is None:
                 # Lone negation of another sentence
                 if self.negation:
                     ret_val += "~("
@@ -531,7 +531,7 @@ class Sentence:
                 # End negation
                 if self.negation:
                     ret_val += ")"
-            else:  # sentence is complex
+            else:  # sentence is full complex
                 # Start negation
                 if self.negation:
                     ret_val += "~("
