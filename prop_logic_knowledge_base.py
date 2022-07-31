@@ -295,6 +295,9 @@ class SymbolList:
         symbol: LogicSymbol = self.find(symbol_name)
         return symbol.value
 
+    def clone(self):
+        return deepcopy(self)
+
 
 class PLKnowledgeBase:
     # Static parser -- so that Sentence can parse propositional logic text

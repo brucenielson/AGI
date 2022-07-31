@@ -274,6 +274,7 @@ class TestPropLogicParser(TestCase):
         parser = PropLogicParser("(P1 AND P3) => (P2 AND P4)")
         sentence = parser.parse_line()
         self.assertEqual(None, sentence.first_sentence.symbol)
+        sentence.to_string(True)
         self.assertEqual(False, sentence.first_sentence.negation)
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
         self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
@@ -343,7 +344,7 @@ class TestPropLogicParser(TestCase):
         self.assertEqual(LogicOperatorTypes.Biconditional, sentence.logic_operator)
         self.assertEqual(False, sentence.negation)
 
-    def test_simple_and_or_priority(self):
+    def test_and_or_priority(self):
         parser = PropLogicParser("P1 AND P2 OR P3")
         sentence = parser.parse_line()
         # Top level
@@ -705,6 +706,18 @@ class TestPropLogicParser(TestCase):
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
         self.assertEqual(False, sentence.negation)
 
+    def test_parsing_negations(self):
+        # parser = PropLogicParser("P1")
+        # sentence = parser.parse_line()
+        # self.assertEqual("P1", sentence.to_string(True))
+        # parser = PropLogicParser("~P1")
+        # sentence = parser.parse_line()
+        # self.assertEqual("~P1", sentence.to_string(True))
+        # parser = PropLogicParser("~(~P1)")
+        # sentence = parser.parse_line()
+        # self.assertEqual("~(~P1)", sentence.to_string(True))
+        pass
+
 
 class TestSentence(TestCase):
     def test_create_sentence(self):
@@ -790,7 +803,7 @@ class TestSentence(TestCase):
             Sentence(None)
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertEqual(False, failed)
 
         failed = False
         try:
@@ -1079,3 +1092,14 @@ class TestSentence(TestCase):
         model.set_value("U2", False)
         value: LogicValue = sentence.evaluate(model)
         self.assertEqual(LogicValue.FALSE, value)
+
+    def test_is_equivalent(self):
+        # parser = PropLogicParser("~(~((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4))")
+        # sentence1 = parser.parse_line()
+        # self.assertEqual("((P1 AND (((U1 OR U2) => P2) OR P3)) AND P4)", sentence1.to_string(True))
+        # parser = PropLogicParser("((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4)")
+        # sentence2 = parser.parse_line()
+        # self.assertEqual("P1 AND ((U1 OR U2 => P2) OR P3) AND P4", sentence2.to_string())
+        # result = sentence1.is_equivalent(sentence2)
+        # self.assertEqual(True, result)
+        pass

@@ -119,8 +119,8 @@ class PropLogicParser:
         self._tokens = None
         try:
             self._tokens = self.lines.parse_string(input_str, parse_all=True)
-        except exceptions.ParseException:
-            raise ParseError("Incorrect syntax")
+        except exceptions.ParseException as err:
+            raise ParseError("Incorrect syntax. Details: " + err.msg)
         self._token_list: List = self._tokens.asList()
         self._current_line: List = self._token_list[0]
         self._current_token: str = self._current_line[0]
@@ -300,8 +300,14 @@ class PropLogicParser:
         if self.current_token_type == PLTokenType.LPAREN:
             # This is a parenthetical sentence
             self.consume_token(PLTokenType.LPAREN)
-            sentence = self.logical_sentence()
+            logical_sentence: Sentence = self.logical_sentence()
             self.consume_token(PLTokenType.RPAREN)
+            if negate_sentence and logical_sentence.negation:
+                # Double negation, so make this sentence a level above
+                sentence: Sentence = Sentence()
+                sentence.first_sentence = logical_sentence
+            else:
+                sentence = logical_sentence
         else:
             # This must be a symbol
             symbol: str = self.consume_token(PLTokenType.SYMBOL)
@@ -315,7 +321,7 @@ class PropLogicParser:
 
 
 class Sentence:
-    def __init__(self, symbol1_or_sentence1, logical_operator: LogicOperatorTypes = None,
+    def __init__(self, symbol1_or_sentence1: Union[Sentence, str] = None, logical_operator: LogicOperatorTypes = None,
                  sentence2: Union[Sentence, str] = None, negated: bool = False):
         # set default values
         self._symbol: Optional[str] = None
@@ -369,9 +375,16 @@ class Sentence:
         elif isinstance(symbol1_or_sentence1, Sentence):
             # This is a sentence, so store it as a sentence
             self._first_sentence = symbol1_or_sentence1
+        elif symbol1_or_sentence1 is None:
+            # This is a lone Not
+            self._symbol = None
         else:
             # We should never have a blank first sentence/symbol
-            raise SentenceError("The first parameter (symbol1_or_sentence1) must always be included.")
+            raise SentenceError("The first parameter (symbol1_or_sentence1) "
+                                "must always be included, except for lone negations.")
+
+    def __repr__(self) -> str:
+        return self.to_string()
 
     @property
     def logic_operator(self) -> LogicOperatorTypes:
@@ -420,8 +433,13 @@ class Sentence:
         # Returns True if this is a simple atomic sentence and False if it is a complex sentence
         if self.symbol is not None and self.logic_operator == LogicOperatorTypes.NoOperator \
                 and self.first_sentence is None and self.second_sentence is None:
+            # Full complex sentence
+            return True
+        elif self.first_sentence is not None and self.second_sentence is None and self.negation:
+            # Lone negation with a sentence under it
             return True
         elif self.logic_operator != LogicOperatorTypes.NoOperator and self.first_sentence is not None:
+            # Atomic sentence
             return False
         else:
             raise SentenceError("This sentence is in an illegal state because it is neither atomic or complex.")
@@ -491,7 +509,12 @@ class Sentence:
                 ret_val += "~"
             if self.is_atomic:
                 ret_val += self.symbol
-            else:  # sentence is complex
+            elif self.logic_operator == LogicOperatorTypes.NoOperator and self.negation \
+                    and self.first_sentence is not None:
+                # We have a lone negation of another sentence
+                ret_val += "(" + self.first_sentence.to_string(True) + ")"
+            else:
+                # Full complex sentence
                 ret_val += "(" + self.first_sentence.to_string(True) + " " + \
                            Sentence.logic_operator_to_string(self.logic_operator) + " " + \
                            self.second_sentence.to_string(True) + ")"
@@ -499,6 +522,10 @@ class Sentence:
         else:
             if self.is_atomic:
                 ret_val += self.to_string(True)
+            elif self.logic_operator == LogicOperatorTypes.NoOperator and self.negation \
+                    and self.first_sentence is not None:
+                # Lone negation of another sentence
+                ret_val += "(" + self.first_sentence.to_string() + ")"
             else:  # sentence is complex
                 # Start negation
                 if self.negation:
@@ -565,3 +592,36 @@ class Sentence:
                 return kb.LogicValue.UNDEFINED
         else:
             return evaluate
+
+    def _truth_table_check_all(self, sentence: Sentence, symbols: kb.SymbolList, model: kb.SymbolList) -> bool:
+        if symbols is None or symbols.length == 0:
+            # We've processed every single symbol so this is one possible combination to evaluate
+            if self.evaluate(model) == sentence.evaluate(model):
+                return True
+            else:
+                return False
+        else:
+            # We still have symbols to pop off the queue and try both true and false for
+            next_symbol: kb.LogicSymbol = symbols.get_next_symbol()
+            copy_model1: kb.SymbolList = model.clone()
+            copy_model2: kb.SymbolList = model.clone()
+            copy_model1.set_value(next_symbol.name, True)
+            copy_model2.set_value(next_symbol.name, False)
+            # Recurse to create every possibility
+            check1: bool = self._truth_table_check_all(sentence, symbols.clone(), copy_model1)
+            check2: bool = self._truth_table_check_all(sentence, symbols.clone(), copy_model2)
+            return check1 and check2
+
+    def is_equivalent(self, sentence: Sentence):
+        symbols1: kb.SymbolList = self.get_symbol_list()
+        symbols2: kb.SymbolList = sentence.get_symbol_list()
+        if symbols1.length != symbols2.length:
+            # The sentences can't be equivalent if they don't have the same number of symbols
+            return False
+        else:
+            for i in range(0,symbols1.length):
+                # Abort if there is every a mismatch between symbol names because they can't be equivalent then
+                if symbols1[i] != symbols2[i]:
+                    return False
+        # All the symbols match, so move on to create the truth table
+        return self._truth_table_check_all(sentence, symbols1.clone(), symbols1.clone())
