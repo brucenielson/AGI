@@ -1158,49 +1158,53 @@ class TestSentence(TestCase):
     def test_is_equivalent_2(self):
         sentence1: Sentence
         sentence2: Sentence
-
         sentence1 = Sentence("a => b")
         sentence2 = Sentence("A => B")
         self.assertTrue(sentence1.is_equivalent(sentence2))
-
         sentence1 = Sentence("a => b")
         sentence2 = Sentence("a or b")
         self.assertFalse(sentence1.is_equivalent(sentence2))
-
         sentence1 = Sentence("a => b")
         sentence2 = Sentence("~a or b")
         self.assertTrue(sentence1.is_equivalent(sentence2))
-
         sentence1 = Sentence("a <=> b")
         sentence2 = Sentence("a => b")
         self.assertFalse(sentence1.is_equivalent(sentence2))
-
         sentence1 = Sentence("a <=> b")
         sentence2 = Sentence("(a => b) AND (b => a)")
         self.assertTrue(sentence1.is_equivalent(sentence2))
-
         sentence1 = Sentence("a")
         sentence2 = Sentence("~(~a)")
         self.assertTrue(sentence1.is_equivalent(sentence2))
-
         sentence1 = Sentence("~(a AND b)")
         sentence2 = Sentence("~a OR ~b")
         self.assertTrue(sentence1.is_equivalent(sentence2))
-
         sentence1 = Sentence("~(a OR b)")
         sentence2 = Sentence("~a and ~b")
         self.assertTrue(sentence1.is_equivalent(sentence2))
-
         sentence1 = Sentence("a and b and c")
         sentence2 = Sentence("c and a and b")
         self.assertTrue(sentence1.is_equivalent(sentence2))
-
         sentence1 = Sentence("a => b")
         sentence2 = Sentence("A => B")
         self.assertTrue(sentence1 == sentence2)
         self.assertTrue(sentence1.is_equivalent("a=>b"))
-
         sentence1 = Sentence("a <=> b")
         sentence2 = Sentence("A => B")
         self.assertFalse(sentence1 == sentence2)
         self.assertFalse(sentence1.is_equivalent("a=>b"))
+
+    def test_complex_sentence_constructor(self):
+        sentence = Sentence("a => b", LogicOperatorTypes.Implies, "c or d")
+        self.assertEqual("((A => B) => (C OR D))", sentence.to_string(True))
+        self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
+        self.assertEqual(LogicOperatorTypes.Implies, sentence.first_sentence.logic_operator)
+        self.assertEqual(True, sentence.first_sentence.first_sentence.is_atomic)
+        self.assertEqual('A', sentence.first_sentence.first_sentence.symbol)
+        self.assertEqual(True, sentence.first_sentence.second_sentence.is_atomic)
+        self.assertEqual('B', sentence.first_sentence.second_sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.Or, sentence.second_sentence.logic_operator)
+        self.assertEqual(True, sentence.second_sentence.first_sentence.is_atomic)
+        self.assertEqual('C', sentence.second_sentence.first_sentence.symbol)
+        self.assertEqual(True, sentence.second_sentence.second_sentence.is_atomic)
+        self.assertEqual('D', sentence.second_sentence.second_sentence.symbol)
