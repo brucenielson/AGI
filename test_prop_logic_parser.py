@@ -709,12 +709,19 @@ class TestPropLogicParser(TestCase):
         parser = PropLogicParser("P1")
         sentence = parser.parse_line()
         self.assertEqual("P1", sentence.to_string(True))
+        self.assertEqual("P1", sentence.to_string())
         parser = PropLogicParser("~P1")
         sentence = parser.parse_line()
         self.assertEqual("~P1", sentence.to_string(True))
+        self.assertEqual("~P1", sentence.to_string())
         parser = PropLogicParser("~(~P1)")
         sentence = parser.parse_line()
         self.assertEqual("~(~P1)", sentence.to_string(True))
+        self.assertEqual("~(~P1)", sentence.to_string())
+        parser = PropLogicParser("~(~(~P1))")
+        sentence = parser.parse_line()
+        self.assertEqual("~(~(~P1))", sentence.to_string(True))
+        self.assertEqual("~(~(~P1))", sentence.to_string())
 
 
 class TestSentence(TestCase):

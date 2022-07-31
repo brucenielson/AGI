@@ -525,7 +525,12 @@ class Sentence:
             elif self.logic_operator == LogicOperatorTypes.NoOperator and self.negation \
                     and self.first_sentence is not None:
                 # Lone negation of another sentence
-                ret_val += "(" + self.first_sentence.to_string() + ")"
+                if self.negation:
+                    ret_val += "~("
+                    ret_val += to_string_sub_sentence(self.first_sentence)
+                    # End negation
+                    if self.negation:
+                        ret_val += ")"
             else:  # sentence is complex
                 # Start negation
                 if self.negation:
