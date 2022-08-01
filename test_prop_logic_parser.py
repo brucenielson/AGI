@@ -1237,13 +1237,13 @@ class TestSentence(TestCase):
         # Illegal attempt to create an Atomic Sentence
         failed: bool = False
         try:
-            sentence = Sentence(symbol1_or_sentence1=None, logical_operator=LogicOperatorTypes.And)
+            Sentence(symbol1_or_sentence1=None, logical_operator=LogicOperatorTypes.And)
         except SentenceError:
             failed = True
         self.assertTrue(failed)
         failed = False
         try:
-            sentence = Sentence(symbol1_or_sentence1=None, sentence2="Test")
+            Sentence(symbol1_or_sentence1=None, sentence2="Test")
         except SentenceError:
             failed = True
         self.assertTrue(failed)
@@ -1298,4 +1298,3 @@ class TestSentence(TestCase):
         self.assertEqual("TEST1", sentence.first_sentence.to_string(True))
         self.assertEqual("TEST2", sentence.second_sentence.to_string(True))
         self.assertEqual("~(TEST1 AND TEST2)", sentence.to_string(True))
-
