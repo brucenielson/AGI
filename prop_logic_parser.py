@@ -112,7 +112,8 @@ class PropLogicParser:
         not_sign = Literal('~')
         symbol = Word(alphas.upper(), alphanums.upper())
         logical_sentence = Forward()
-        term = not_sign + symbol | symbol | not_sign + "(" + logical_sentence + ")" | "(" + logical_sentence + ")"
+        term = Forward()
+        term << (not_sign + term | symbol | "(" + logical_sentence + ")")
         or_and_operator = oneOf(["AND", "OR"])
         or_and_phrase = term + ZeroOrMore(or_and_operator + term)
         logical_sentence << (or_and_phrase + "=>" + or_and_phrase
@@ -305,22 +306,23 @@ class PropLogicParser:
         if self.current_token_type == PLTokenType.NOT:
             self.consume_token(PLTokenType.NOT)
             negate_sentence = True
-        # Is this a single symbol or a parenthetical sentence?
-        if self.current_token_type == PLTokenType.LPAREN:
-            # This is a parenthetical sentence
-            self.consume_token(PLTokenType.LPAREN)
-            logical_sentence: Sentence = self.logical_sentence()
-            self.consume_token(PLTokenType.RPAREN)
+            logical_sentence = self.term()
             if negate_sentence and logical_sentence.negation:
                 # Double negation, so make this sentence a level above
-                sentence: Sentence = Sentence()
+                sentence = Sentence()
                 sentence.first_sentence = logical_sentence
             else:
                 sentence = logical_sentence
+        # Is this a parenthetical sentence?
+        elif self.current_token_type == PLTokenType.LPAREN:
+            # This is a parenthetical sentence
+            self.consume_token(PLTokenType.LPAREN)
+            sentence = self.logical_sentence()
+            self.consume_token(PLTokenType.RPAREN)
         else:
             # This must be a symbol
             symbol: str = self.consume_token(PLTokenType.SYMBOL)
-            sentence: Sentence = Sentence(symbol)
+            sentence = Sentence(symbol)
 
         # Deal with the negation if there was one
         if negate_sentence:
@@ -538,6 +540,7 @@ class Sentence:
         if full_parentheses:
             if self._negation:
                 ret_val += "~"
+
             if self.is_atomic:
                 ret_val += self.symbol
             elif self.logic_operator == LogicOperatorTypes.NoOperator and self.negation \
@@ -549,32 +552,27 @@ class Sentence:
                 ret_val += "(" + self.first_sentence.to_string(True) + " " + \
                            Sentence.logic_operator_to_string(self.logic_operator) + " " + \
                            self.second_sentence.to_string(True) + ")"
+
             return ret_val
         else:
             if self.is_atomic:
+                # Handle atomic sentence
                 ret_val += self.to_string(True)
             elif self.logic_operator == LogicOperatorTypes.NoOperator and self.negation \
                     and self.first_sentence is not None and self.second_sentence is None:
-                # Lone negation of another sentence
-                if self.negation:
-                    ret_val += "~("
+                # Handle lone negation
+                if self._negation:
+                    ret_val += "~"
                 ret_val += to_string_sub_sentence(self.first_sentence)
-                # End negation
-                if self.negation:
-                    ret_val += ")"
             else:  # sentence is full complex
-                # Start negation
-                if self.negation:
-                    ret_val += "~("
                 # First Sentence
                 ret_val += to_string_sub_sentence(self.first_sentence)
                 # Logical operator
                 ret_val += " " + Sentence.logic_operator_to_string(self.logic_operator) + " "
                 # Second Sentence
                 ret_val += to_string_sub_sentence(self.second_sentence)
-                # End negation
-                if self.negation:
-                    ret_val += ")"
+                if self._negation:
+                    ret_val = "~(" + ret_val + ")"
 
             return ret_val
 
