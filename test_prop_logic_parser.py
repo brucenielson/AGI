@@ -1389,7 +1389,7 @@ class TestSentence(TestCase):
         self.assertEqual(LogicValue.FALSE, sentence.evaluate(model))
         self.assertFalse(sentence.is_true(model))
         self.assertTrue(sentence.is_false(model))
-        # Double negated sybmol
+        # Double negated symbol
         sentence = Sentence("~~a")
         model = sentence.get_symbol_list()
         model.set_value("A", True)

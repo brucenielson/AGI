@@ -702,7 +702,7 @@ class Sentence:
         sentence: Sentence = self.clone()
         if sentence.is_atomic:
             return sentence
-        else: # if sentence is complex
+        else:  # if sentence is complex
             if sentence.logic_operator == LogicOperatorTypes.Biconditional:
                 # Replace bi-conditional (a <=> b) with a => b AND b => a
                 clone_ab: Sentence
