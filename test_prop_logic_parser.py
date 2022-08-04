@@ -1289,8 +1289,37 @@ class TestSentence(TestCase):
         self.assertEqual("TEST1", sentence.first_sentence.to_string(True))
         self.assertEqual("TEST2", sentence.second_sentence.to_string(True))
         self.assertEqual("~(TEST1 AND TEST2)", sentence.to_string(True))
-        # If you set negation to True on an already negated sentence nothing changes
+        # If you set negation to True on an already negated sentence then double negate it
+        sentence = Sentence("Test1 AND TEst2", negation=False)
+        sentence = Sentence(sentence, negation=True)
+        self.assertFalse(sentence.is_atomic)
+        self.assertEqual(None, sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
+        self.assertEqual(True, sentence.negation)
+        self.assertEqual("TEST1", sentence.first_sentence.symbol)
+        self.assertEqual("TEST2", sentence.second_sentence.symbol)
+        self.assertEqual("~(TEST1 AND TEST2)", sentence.to_string(True))
+        self.assertEqual("~(TEST1 AND TEST2)", sentence.to_string())
+        # Double negation using a sentence
+        sentence = Sentence(sentence, negation=True)
+        self.assertFalse(sentence.is_atomic)
+        self.assertEqual(None, sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
+        self.assertEqual(True, sentence.negation)
+        self.assertEqual("~(TEST1 AND TEST2)", sentence.first_sentence.to_string(True))
+        self.assertEqual(None, sentence.second_sentence)
+        self.assertEqual("~(~(TEST1 AND TEST2))", sentence.to_string(True))
+        # Not using a Sentence - double negation
         sentence = Sentence("~(Test1 AND TEst2)", negation=True)
+        self.assertFalse(sentence.is_atomic)
+        self.assertEqual(None, sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
+        self.assertEqual(True, sentence.negation)
+        self.assertEqual("~(TEST1 AND TEST2)", sentence.first_sentence.to_string(True))
+        self.assertEqual(None, sentence.second_sentence)
+        self.assertEqual("~(~(TEST1 AND TEST2))", sentence.to_string(True))
+        # Not negated when not using a sentence
+        sentence = Sentence("~(Test1 AND TEst2)", negation=False)
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
@@ -1298,6 +1327,18 @@ class TestSentence(TestCase):
         self.assertEqual("TEST1", sentence.first_sentence.to_string(True))
         self.assertEqual("TEST2", sentence.second_sentence.to_string(True))
         self.assertEqual("~(TEST1 AND TEST2)", sentence.to_string(True))
+        # Now without negation
+        sentence = Sentence("Test1 AND TEst2", negation=False)
+        self.assertFalse(sentence.is_atomic)
+        self.assertEqual(None, sentence.symbol)
+        self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
+        self.assertEqual(False, sentence.negation)
+        self.assertEqual("TEST1", sentence.first_sentence.to_string(True))
+        self.assertEqual("TEST2", sentence.second_sentence.to_string(True))
+        self.assertEqual("(TEST1 AND TEST2)", sentence.to_string(True))
+
+    def test_negated_complex_sentences(self):
+        pass
 
     def test_not_negated_sentence(self):
         # I.e. test putting negated = false in the constructor, which is the same as having no value

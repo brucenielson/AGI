@@ -377,8 +377,14 @@ class Sentence:
             # Creating an empty Sentence, probably for a lone not
             self._symbol = None
         elif isinstance(symbol1_or_sentence1, Sentence):
-            # This is a Sentence, so store it as a Sentence
-            self._first_sentence = symbol1_or_sentence1
+            # This is a Sentence. Cases:
+            # One sentence only...
+            if self._second_sentence is None and self._logic_operator == LogicOperatorTypes.NoOperator:
+                # No other parameters, so do a shallow copy instead
+                self.copy(symbol1_or_sentence1, negated=negation)
+            else:
+                # Make this first sentence because it is part of other parameters
+                self._first_sentence = symbol1_or_sentence1
         elif isinstance(symbol1_or_sentence1, str):
             symbol1_or_sentence1 = symbol1_or_sentence1.upper()
             # This is a string, so it could be a symbol or a string that is to be parsed to a Sentence
@@ -396,15 +402,10 @@ class Sentence:
                     SentenceError("Symbols must start with a letter.")
                 else:
                     # Only first parameter was passed and it wasn't alpha numeric, so is it a full sentence?
-                    result: Sentence = parse_sentence(symbol1_or_sentence1)
+                    result: Sentence = parse_sentence(symbol1_or_sentence1)  # Attempting to parse
                     # This was a full sentence, so set it to be the sentence
                     # Do a shallow copy
-                    self._symbol = result._symbol
-                    self._negation = result._negation or negation
-                    self._first_sentence = result._first_sentence
-                    self._second_sentence = result._second_sentence
-                    self._logic_operator = result._logic_operator
-
+                    self.copy(result, negated=negation)
         else:
             # Illegal input
             raise SentenceError("Sentence constructor first parameter (symbol1_or_sentence1) not passed a legal type.")
@@ -478,6 +479,24 @@ class Sentence:
             return False
         else:
             raise SentenceError("This sentence is in an illegal state because it is neither atomic or complex.")
+
+    def copy(self, sentence: Sentence, negated: bool = False):
+        if sentence._negation and negated:
+            # If we are negating this copy, and it is already negated, then make it a first sentence instead
+            new_sentence: Sentence = Sentence(sentence)
+            self._first_sentence = new_sentence
+            self._negation = True
+        else:
+            # Otherwise make a shallow copy
+            self._symbol = sentence._symbol
+            # Flip the negation sign if negated = True
+            if negated:
+                self._negation = not sentence._negation
+            else:
+                self._negation = sentence._negation
+            self._first_sentence = sentence._first_sentence
+            self._second_sentence = sentence._second_sentence
+            self._logic_operator = sentence._logic_operator
 
     def sentence_from_tokens(self, token1: str, operator: LogicOperatorTypes, token2: str) -> None:
         if not (operator == LogicOperatorTypes.NoOperator or token1 == "" or token2 == ""
@@ -710,4 +729,3 @@ class Sentence:
                 # Replace implies (a => b) with ~a OR b
                 neg_first_sentence: Sentence
                 neg_first_sentence = Sentence(sentence.first_sentence, negation=True)
-                
