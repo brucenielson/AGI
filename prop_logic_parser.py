@@ -602,7 +602,7 @@ class Sentence:
         return self._traverse_and_evaluate(model) == kb.LogicValue.TRUE
 
     def is_false(self, model: kb.SymbolList) -> bool:
-        return self._traverse_and_evaluate(model) == kb.LogicValue.TRUE
+        return self._traverse_and_evaluate(model) == kb.LogicValue.FALSE
 
     def _traverse_and_evaluate(self, model: kb.SymbolList) -> kb.LogicValue:
         evaluate: kb.LogicValue

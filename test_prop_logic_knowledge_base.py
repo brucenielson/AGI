@@ -87,6 +87,15 @@ class TestSymbolList(TestCase):
         self.assertEqual(8, symbols.find_with_index('UA45')[1])
         self.assertEqual(9, symbols.length)
         self.assertIsNone(symbols.find('d'))
+        self.assertEqual('A2', symbols[0].name)
+        self.assertEqual('H356', symbols[1].name)
+        self.assertEqual('P1', symbols[2].name)
+        self.assertEqual('P14', symbols[3].name)
+        self.assertEqual('P2', symbols[4].name)
+        self.assertEqual('P4', symbols[5].name)
+        self.assertEqual('Q23', symbols[6].name)
+        self.assertEqual('Q3', symbols[7].name)
+        self.assertEqual('UA45', symbols[8].name)
 
     def test_symbol_list_set_value(self):
         symbols = SymbolList()
