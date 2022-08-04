@@ -334,7 +334,7 @@ class PropLogicParser:
 
 class Sentence:
     def __init__(self, symbol1_or_sentence1: Union[Sentence, str] = None, logical_operator: LogicOperatorTypes = None,
-                 sentence2: Union[Sentence, str] = None, negation: bool = False):
+                 sentence2: Union[Sentence, str] = None, negated: bool = False):
         # set default values
         self._symbol: Optional[str] = None
         self._first_sentence: Optional[Sentence] = None
@@ -342,7 +342,7 @@ class Sentence:
         self._parent_sentence: Optional[Sentence] = None
         self._logic_operator: LogicOperatorTypes = LogicOperatorTypes.NoOperator
         # Set negation
-        self._negation: bool = negation
+        self._negation: bool = negated
         # A blank symbol should be treated as a None
         if symbol1_or_sentence1 == "":
             symbol1_or_sentence1 = None
@@ -381,7 +381,7 @@ class Sentence:
             # One sentence only...
             if self._second_sentence is None and self._logic_operator == LogicOperatorTypes.NoOperator:
                 # No other parameters, so do a shallow copy instead
-                self.copy(symbol1_or_sentence1, negated=negation)
+                self.copy(symbol1_or_sentence1, negated=negated)
             else:
                 # Make this first sentence because it is part of other parameters
                 self._first_sentence = symbol1_or_sentence1
@@ -403,9 +403,8 @@ class Sentence:
                 else:
                     # Only first parameter was passed and it wasn't alpha numeric, so is it a full sentence?
                     result: Sentence = parse_sentence(symbol1_or_sentence1)  # Attempting to parse
-                    # This was a full sentence, so set it to be the sentence
-                    # Do a shallow copy
-                    self.copy(result, negated=negation)
+                    # This was a full sentence, so do a shallow copy
+                    self.copy(result, negated=negated)
         else:
             # Illegal input
             raise SentenceError("Sentence constructor first parameter (symbol1_or_sentence1) not passed a legal type.")
@@ -728,4 +727,4 @@ class Sentence:
             elif sentence.logic_operator == LogicOperatorTypes.Implies:
                 # Replace implies (a => b) with ~a OR b
                 neg_first_sentence: Sentence
-                neg_first_sentence = Sentence(sentence.first_sentence, negation=True)
+                neg_first_sentence = Sentence(sentence.first_sentence, negated=True)
