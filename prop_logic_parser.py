@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Optional, List, Union
 from functools import total_ordering
 import prop_logic_knowledge_base as kb
+from copy import deepcopy
 
 # Original Grammar for the Propositional Logic Parser (I've changed it a bit since)
 #
@@ -665,3 +666,48 @@ class Sentence:
                     return False
         # All the symbols match, so move on to create the truth table
         return self._truth_table_check_all(sentence, symbols1.clone(), symbols1.clone())
+
+    def clone(self):
+        return deepcopy(self)
+
+    def convert_to_cnf(self):
+        # This function transforms the sentence into Conjunctive Normal Form
+        # CNF is a form made up of Ors connected by ANDs i.e. (A OR B OR C) AND (D OR E OR F)
+        # 3-CNF is the 3-SAT problem
+        sentence: Sentence = self.clone()
+        temp_sentence: Sentence
+        # sentence = sentence.transform_conditionals()
+        # sentence = sentence.transform_nots()
+
+    def transform_conditionals(self):
+        # Start with a clone to avoid any side effect
+        sentence: Sentence = self.clone()
+        if sentence.is_atomic:
+            return sentence
+        else: # if sentence is complex
+            if sentence.logic_operator == LogicOperatorTypes.Biconditional:
+                # Replace bi-conditional (a <=> b) with a => b AND b => a
+                clone_ab: Sentence
+                clone_ba: Sentence
+                temp: Sentence
+                # a => b
+                clone_ab = sentence.clone()
+                clone_ab.logic_operator = LogicOperatorTypes.Implies
+                # b => a
+                clone_ba = sentence.clone()
+                clone_ba.logic_operator = LogicOperatorTypes.Implies
+                temp = clone_ba.first_sentence
+                clone_ba.second_sentence = temp
+                # Recurse
+                clone_ab = clone_ab.transform_conditionals()
+                clone_ba = clone_ba.transform_conditionals()
+                # And
+                sentence.logic_operator = LogicOperatorTypes.And
+                sentence.first_sentence = clone_ab
+                sentence.second_sentence = clone_ba
+                return sentence
+            elif sentence.logic_operator == LogicOperatorTypes.Implies:
+                # Replace implies (a => b) with ~a OR b
+                neg_first_sentence: Sentence
+                neg_first_sentence = Sentence(sentence.first_sentence, negation=True)
+                

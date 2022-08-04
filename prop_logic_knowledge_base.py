@@ -73,13 +73,15 @@ class LogicSymbol:
         return self._value
 
     @value.setter
-    def value(self, value: Union[LogicValue, bool]) -> None:
+    def value(self, value: Optional[Union[LogicValue, bool]]) -> None:
         final_value: LogicValue
         if isinstance(value, bool):
             if value:
                 final_value = LogicValue.TRUE
             else:
                 final_value = LogicValue.FALSE
+        elif value is None:
+            final_value = LogicValue.UNDEFINED
         else:
             final_value = value
         self._value = final_value
@@ -293,7 +295,7 @@ class SymbolList:
                     self._symbols.append(symbol)
                     self._is_sorted = False
 
-    def set_value(self, symbol_name: str, value: Union[LogicValue, bool]) -> None:
+    def set_value(self, symbol_name: str, value: Optional[Union[LogicValue, bool]]) -> None:
         symbol: LogicSymbol = self.find(symbol_name)
         symbol.value = value
 
