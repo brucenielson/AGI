@@ -114,7 +114,7 @@ class PropLogicParser:
         symbol = Word(alphas.upper(), alphanums.upper())
         logical_sentence = Forward()
         term = Forward()
-        term << (not_sign + term | symbol | "(" + logical_sentence + ")")
+        term << (not_sign + term | "(" + logical_sentence + ")" | symbol)
         or_and_operator = oneOf(["AND", "OR"])
         or_and_phrase = term + ZeroOrMore(or_and_operator + term)
         logical_sentence << (or_and_phrase + "=>" + or_and_phrase
@@ -551,6 +551,12 @@ class Sentence:
                 # 2. The next level down is a complex sentence
                 # 3. The next level down has no negation
                 return "(" + sub_sentence.to_string() + ")"
+            elif (self.logic_operator == LogicOperatorTypes.Implies or
+                  self.logic_operator == LogicOperatorTypes.Biconditional) \
+                    and (sub_sentence.logic_operator == LogicOperatorTypes.Implies or
+                         sub_sentence.logic_operator == LogicOperatorTypes.Biconditional):
+                # Use parentheses with implies or bi-conditionals next to each other to be more clear
+                return "(" + sub_sentence.to_string() + ")"
             else:
                 # Otherwise, skip the parentheses
                 return sub_sentence.to_string()
@@ -710,20 +716,21 @@ class Sentence:
                 temp: Sentence
                 # a => b
                 clone_ab = sentence.clone()
+                clone_ab.negation = False
                 clone_ab.logic_operator = LogicOperatorTypes.Implies
                 # b => a
                 clone_ba = sentence.clone()
-                clone_ba.logic_operator = LogicOperatorTypes.Implies
+                clone_ba.negation = False
                 temp = clone_ba.first_sentence
+                clone_ba.first_sentence = clone_ba.second_sentence
                 clone_ba.second_sentence = temp
+                clone_ba.logic_operator = LogicOperatorTypes.Implies
                 # Recurse
                 clone_ab = clone_ab.transform_conditionals()
                 clone_ba = clone_ba.transform_conditionals()
                 # And
-                sentence.logic_operator = LogicOperatorTypes.And
-                sentence.first_sentence = clone_ab
-                sentence.second_sentence = clone_ba
-                return sentence
+                new_sentence: Sentence = Sentence(clone_ab, LogicOperatorTypes.And, clone_ba, negated=sentence.negation)
+                return new_sentence
             elif sentence.logic_operator == LogicOperatorTypes.Implies:
                 # Replace implies (a => b) with ~a OR b
                 neg_first_sentence: Sentence
