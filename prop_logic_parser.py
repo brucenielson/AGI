@@ -728,3 +728,17 @@ class Sentence:
                 # Replace implies (a => b) with ~a OR b
                 neg_first_sentence: Sentence
                 neg_first_sentence = Sentence(sentence.first_sentence, negated=True)
+                neg_first_sentence = neg_first_sentence.transform_conditionals()
+                sentence.logic_operator = LogicOperatorTypes.Or
+                sentence.first_sentence = neg_first_sentence
+                sentence.second_sentence = sentence.second_sentence.transform_conditionals()
+                return sentence
+            else:
+                # We have completed the current top node and it's not a condition, so we need to traverse down
+                if sentence.is_atomic:
+                    return sentence
+                else:
+                    sentence.first_sentence = sentence.first_sentence.transform_conditionals()
+                    if sentence.second_sentence is not None:
+                        sentence.second_sentence = sentence.second_sentence.transform_conditionals()
+                    return sentence
