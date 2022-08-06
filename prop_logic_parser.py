@@ -700,10 +700,11 @@ class Sentence:
         # 3-CNF is the 3-SAT problem
         sentence: Sentence = self.clone()
         temp_sentence: Sentence
-        # sentence = sentence.transform_conditionals()
-        # sentence = sentence.transform_nots()
+        sentence = sentence._transform_conditionals()
+        sentence = sentence._transform_not()
+        return sentence
 
-    def transform_conditionals(self) -> Sentence:
+    def _transform_conditionals(self) -> Sentence:
         # Start with a clone to avoid any side effect
         sentence: Sentence = self.clone()
         # Transform top level bi-conditional
@@ -736,13 +737,13 @@ class Sentence:
         # Top level should now be transformed -- if sentence is not atomic, recurse down the chain
         if not sentence.is_atomic:
             # We have completed the current top node and it's not a condition, so we need to traverse down
-            sentence.first_sentence = sentence.first_sentence.transform_conditionals()
+            sentence.first_sentence = sentence.first_sentence._transform_conditionals()
             if sentence.second_sentence is not None:
-                sentence.second_sentence = sentence.second_sentence.transform_conditionals()
+                sentence.second_sentence = sentence.second_sentence._transform_conditionals()
         # Return final result
         return sentence
 
-    def move_not_inward(self) -> Sentence:
+    def _move_not_inward(self) -> Sentence:
         sentence: Sentence = self.clone()
         # Flip the negation on this sentence
         if sentence.negation:
@@ -755,7 +756,7 @@ class Sentence:
             sentence = sentence.first_sentence
         return sentence
 
-    def transform_not(self) -> Sentence:
+    def _transform_not(self) -> Sentence:
         sentence: Sentence = self.clone()
         # CNF requires not (~) to appear only in literals
         if sentence.is_atomic:
@@ -769,22 +770,23 @@ class Sentence:
                 # Flip negation sign on one level down because we just removed the negation at this level
                 if sentence.second_sentence is None:
                     # This is a 'negation' only sentence, so pull it up one level
-                    sentence = sentence.first_sentence.move_not_inward()
+                    sentence = sentence.first_sentence._move_not_inward()
                 else:  # if sentence.second_sentence is not None:
                     # This ia a regular two sentence logical operation
-                    sentence.first_sentence = sentence.first_sentence.move_not_inward()
+                    sentence.first_sentence = sentence.first_sentence._move_not_inward()
                     # Flip ands and ors because this is a regular complex sentence that was negated
                     if sentence.logic_operator == LogicOperatorTypes.And:
                         sentence.logic_operator = LogicOperatorTypes.Or
                     elif sentence.logic_operator == LogicOperatorTypes.Or:
                         sentence.logic_operator = LogicOperatorTypes.And
                     else:
+                        # Throw an error if we don't yet have all other types of operators removed by now
                         raise SentenceError("Do not call transform_not without first calling transform_conditionals.")
                     # Flip negation sign on one level down because we just removed the negation at this level
-                    sentence.second_sentence = sentence.second_sentence.move_not_inward()
+                    sentence.second_sentence = sentence.second_sentence._move_not_inward()
             # Recurse down to the level
-            sentence.first_sentence = sentence.first_sentence.transform_not()
+            sentence.first_sentence = sentence.first_sentence._transform_not()
             if sentence.second_sentence is not None:
-                sentence.second_sentence = sentence.second_sentence.transform_not()
+                sentence.second_sentence = sentence.second_sentence._transform_not()
             # Return final complex sentence
             return sentence
