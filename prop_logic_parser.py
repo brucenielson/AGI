@@ -765,21 +765,27 @@ class Sentence:
             # sentence is complex
             if self.negation:
                 sentence.negation = False
-                # A negated sentence has only one sub-sentence, so deal with that first
-                if sentence.logic_operator is LogicOperatorTypes.NoOperator:
-                    sentence = sentence.first_sentence.move_not_inward().transform_not()
-                else:  # sentence.logic_operator is a regular operator
-                    # Flip ands and ors
+                # Flip negation sign on one level down because we just removed the negation at this level
+                if sentence.second_sentence is None:
+                    sentence = sentence.first_sentence.move_not_inward()
+                else:  # if sentence.second_sentence is not None:
+                    sentence.first_sentence = sentence.first_sentence.move_not_inward()
+                    # Flip ands and ors because this is a regular complex sentence that was negated
                     if sentence.logic_operator == LogicOperatorTypes.And:
                         sentence.logic_operator = LogicOperatorTypes.Or
                     elif sentence.logic_operator == LogicOperatorTypes.Or:
                         sentence.logic_operator = LogicOperatorTypes.And
-                    # Recurse down both paths
-                    sentence.first_sentence = sentence.first_sentence.move_not_inward().transform_not()
-                    sentence.second_sentence = sentence.second_sentence.move_not_inward().transform_not()
+                    else:
+                        raise SentenceError("Do not call transform_not without first calling transform_conditionals.")
+                    # Flip negation sign on one level down because we just removed the negation at this level
+                    sentence.second_sentence = sentence.second_sentence.move_not_inward()
+
+                sentence.first_sentence = sentence.first_sentence.transform_not()
+                if sentence.second_sentence is not None:
+                    sentence.second_sentence = sentence.second_sentence.transform_not()
             else:
                 # top level of sentence is not negated, so recurse down without moving not inward
                 sentence.first_sentence = sentence.first_sentence.transform_not()
                 sentence.second_sentence = sentence.second_sentence.transform_not()
-
+            # Return final complex sentence
             return sentence
