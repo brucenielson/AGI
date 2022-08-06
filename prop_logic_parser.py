@@ -341,6 +341,7 @@ class Sentence:
         self._second_sentence: Optional[Sentence] = None
         self._parent_sentence: Optional[Sentence] = None
         self._logic_operator: LogicOperatorTypes = LogicOperatorTypes.NoOperator
+        self._is_cnf: bool = False
         # Set negation
         self._negation: bool = negated
         # A blank symbol should be treated as a None
@@ -420,6 +421,10 @@ class Sentence:
                 return True
             else:
                 return False
+
+    @ property
+    def is_cnf(self) -> bool:
+        return self._is_cnf
 
     @property
     def logic_operator(self) -> LogicOperatorTypes:
@@ -712,6 +717,8 @@ class Sentence:
         while temp_sentence.to_string(True) != sentence.to_string(True):
             temp_sentence = sentence.clone()
             sentence = sentence._transform_distribute_ors()
+        # Mark this sentence as in cnf format
+        sentence._is_cnf = True
         return sentence
 
     def _transform_conditionals(self) -> Sentence:
@@ -889,4 +896,9 @@ class Sentence:
         if not self.is_atomic:
             result = result and self.first_sentence.is_valid_cnf(previous_or=previous_or) \
                      and self.second_sentence.is_valid_cnf(previous_or=previous_or)
+        if result:
+            self._is_cnf = True
+        else:
+            self._is_cnf = False
+
         return result

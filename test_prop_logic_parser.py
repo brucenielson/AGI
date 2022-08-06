@@ -2036,10 +2036,14 @@ class TestSentence(TestCase):
         sentence1 = Sentence("A")
         self.assertEqual("A", sentence1.to_string(True))
         sentence2 = sentence1.convert_to_cnf()
+        self.assertFalse(sentence1.is_cnf)
+        self.assertTrue(sentence2.is_cnf)
         self.assertEqual("A", sentence2.to_string())
         self.assertTrue(sentence1 == sentence2)
         self.assertTrue(sentence1.is_valid_cnf())
         self.assertTrue(sentence2.is_valid_cnf())
+        self.assertTrue(sentence1.is_cnf)
+        self.assertTrue(sentence2.is_cnf)
         # Basic tests
         sentence1 = Sentence("A AND B")
         self.assertEqual("(A AND B)", sentence1.to_string(True))
@@ -2048,6 +2052,8 @@ class TestSentence(TestCase):
         self.assertTrue(sentence1 == sentence2)
         self.assertTrue(sentence1.is_valid_cnf())
         self.assertTrue(sentence2.is_valid_cnf())
+        self.assertTrue(sentence1.is_cnf)
+        self.assertTrue(sentence2.is_cnf)
         # Not version
         sentence1 = Sentence("~(A AND B)")
         self.assertEqual("~(A AND B)", sentence1.to_string(True))
@@ -2056,6 +2062,8 @@ class TestSentence(TestCase):
         self.assertTrue(sentence1 == sentence2)
         self.assertFalse(sentence1.is_valid_cnf())
         self.assertTrue(sentence2.is_valid_cnf())
+        self.assertFalse(sentence1.is_cnf)
+        self.assertTrue(sentence2.is_cnf)
         # Slightly more complicated
         sentence1 = Sentence("(A AND B) OR C OR D AND E")
         sentence2 = sentence1._transform_distribute_ors()
@@ -2064,6 +2072,9 @@ class TestSentence(TestCase):
         self.assertFalse(sentence1.is_valid_cnf())
         self.assertFalse(sentence2.is_valid_cnf())
         self.assertTrue(sentence3.is_valid_cnf())
+        self.assertFalse(sentence1.is_cnf)
+        self.assertFalse(sentence2.is_cnf)
+        self.assertTrue(sentence3.is_cnf)
         # Complex example
         sentence1 = Sentence("(A AND B) OR (C AND D)")
         self.assertEqual("((A AND B) OR (C AND D))", sentence1.to_string(True))
@@ -2072,6 +2083,8 @@ class TestSentence(TestCase):
         self.assertTrue(sentence1 == sentence2)
         self.assertFalse(sentence1.is_valid_cnf())
         self.assertTrue(sentence2.is_valid_cnf())
+        self.assertFalse(sentence1.is_cnf)
+        self.assertTrue(sentence2.is_cnf)
         # Very complex example - Too slow to use normally
         sentence1 = Sentence("(A AND B) OR (C AND D) AND D OR E AND (Q OR T) OR (C AND Z)")
         sentence2 = sentence1._transform_distribute_ors()
@@ -2080,3 +2093,6 @@ class TestSentence(TestCase):
         self.assertFalse(sentence1.is_valid_cnf())
         self.assertFalse(sentence2.is_valid_cnf())
         self.assertTrue(sentence3.is_valid_cnf())
+        self.assertFalse(sentence1.is_cnf)
+        self.assertFalse(sentence2.is_cnf)
+        self.assertTrue(sentence3.is_cnf)
