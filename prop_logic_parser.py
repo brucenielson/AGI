@@ -853,7 +853,7 @@ class Sentence:
         return sentence
 
     def is_valid_cnf(self, previous_or: bool = False) -> bool:
-        def is_valid_node(sentence: Sentence, previous_or: bool) -> bool:
+        def is_valid_node(sentence: Sentence, current_previous_or: bool) -> bool:
             # This function will verify that the current sentence is really in CNF formatting
             # A Sentence is in CNF format if the following are true:
             # 1. There are no AND operators under an OR operator
@@ -877,7 +877,7 @@ class Sentence:
                     return False
                 return True
             elif sentence.logic_operator == LogicOperatorTypes.And:
-                if previous_or:
+                if current_previous_or:
                     return False
                 else:
                     return True
