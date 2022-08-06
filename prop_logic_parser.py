@@ -764,11 +764,14 @@ class Sentence:
         else:
             # sentence is complex
             if self.negation:
+                # This is a complex sentence with a negation, so deal with it
                 sentence.negation = False
                 # Flip negation sign on one level down because we just removed the negation at this level
                 if sentence.second_sentence is None:
+                    # This is a 'negation' only sentence, so pull it up one level
                     sentence = sentence.first_sentence.move_not_inward()
                 else:  # if sentence.second_sentence is not None:
+                    # This ia a regular two sentence logical operation
                     sentence.first_sentence = sentence.first_sentence.move_not_inward()
                     # Flip ands and ors because this is a regular complex sentence that was negated
                     if sentence.logic_operator == LogicOperatorTypes.And:
@@ -779,13 +782,9 @@ class Sentence:
                         raise SentenceError("Do not call transform_not without first calling transform_conditionals.")
                     # Flip negation sign on one level down because we just removed the negation at this level
                     sentence.second_sentence = sentence.second_sentence.move_not_inward()
-
-                sentence.first_sentence = sentence.first_sentence.transform_not()
-                if sentence.second_sentence is not None:
-                    sentence.second_sentence = sentence.second_sentence.transform_not()
-            else:
-                # top level of sentence is not negated, so recurse down without moving not inward
-                sentence.first_sentence = sentence.first_sentence.transform_not()
+            # Recurse down to the level
+            sentence.first_sentence = sentence.first_sentence.transform_not()
+            if sentence.second_sentence is not None:
                 sentence.second_sentence = sentence.second_sentence.transform_not()
             # Return final complex sentence
             return sentence
