@@ -851,3 +851,43 @@ class Sentence:
         else:
             raise SentenceError("Encountered an illegal operator type in _transform_distribute_ors.")
         return sentence
+
+    def is_valid_cnf(self, previous_or: bool = False) -> bool:
+        def is_valid_node(sentence: Sentence, previous_or: bool) -> bool:
+            # This function will verify that the current sentence is really in CNF formatting
+            # A Sentence is in CNF format if the following are true:
+            # 1. There are no AND operators under an OR operator
+            # 2. OR Operators have either atomic sentences under them or other OR sentences
+            # 3. AND Operators have either atomic sentences under them, or AND sentences, or OR sentences
+            # 4. We never bump into any other type of operator
+            # 5. We never have a 'negated sentence' i.e. a complex sentence without a second sentence
+            if sentence.is_atomic:
+                return True
+            elif not sentence.is_atomic and sentence.second_sentence is None:
+                # CNF should always have a second sentence unless it is atomic
+                return False
+            elif not sentence.is_atomic and sentence.negation:
+                # CNF should never have negated sentences unless they are literals (i.e. atomic)
+                return False
+            elif sentence.logic_operator == LogicOperatorTypes.Or:
+                # CNF never has OR clauses with And clauses under them
+                if sentence.first_sentence.logic_operator == LogicOperatorTypes.And:
+                    return False
+                elif sentence.second_sentence.second_sentence == LogicOperatorTypes.And:
+                    return False
+                return True
+            elif sentence.logic_operator == LogicOperatorTypes.And:
+                if previous_or:
+                    return False
+                else:
+                    return True
+            else:
+                return False
+
+        if self.logic_operator == LogicOperatorTypes.Or:
+            previous_or = True
+        result = is_valid_node(self, previous_or)
+        if not self.is_atomic:
+            result = result and self.first_sentence.is_valid_cnf(previous_or=previous_or) \
+                     and self.second_sentence.is_valid_cnf(previous_or=previous_or)
+        return result

@@ -2030,3 +2030,25 @@ class TestSentence(TestCase):
         self.assertTrue(sentence1 == sentence3)
         sentence4 = sentence1.convert_to_cnf()
         self.assertTrue(sentence1 == sentence4)
+
+    def test_is_valid_cnf(self):
+        # Test atomic
+
+        # Basic tests
+
+        # Complex example
+        sentence1 = Sentence("(A AND B) OR (C AND D)")
+        self.assertEqual("((A AND B) OR (C AND D))", sentence1.to_string(True))
+        sentence2 = sentence1.convert_to_cnf()
+        self.assertEqual("(C OR A) AND (D OR A) AND (C OR B) AND (D OR B)", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+        self.assertFalse(sentence1.is_valid_cnf())
+        self.assertTrue(sentence2.is_valid_cnf())
+        # Very complex example
+        sentence1 = Sentence("(A AND B) OR (C AND D) AND D OR E AND (Q OR T) OR (C AND Z)")
+        sentence2 = sentence1._transform_distribute_ors()
+        sentence3 = sentence1.convert_to_cnf()
+        self.assertTrue(sentence1 == sentence2)
+        self.assertFalse(sentence1.is_valid_cnf())
+        self.assertFalse(sentence2.is_valid_cnf())
+        self.assertTrue(sentence3.is_valid_cnf())
