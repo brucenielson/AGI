@@ -838,18 +838,17 @@ class Sentence:
                 sentence = sentence.second_sentence.clone()
                 # Now traverse the AND plus any more beneath it and put the left under each AND clause
                 sentence = sentence._redistribute_or(sub_sentence)
-            # Recurse down
-            sentence.first_sentence = sentence.first_sentence._transform_distribute_ors()
-            sentence.second_sentence = sentence.second_sentence._transform_distribute_ors()
         elif sentence.logic_operator == LogicOperatorTypes.And:
-            # We are on an AND parent, so descend
-            sentence.first_sentence = sentence.first_sentence._transform_distribute_ors()
-            sentence.second_sentence = sentence.second_sentence._transform_distribute_ors()
+            pass
         elif sentence.logic_operator == LogicOperatorTypes.NoOperator:
-            # This sentence has only one sub sentence
-            sentence.first_sentence = sentence.first_sentence._transform_distribute_ors()
+            pass
         else:
             raise SentenceError("Encountered an illegal operator type in _transform_distribute_ors.")
+
+        # Recurse down
+        sentence.first_sentence = sentence.first_sentence._transform_distribute_ors()
+        if sentence.second_sentence is not None:
+            sentence.second_sentence = sentence.second_sentence._transform_distribute_ors()
         return sentence
 
     def is_valid_cnf(self, previous_or: bool = False) -> bool:
