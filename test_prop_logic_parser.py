@@ -69,27 +69,27 @@ class TestPropLogicParser(TestCase):
         self.assertEqual(None, sentence.second_sentence)
         self.assertEqual('P1', sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("P1 AND P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("P1 OR P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("~P1")
         sentence = parser.parse_line()
@@ -97,250 +97,250 @@ class TestPropLogicParser(TestCase):
         self.assertEqual(None, sentence.second_sentence)
         self.assertEqual('P1', sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
 
         parser = PropLogicParser("~(P1 AND P2)")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
 
         parser = PropLogicParser("~(P1 OR P2)")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
 
         parser = PropLogicParser("~P1 AND P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(True, sentence.first_sentence.negation)
+        self.assertTrue(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("~P1 OR P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(True, sentence.first_sentence.negation)
+        self.assertTrue(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("P1 AND ~P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
-        self.assertEqual(True, sentence.second_sentence.negation)
+        self.assertTrue(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("P1 OR ~P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
-        self.assertEqual(True, sentence.second_sentence.negation)
+        self.assertTrue(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
     def test_simple_implications_bi_conditionals(self):
         parser = PropLogicParser("P1 => P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("~P1 <=> P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
-        self.assertEqual(True, sentence.first_sentence.negation)
+        self.assertTrue(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Biconditional, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("P1 <=> ~P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.logic_operator)
-        self.assertEqual(True, sentence.second_sentence.negation)
+        self.assertTrue(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Biconditional, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("P1 <=> P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Biconditional, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("~P1 <=> P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
-        self.assertEqual(True, sentence.first_sentence.negation)
+        self.assertTrue(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Biconditional, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("P1 <=> ~P2")
         sentence = parser.parse_line()
         self.assertEqual('P1', sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.logic_operator)
-        self.assertEqual(True, sentence.second_sentence.negation)
+        self.assertTrue(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Biconditional, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
     # noinspection SpellCheckingInspection
     def test_complex_implications_biconditionals(self):
         parser = PropLogicParser("P1 AND P3 => P2 AND P4")
         sentence = parser.parse_line()
         self.assertEqual(None, sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.first_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P4', sentence.second_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("P1 AND P3 <=> P2 AND P4")
         sentence = parser.parse_line()
         self.assertEqual(None, sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.first_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P4', sentence.second_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Biconditional, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("(P1 AND P3) => (P2 AND P4)")
         sentence = parser.parse_line()
         self.assertEqual(None, sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.first_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P4', sentence.second_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("(P1 AND P3) <=> (P2 AND P4)")
         sentence = parser.parse_line()
         self.assertEqual(None, sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.first_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P4', sentence.second_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Biconditional, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("~(P1 AND P3) => ~(P2 AND P4)")
         sentence = parser.parse_line()
         self.assertEqual(None, sentence.first_sentence.symbol)
-        self.assertEqual(True, sentence.first_sentence.negation)
+        self.assertTrue(sentence.first_sentence.negation)
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.first_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.second_sentence.symbol)
-        self.assertEqual(True, sentence.second_sentence.negation)
+        self.assertTrue(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P4', sentence.second_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         parser = PropLogicParser("~(P1 AND P3) <=> ~(P2 AND P4)")
         sentence = parser.parse_line()
         self.assertEqual(None, sentence.first_sentence.symbol)
-        self.assertEqual(True, sentence.first_sentence.negation)
+        self.assertTrue(sentence.first_sentence.negation)
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.first_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.second_sentence.symbol)
-        self.assertEqual(True, sentence.second_sentence.negation)
+        self.assertTrue(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P4', sentence.second_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Biconditional, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
     def test_and_or_priority(self):
         parser = PropLogicParser("P1 AND P2 OR P3")
@@ -348,47 +348,47 @@ class TestPropLogicParser(TestCase):
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First sentence
         self.assertEqual(None, sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual(LogicOperatorTypes.And, sentence.first_sentence.logic_operator)
 
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.first_sentence.logic_operator)
 
         self.assertEqual('P2', sentence.first_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.second_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.second_sentence.logic_operator)
 
         # Second sentence
         self.assertEqual('P3', sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
 
         parser = PropLogicParser("P1 OR P2 AND P3")
         sentence = parser.parse_line()
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First sentence
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
         self.assertEqual(None, sentence.first_sentence.first_sentence)
         self.assertEqual(None, sentence.first_sentence.second_sentence)
         # Second sentence
         self.assertEqual(LogicOperatorTypes.And, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.second_sentence.negation)
-        self.assertEqual(False, sentence.second_sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.second_sentence.negation)
 
     def test_string_of_ands(self):
         parser = PropLogicParser("P1 AND P2 AND P3")
@@ -396,66 +396,66 @@ class TestPropLogicParser(TestCase):
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First sentence
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
         # Second sentence
         self.assertEqual(None, sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.second_sentence.negation)
 
         parser = PropLogicParser("P1 AND (P2 AND P3)")
         sentence = parser.parse_line()
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First sentence
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
         # Second sentence
         self.assertEqual(None, sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.second_sentence.negation)
 
         parser = PropLogicParser("(P1 AND P2) AND P3")
         sentence = parser.parse_line()
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First sentence
         self.assertEqual(None, sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.first_sentence.logic_operator)
 
         self.assertEqual('P2', sentence.first_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.second_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.second_sentence.logic_operator)
 
         # Second sentence
         self.assertEqual('P3', sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
 
     def test_string_of_ors(self):
         parser = PropLogicParser("P1 OR P2 OR P3")
@@ -463,63 +463,63 @@ class TestPropLogicParser(TestCase):
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First sentence
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
         # Second sentence
         self.assertEqual(None, sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.second_sentence.negation)
 
         parser = PropLogicParser("P1 OR (P2 OR P3)")
         sentence = parser.parse_line()
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First sentence
         self.assertEqual('P1', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.logic_operator)
         # Second sentence
         self.assertEqual(None, sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual('P2', sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         self.assertEqual('P3', sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.second_sentence.negation)
 
         parser = PropLogicParser("(P1 OR P2) OR P3")
         sentence = parser.parse_line()
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First sentence
         self.assertEqual(None, sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         self.assertEqual('P1', sentence.first_sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.first_sentence.logic_operator)
         self.assertEqual('P2', sentence.first_sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.second_sentence.negation)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.second_sentence.logic_operator)
         # Second sentence
         self.assertEqual('P3', sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
 
     def test_parse_line(self):
         parser = PropLogicParser("P1U87 AND P2 AND ~P3 OR A94P => P4 AND (P6 OR P8)")
@@ -527,50 +527,50 @@ class TestPropLogicParser(TestCase):
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First Sentence
         self.assertEqual(None, sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         # First - First
         self.assertEqual(None, sentence.first_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.first_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         # First - First - First
         self.assertEqual('P1U87', sentence.first_sentence.first_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator,
                          sentence.first_sentence.first_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.first_sentence.negation)
         # First - First - Second
         self.assertEqual(None, sentence.first_sentence.first_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.first_sentence.first_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.second_sentence.negation)
         # First - First - Second - First
         self.assertEqual('P2', sentence.first_sentence.first_sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator,
                          sentence.first_sentence.first_sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.second_sentence.negation)
         # First - First - Second - Second
         self.assertEqual('P3', sentence.first_sentence.first_sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator,
                          sentence.first_sentence.first_sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(True, sentence.first_sentence.first_sentence.second_sentence.second_sentence.negation)
+        self.assertTrue(sentence.first_sentence.first_sentence.second_sentence.second_sentence.negation)
         # First - Second
         self.assertEqual('A94P', sentence.first_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.second_sentence.negation)
         # Second Sentence
         self.assertEqual(None, sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         # Second - First
         self.assertEqual('P4', sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         # Second - Second
         self.assertEqual(None, sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.second_sentence.negation)
         self.assertEqual('P6', sentence.second_sentence.second_sentence.first_sentence.symbol)
         self.assertEqual('P8', sentence.second_sentence.second_sentence.second_sentence.symbol)
 
@@ -581,62 +581,62 @@ class TestPropLogicParser(TestCase):
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First Sentence
         self.assertEqual(None, sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         # First - First
         self.assertEqual(None, sentence.first_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.first_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         # First - First - First
         self.assertEqual('P1U87', sentence.first_sentence.first_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator,
                          sentence.first_sentence.first_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.first_sentence.negation)
         # First - First - Second
         self.assertEqual(None, sentence.first_sentence.first_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.first_sentence.first_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.second_sentence.negation)
         # First - First - Second - First
         self.assertEqual('P2', sentence.first_sentence.first_sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator,
                          sentence.first_sentence.first_sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.second_sentence.negation)
         # First - First - Second - Second
         self.assertEqual('P3', sentence.first_sentence.first_sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator,
                          sentence.first_sentence.first_sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(True, sentence.first_sentence.first_sentence.second_sentence.second_sentence.negation)
+        self.assertTrue(sentence.first_sentence.first_sentence.second_sentence.second_sentence.negation)
         # First - Second
         self.assertEqual('A94P', sentence.first_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.second_sentence.negation)
         # Second Sentence
         self.assertEqual(None, sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         # Second - First
         self.assertEqual('P4', sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         # Second - Second
         self.assertEqual(None, sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.second_sentence.negation)
         self.assertEqual('P6', sentence.second_sentence.second_sentence.first_sentence.symbol)
         self.assertEqual('P8', sentence.second_sentence.second_sentence.second_sentence.symbol)
 
         # Line 2
         sentence = sentences[1]
         self.assertEqual('P5', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P7', sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
     def test_parse_set_input(self):
         # This tests the parser without passing in an input string right away
@@ -647,62 +647,62 @@ class TestPropLogicParser(TestCase):
         # Top level
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         # First Sentence
         self.assertEqual(None, sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         # First - First
         self.assertEqual(None, sentence.first_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.first_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.negation)
         # First - First - First
         self.assertEqual('P1U87', sentence.first_sentence.first_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator,
                          sentence.first_sentence.first_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.first_sentence.negation)
         # First - First - Second
         self.assertEqual(None, sentence.first_sentence.first_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.first_sentence.first_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.second_sentence.negation)
         # First - First - Second - First
         self.assertEqual('P2', sentence.first_sentence.first_sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator,
                          sentence.first_sentence.first_sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.first_sentence.second_sentence.negation)
         # First - First - Second - Second
         self.assertEqual('P3', sentence.first_sentence.first_sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator,
                          sentence.first_sentence.first_sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(True, sentence.first_sentence.first_sentence.second_sentence.second_sentence.negation)
+        self.assertTrue(sentence.first_sentence.first_sentence.second_sentence.second_sentence.negation)
         # First - Second
         self.assertEqual('A94P', sentence.first_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.first_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.first_sentence.second_sentence.negation)
+        self.assertFalse(sentence.first_sentence.second_sentence.negation)
         # Second Sentence
         self.assertEqual(None, sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         # Second - First
         self.assertEqual('P4', sentence.second_sentence.first_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.second_sentence.first_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.first_sentence.negation)
+        self.assertFalse(sentence.second_sentence.first_sentence.negation)
         # Second - Second
         self.assertEqual(None, sentence.second_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.second_sentence.second_sentence.logic_operator)
-        self.assertEqual(False, sentence.second_sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.second_sentence.negation)
         self.assertEqual('P6', sentence.second_sentence.second_sentence.first_sentence.symbol)
         self.assertEqual('P8', sentence.second_sentence.second_sentence.second_sentence.symbol)
 
         # Line 2
         sentence = sentences[1]
         self.assertEqual('P5', sentence.first_sentence.symbol)
-        self.assertEqual(False, sentence.first_sentence.negation)
+        self.assertFalse(sentence.first_sentence.negation)
         self.assertEqual('P7', sentence.second_sentence.symbol)
-        self.assertEqual(False, sentence.second_sentence.negation)
+        self.assertFalse(sentence.second_sentence.negation)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
 
     def test_parsing_negations(self):
         parser = PropLogicParser("P1")
@@ -735,7 +735,7 @@ class TestSentence(TestCase):
         self.assertEqual(None, atomic_sentence1.first_sentence)
         self.assertEqual(None, atomic_sentence1.second_sentence)
         self.assertEqual(LogicOperatorTypes.NoOperator, atomic_sentence1.logic_operator)
-        self.assertEqual(False, atomic_sentence1.negation)
+        self.assertFalse(atomic_sentence1.negation)
 
         # Test creation of a negated atomic sentence
         atomic_sentence2 = Sentence('P2', negated=True)
@@ -743,7 +743,7 @@ class TestSentence(TestCase):
         self.assertEqual(None, atomic_sentence2.first_sentence)
         self.assertEqual(None, atomic_sentence2.second_sentence)
         self.assertEqual(LogicOperatorTypes.NoOperator, atomic_sentence2.logic_operator)
-        self.assertEqual(True, atomic_sentence2.negation)
+        self.assertTrue(atomic_sentence2.negation)
 
         # Test creation of negation of a sentence
         negated_sentence = Sentence(atomic_sentence2, negated=True)
@@ -751,13 +751,13 @@ class TestSentence(TestCase):
         self.assertEqual(atomic_sentence2, negated_sentence.first_sentence)
         self.assertEqual(None, negated_sentence.second_sentence)
         self.assertEqual(LogicOperatorTypes.NoOperator, negated_sentence.logic_operator)
-        self.assertEqual(True, negated_sentence.negation)
+        self.assertTrue(negated_sentence.negation)
         # Check the sentence inside the sentence
         self.assertEqual('P2', negated_sentence.first_sentence.symbol)
         self.assertEqual(None, negated_sentence.first_sentence.first_sentence)
         self.assertEqual(None, negated_sentence.first_sentence.second_sentence)
         self.assertEqual(LogicOperatorTypes.NoOperator, negated_sentence.first_sentence.logic_operator)
-        self.assertEqual(True, negated_sentence.first_sentence.negation)
+        self.assertTrue(negated_sentence.first_sentence.negation)
 
         # Test creation of a complex sentence using two string tokens
         complex_sentence1 = Sentence('Q1', LogicOperatorTypes.And, 'Q2')
@@ -765,18 +765,18 @@ class TestSentence(TestCase):
         self.assertNotEqual(None, complex_sentence1.first_sentence)
         self.assertNotEqual(None, complex_sentence1.second_sentence)
         self.assertEqual(LogicOperatorTypes.And, complex_sentence1.logic_operator)
-        self.assertEqual(False, complex_sentence1.negation)
+        self.assertFalse(complex_sentence1.negation)
         # Check the sentences inside
         self.assertEqual('Q1', complex_sentence1.first_sentence.symbol)
         self.assertEqual(None, complex_sentence1.first_sentence.first_sentence)
         self.assertEqual(None, complex_sentence1.first_sentence.second_sentence)
         self.assertEqual(LogicOperatorTypes.NoOperator, complex_sentence1.first_sentence.logic_operator)
-        self.assertEqual(False, complex_sentence1.first_sentence.negation)
+        self.assertFalse(complex_sentence1.first_sentence.negation)
         self.assertEqual('Q2', complex_sentence1.second_sentence.symbol)
         self.assertEqual(None, complex_sentence1.second_sentence.first_sentence)
         self.assertEqual(None, complex_sentence1.second_sentence.second_sentence)
         self.assertEqual(LogicOperatorTypes.NoOperator, complex_sentence1.second_sentence.logic_operator)
-        self.assertEqual(False, complex_sentence1.second_sentence.negation)
+        self.assertFalse(complex_sentence1.second_sentence.negation)
 
         # Test creation of a complex sentence using two sentences
         complex_sentence2 = Sentence(atomic_sentence1, LogicOperatorTypes.Or, atomic_sentence2)
@@ -784,18 +784,18 @@ class TestSentence(TestCase):
         self.assertEqual(atomic_sentence1, complex_sentence2.first_sentence)
         self.assertEqual(atomic_sentence2, complex_sentence2.second_sentence)
         self.assertEqual(LogicOperatorTypes.Or, complex_sentence2.logic_operator)
-        self.assertEqual(False, complex_sentence2.negation)
+        self.assertFalse(complex_sentence2.negation)
         # Check the sentences inside
         self.assertEqual('P1', complex_sentence2.first_sentence.symbol)
         self.assertEqual(None, complex_sentence2.first_sentence.first_sentence)
         self.assertEqual(None, complex_sentence2.first_sentence.second_sentence)
         self.assertEqual(LogicOperatorTypes.NoOperator, complex_sentence2.first_sentence.logic_operator)
-        self.assertEqual(False, complex_sentence2.first_sentence.negation)
+        self.assertFalse(complex_sentence2.first_sentence.negation)
         self.assertEqual('P2', complex_sentence2.second_sentence.symbol)
         self.assertEqual(None, complex_sentence2.second_sentence.first_sentence)
         self.assertEqual(None, complex_sentence2.second_sentence.second_sentence)
         self.assertEqual(LogicOperatorTypes.NoOperator, complex_sentence2.second_sentence.logic_operator)
-        self.assertEqual(True, complex_sentence2.second_sentence.negation)
+        self.assertTrue(complex_sentence2.second_sentence.negation)
 
     def test_bad_create_sentence(self):
         failed: bool = False
@@ -804,136 +804,136 @@ class TestSentence(TestCase):
             Sentence('P1')
         except SentenceError:
             failed = True
-        self.assertEqual(False, failed)
+        self.assertFalse(failed)
 
         failed = False
         try:
             Sentence(None)
         except SentenceError:
             failed = True
-        self.assertEqual(False, failed)
+        self.assertFalse(failed)
 
         failed = False
         try:
             Sentence(failed) # noqa
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence('P1', LogicOperatorTypes.NoOperator, 'P2')
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence('P1', None, 'P2')
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence(Sentence('P1'), LogicOperatorTypes.NoOperator, Sentence('P2'))
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence(Sentence('P1'), None, Sentence('P2'))
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence('P1', None, 'P2')
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence('P1', LogicOperatorTypes.And)
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence('P1', LogicOperatorTypes.And, None)
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence('P1', LogicOperatorTypes.And, False) # noqa
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence(Sentence("P1"), LogicOperatorTypes.And, None)
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence(Sentence("P1"), LogicOperatorTypes.And)
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
         failed = False
         try:
             Sentence(Sentence("P1"), LogicOperatorTypes.And, False) # noqa
         except SentenceError:
             failed = True
-        self.assertEqual(True, failed)
+        self.assertTrue(failed)
 
     def test_is_atomic(self):
         parser = PropLogicParser("P1")
         sentence = parser.parse_line()
-        self.assertEqual(True, sentence.is_atomic)
+        self.assertTrue(sentence.is_atomic)
         parser = PropLogicParser("~P1")
         sentence = parser.parse_line()
-        self.assertEqual(True, sentence.is_atomic)
+        self.assertTrue(sentence.is_atomic)
         parser = PropLogicParser("P1 OR P2")
         sentence = parser.parse_line()
-        self.assertEqual(False, sentence.is_atomic)
+        self.assertFalse(sentence.is_atomic)
         parser = PropLogicParser("P1 AND P2")
         sentence = parser.parse_line()
-        self.assertEqual(False, sentence.is_atomic)
+        self.assertFalse(sentence.is_atomic)
         parser = PropLogicParser("P1 => P2")
         sentence = parser.parse_line()
-        self.assertEqual(False, sentence.is_atomic)
+        self.assertFalse(sentence.is_atomic)
         parser = PropLogicParser("P1 <=> P2")
         sentence = parser.parse_line()
-        self.assertEqual(False, sentence.is_atomic)
+        self.assertFalse(sentence.is_atomic)
         parser = PropLogicParser("~P1 AND ~P2")
         sentence = parser.parse_line()
-        self.assertEqual(False, sentence.is_atomic)
+        self.assertFalse(sentence.is_atomic)
         parser = PropLogicParser("~P1 OR ~P2")
         sentence = parser.parse_line()
-        self.assertEqual(False, sentence.is_atomic)
+        self.assertFalse(sentence.is_atomic)
         parser = PropLogicParser("~P1 AND P2")
         sentence = parser.parse_line()
-        self.assertEqual(False, sentence.is_atomic)
+        self.assertFalse(sentence.is_atomic)
         parser = PropLogicParser("~(P1 AND P2)")
         sentence = parser.parse_line()
-        self.assertEqual(False, sentence.is_atomic)
+        self.assertFalse(sentence.is_atomic)
         parser = PropLogicParser("~(P1)")
         sentence = parser.parse_line()
-        self.assertEqual(True, sentence.is_atomic)
+        self.assertTrue(sentence.is_atomic)
         parser = PropLogicParser("~(~(P1))")
         sentence = parser.parse_line()
-        self.assertEqual(False, sentence.is_atomic)
+        self.assertFalse(sentence.is_atomic)
 
     def test_sentence_to_string(self):
         parser = PropLogicParser("P1 AND P2 OR P3")
@@ -1111,7 +1111,7 @@ class TestSentence(TestCase):
         sentence2 = parser.parse_line()
         self.assertEqual("P1 AND ((U1 OR U2 => P2) OR P3) AND P4", sentence2.to_string())
         result = sentence1.is_equivalent(sentence2)
-        self.assertEqual(True, result)
+        self.assertTrue(result)
         # Try two sentences that are not quite equivalent - make sure it fails
         parser = PropLogicParser("((P1 AND ((U1 OR U2 => P2) OR P3)) AND P4)")
         sentence1 = parser.parse_line()
@@ -1120,7 +1120,7 @@ class TestSentence(TestCase):
         sentence2 = parser.parse_line()
         self.assertEqual("((P1 AND (((U1 OR ~U2) => P2) OR P3)) AND P4)", sentence2.to_string(True))
         result = sentence1.is_equivalent(sentence2)
-        self.assertEqual(False, result)
+        self.assertFalse(result)
         # Try various equivalents
         # Not an And-clause
         parser = PropLogicParser("~(P1 AND P2)")
@@ -1130,7 +1130,7 @@ class TestSentence(TestCase):
         sentence2 = parser.parse_line()
         self.assertEqual("(~P1 OR ~P2)", sentence2.to_string(True))
         result = sentence1.is_equivalent(sentence2)
-        self.assertEqual(True, result)
+        self.assertTrue(result)
         # Not an Or-clause
         parser = PropLogicParser("~(P1 OR P2)")
         sentence1 = parser.parse_line()
@@ -1139,7 +1139,7 @@ class TestSentence(TestCase):
         sentence2 = parser.parse_line()
         self.assertEqual("(~P1 AND ~P2)", sentence2.to_string(True))
         result = sentence1.is_equivalent(sentence2)
-        self.assertEqual(True, result)
+        self.assertTrue(result)
         # Implies to Or-Clause
         parser = PropLogicParser("A => B")
         sentence1 = parser.parse_line()
@@ -1148,7 +1148,7 @@ class TestSentence(TestCase):
         sentence2 = parser.parse_line()
         self.assertEqual("(~A OR B)", sentence2.to_string(True))
         result = sentence1.is_equivalent(sentence2)
-        self.assertEqual(True, result)
+        self.assertTrue(result)
         # Bi-conditional to Or-Clause
         parser = PropLogicParser("A <=> B")
         sentence1 = parser.parse_line()
@@ -1157,7 +1157,7 @@ class TestSentence(TestCase):
         sentence2 = parser.parse_line()
         self.assertEqual("((~A OR B) AND (~B OR A))", sentence2.to_string(True))
         result = sentence1.is_equivalent(sentence2)
-        self.assertEqual(True, result)
+        self.assertTrue(result)
 
     def test_is_equivalent_2(self):
         sentence1: Sentence
@@ -1203,14 +1203,14 @@ class TestSentence(TestCase):
         self.assertEqual("((A => B) => (C OR D))", sentence.to_string(True))
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.first_sentence.logic_operator)
-        self.assertEqual(True, sentence.first_sentence.first_sentence.is_atomic)
+        self.assertTrue(sentence.first_sentence.first_sentence.is_atomic)
         self.assertEqual('A', sentence.first_sentence.first_sentence.symbol)
-        self.assertEqual(True, sentence.first_sentence.second_sentence.is_atomic)
+        self.assertTrue(sentence.first_sentence.second_sentence.is_atomic)
         self.assertEqual('B', sentence.first_sentence.second_sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Or, sentence.second_sentence.logic_operator)
-        self.assertEqual(True, sentence.second_sentence.first_sentence.is_atomic)
+        self.assertTrue(sentence.second_sentence.first_sentence.is_atomic)
         self.assertEqual('C', sentence.second_sentence.first_sentence.symbol)
-        self.assertEqual(True, sentence.second_sentence.second_sentence.is_atomic)
+        self.assertTrue(sentence.second_sentence.second_sentence.is_atomic)
         self.assertEqual('D', sentence.second_sentence.second_sentence.symbol)
 
     def test_atomic_sentence(self):
@@ -1219,7 +1219,7 @@ class TestSentence(TestCase):
         self.assertTrue(sentence.is_atomic)
         self.assertEqual("TEST", sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         self.assertEqual(None, sentence.first_sentence)
         self.assertEqual(None, sentence.second_sentence)
         # Atomic sentence with no symbols
@@ -1227,7 +1227,7 @@ class TestSentence(TestCase):
         self.assertTrue(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         self.assertEqual(None, sentence.first_sentence)
         self.assertEqual(None, sentence.second_sentence)
         # Complex sentence with no symbols
@@ -1253,14 +1253,14 @@ class TestSentence(TestCase):
         self.assertTrue(sentence.is_atomic)
         self.assertEqual("TEST", sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual(None, sentence.first_sentence)
         self.assertEqual(None, sentence.second_sentence)
         sentence = Sentence("~Test")
         self.assertTrue(sentence.is_atomic)
         self.assertEqual("TEST", sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual(None, sentence.first_sentence)
         self.assertEqual(None, sentence.second_sentence)
         # Negations on no parameters
@@ -1268,7 +1268,7 @@ class TestSentence(TestCase):
         self.assertTrue(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual(None, sentence.first_sentence)
         self.assertEqual(None, sentence.second_sentence)
         sentence = Sentence()
@@ -1276,7 +1276,7 @@ class TestSentence(TestCase):
         self.assertTrue(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual(None, sentence.first_sentence)
         self.assertEqual(None, sentence.second_sentence)
         # Complex sentence negation
@@ -1284,7 +1284,7 @@ class TestSentence(TestCase):
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual("TEST1", sentence.first_sentence.to_string(True))
         self.assertEqual("TEST2", sentence.second_sentence.to_string(True))
         self.assertEqual("~(TEST1 AND TEST2)", sentence.to_string(True))
@@ -1294,7 +1294,7 @@ class TestSentence(TestCase):
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual("TEST1", sentence.first_sentence.symbol)
         self.assertEqual("TEST2", sentence.second_sentence.symbol)
         self.assertEqual("~(TEST1 AND TEST2)", sentence.to_string(True))
@@ -1304,7 +1304,7 @@ class TestSentence(TestCase):
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual("~(TEST1 AND TEST2)", sentence.first_sentence.to_string(True))
         self.assertEqual(None, sentence.second_sentence)
         self.assertEqual("~(~(TEST1 AND TEST2))", sentence.to_string(True))
@@ -1313,7 +1313,7 @@ class TestSentence(TestCase):
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual("~(TEST1 AND TEST2)", sentence.first_sentence.to_string(True))
         self.assertEqual(None, sentence.second_sentence)
         self.assertEqual("~(~(TEST1 AND TEST2))", sentence.to_string(True))
@@ -1322,7 +1322,7 @@ class TestSentence(TestCase):
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual("TEST1", sentence.first_sentence.to_string(True))
         self.assertEqual("TEST2", sentence.second_sentence.to_string(True))
         self.assertEqual("~(TEST1 AND TEST2)", sentence.to_string(True))
@@ -1331,7 +1331,7 @@ class TestSentence(TestCase):
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         self.assertEqual("TEST1", sentence.first_sentence.to_string(True))
         self.assertEqual("TEST2", sentence.second_sentence.to_string(True))
         self.assertEqual("(TEST1 AND TEST2)", sentence.to_string(True))
@@ -1341,28 +1341,28 @@ class TestSentence(TestCase):
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
-        self.assertEqual(False, sentence.negation)
+        self.assertFalse(sentence.negation)
         self.assertEqual("((TEST1 AND TEST2) OR TEST3)", sentence.first_sentence.to_string(True))
         self.assertEqual("(TEST5 OR TEST6)", sentence.second_sentence.to_string(True))
         sentence = Sentence("Test1 AND TEst2 OR Test3 => TEST5 OR TEST6", negated=True)
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual("((TEST1 AND TEST2) OR TEST3)", sentence.first_sentence.to_string(True))
         self.assertEqual("(TEST5 OR TEST6)", sentence.second_sentence.to_string(True))
         sentence = Sentence("(Test1 AND TEst2 OR Test3 => TEST5 OR TEST6)", negated=True)
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.Implies, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual("((TEST1 AND TEST2) OR TEST3)", sentence.first_sentence.to_string(True))
         self.assertEqual("(TEST5 OR TEST6)", sentence.second_sentence.to_string(True))
         sentence = Sentence("~(Test1 AND TEst2 OR Test3 => TEST5 OR TEST6)", negated=True)
         self.assertFalse(sentence.is_atomic)
         self.assertEqual(None, sentence.symbol)
         self.assertEqual(LogicOperatorTypes.NoOperator, sentence.logic_operator)
-        self.assertEqual(True, sentence.negation)
+        self.assertTrue(sentence.negation)
         self.assertEqual("~(((TEST1 AND TEST2) OR TEST3) => (TEST5 OR TEST6))", sentence.first_sentence.to_string(True))
         self.assertEqual(None, sentence.second_sentence)
 
@@ -1372,13 +1372,13 @@ class TestSentence(TestCase):
         self.assertFalse(sentence1.is_atomic)
         self.assertEqual(None, sentence1.symbol)
         self.assertEqual(LogicOperatorTypes.And, sentence1.logic_operator)
-        self.assertEqual(False, sentence1.negation)
+        self.assertFalse(sentence1.negation)
         self.assertEqual("TEST1", sentence1.first_sentence.to_string(True))
         self.assertEqual("TEST2", sentence1.second_sentence.to_string(True))
         self.assertEqual("(TEST1 AND TEST2)", sentence1.to_string(True))
         sentence2 = Sentence("Test1 AND TEst2", negated=False)
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence1))
 
     def test_basic_evaluate_sentence(self):
         sentence = Sentence("A AND ~B AND (C OR D) AND E")
@@ -1774,22 +1774,22 @@ class TestSentence(TestCase):
         self.assertEqual("A", sentence1.to_string())
         sentence2 = sentence1.transform_conditionals()
         self.assertEqual("A", sentence2.to_string())
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence1))
         # Test Basic Implies
         sentence1 = Sentence("a => b")
         self.assertEqual("A => B", sentence1.to_string())
         sentence2 = sentence1.transform_conditionals()
         self.assertEqual("~A OR B", sentence2.to_string())
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence1))
         # Test Basic Bi-Conditional
         sentence1 = Sentence("a <=> b")
         self.assertEqual("A <=> B", sentence1.to_string())
         sentence2 = sentence1.transform_conditionals()
         self.assertEqual("(~A OR B) AND (~B OR A)", sentence2.to_string())
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence1))
         # Test Multiple Implies
         sentence1 = Sentence("(a => b) => (c => d)")
         self.assertEqual("((A => B) => (C => D))", sentence1.to_string(True))
@@ -1799,9 +1799,9 @@ class TestSentence(TestCase):
         sentence3 = sentence2.transform_conditionals()
         self.assertEqual("(~(~A OR B) OR (~C OR D))", sentence3.to_string(True))
         self.assertEqual("~(~A OR B) OR ~C OR D", sentence3.to_string())
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence3))
-        self.assertEqual(True, sentence3.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence3))
+        self.assertTrue(sentence3.is_equivalent(sentence1))
         # Figuring out what is wrong with multiple bi-conditional a bit at a time
         sentence1 = Sentence("(a <=> b) AND (c <=> d)")
         self.assertEqual("((A <=> B) AND (C <=> D))", sentence1.to_string(True))
@@ -1809,9 +1809,9 @@ class TestSentence(TestCase):
         self.assertEqual("((A <=> B) AND (C <=> D))", sentence2.to_string(True))
         self.assertEqual("(A <=> B) AND (C <=> D)", sentence2.to_string())
         sentence3 = sentence2.transform_conditionals()
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence3))
-        self.assertEqual(True, sentence3.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence3))
+        self.assertTrue(sentence3.is_equivalent(sentence1))
         # Found a simplified version of the problem
         sentence1 = Sentence("(A => B) AND (B => A) => C")
         self.assertEqual("(((A => B) AND (B => A)) => C)", sentence1.to_string(True))
@@ -1819,9 +1819,9 @@ class TestSentence(TestCase):
         self.assertEqual("(((A => B) AND (B => A)) => C)", sentence2.to_string(True))
         self.assertEqual("(A => B) AND (B => A) => C", sentence2.to_string())
         sentence3 = sentence2.transform_conditionals()
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence3))
-        self.assertEqual(True, sentence3.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence3))
+        self.assertTrue(sentence3.is_equivalent(sentence1))
 
         sentence1 = Sentence("~(A => B)")
         self.assertEqual("~(A => B)", sentence1.to_string(True))
@@ -1829,9 +1829,9 @@ class TestSentence(TestCase):
         self.assertEqual("~(A => B)", sentence2.to_string(True))
         self.assertEqual("~(A => B)", sentence2.to_string())
         sentence3 = sentence2.transform_conditionals()
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence3))
-        self.assertEqual(True, sentence3.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence3))
+        self.assertTrue(sentence3.is_equivalent(sentence1))
 
         sentence1 = Sentence("~(A <=> B)")
         self.assertEqual("~(A <=> B)", sentence1.to_string(True))
@@ -1847,9 +1847,9 @@ class TestSentence(TestCase):
         self.assertEqual("~(A <=> B)", sentence2.to_string(True))
         self.assertEqual("~(A <=> B)", sentence2.to_string())
         sentence3 = sentence2.transform_conditionals()
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence3))
-        self.assertEqual(True, sentence3.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence3))
+        self.assertTrue(sentence3.is_equivalent(sentence1))
 
         sentence1 = Sentence("(a <=> b) => C")
         self.assertEqual("((A <=> B) => C)", sentence1.to_string(True))
@@ -1858,9 +1858,9 @@ class TestSentence(TestCase):
         self.assertEqual("(A <=> B) => C", sentence2.to_string())
         sentence3 = sentence2.transform_conditionals()
         # self.assertEqual("", sentence3.to_string(True))
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence3))
-        self.assertEqual(True, sentence3.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence3))
+        self.assertTrue(sentence3.is_equivalent(sentence1))
 
         sentence1 = Sentence("(a <=> b) => (c <=> d)")
         self.assertEqual("((A <=> B) => (C <=> D))", sentence1.to_string(True))
@@ -1868,22 +1868,115 @@ class TestSentence(TestCase):
         self.assertEqual("((A <=> B) => (C <=> D))", sentence2.to_string(True))
         self.assertEqual("(A <=> B) => (C <=> D)", sentence2.to_string())
         sentence3 = sentence2.transform_conditionals()
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
-        self.assertEqual(True, sentence2.is_equivalent(sentence3))
-        self.assertEqual(True, sentence3.is_equivalent(sentence1))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence2.is_equivalent(sentence3))
+        self.assertTrue(sentence3.is_equivalent(sentence1))
 
         # Test Multiple Bi-Conditional
         sentence1 = Sentence("(a <=> b) <=> (c <=> d)")
         self.assertEqual("((A <=> B) <=> (C <=> D))", sentence1.to_string(True))
         sentence2 = Sentence(sentence1.to_string(True))
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
         sentence2 = Sentence(sentence1.to_string())
-        self.assertEqual(True, sentence1.is_equivalent(sentence2))
+        self.assertTrue(sentence1.is_equivalent(sentence2))
         self.assertEqual("((A <=> B) <=> (C <=> D))", sentence1.to_string(True))
         self.assertEqual("(A <=> B) <=> (C <=> D)", sentence1.to_string())
         sentence3 = Sentence("(~((~A OR B) AND (~B OR A)) OR (~C OR D) AND (~D OR C)) AND (~((~C OR D) " +
                              "AND (~D OR C)) OR (~A OR B) AND (~B OR A))")  # Hand check
         self.assertTrue(sentence1.is_equivalent(sentence3))
         sentence4 = sentence1.transform_conditionals()
-        self.assertEqual(True, sentence1.is_equivalent(sentence4))
+        self.assertTrue(sentence1.is_equivalent(sentence4))
+
+    def test_move_not_inward(self):
+        # Test atomic
+        sentence1 = Sentence("a")
+        self.assertEqual("A", sentence1.to_string())
+        sentence2 = sentence1.move_not_inward()
+        self.assertEqual("~A", sentence2.to_string())
+        self.assertFalse(sentence1 == sentence2)
+        sentence1 = Sentence("~a")
+        self.assertEqual("~A", sentence1.to_string())
+        sentence2 = sentence1.move_not_inward()
+        self.assertEqual("A", sentence2.to_string())
+        self.assertFalse(sentence1 == sentence2)
+        # Test Complex
+        sentence1 = Sentence("~(A AND B)")
+        self.assertEqual("~(A AND B)", sentence1.to_string())
+        self.assertEqual(LogicOperatorTypes.And, sentence1.logic_operator)
+        sentence2 = sentence1.move_not_inward()
+        self.assertEqual("A AND B", sentence2.to_string())
+        self.assertFalse(sentence1 == sentence2)
+        # Test not sentence
+        sentence1 = Sentence("A and B", negated=True)
+        self.assertEqual(LogicOperatorTypes.And, sentence1.logic_operator)
+        self.assertEqual("~(A AND B)", sentence1.to_string())
+        sentence2 = sentence1.move_not_inward()
+        self.assertEqual("A AND B", sentence2.to_string())
+        self.assertFalse(sentence1 == sentence2)
+        # Double Not
+        sentence1 = Sentence("~(A and B)", negated=True)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence1.logic_operator)
+        self.assertEqual("~~(A AND B)", sentence1.to_string())
+        sentence2 = sentence1.move_not_inward()
+        self.assertEqual("~(A AND B)", sentence2.to_string())
+        self.assertEqual(LogicOperatorTypes.And, sentence2.logic_operator)
+        sentence1 = Sentence("~A", negated=True)
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence1.logic_operator)
+        self.assertTrue(sentence1.first_sentence is not None)
+        self.assertEqual("~~A", sentence1.to_string())
+        sentence2 = sentence1.move_not_inward()
+        self.assertEqual("~A", sentence2.to_string())
+        self.assertEqual(LogicOperatorTypes.NoOperator, sentence2.logic_operator)
+        self.assertTrue(sentence2.first_sentence is None)
+
+    def test_transform_not(self):
+        # Test atomic
+        sentence1 = Sentence("a")
+        self.assertEqual("A", sentence1.to_string())
+        sentence2 = sentence1.transform_not()
+        self.assertEqual("A", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+        sentence1 = Sentence("~a")
+        self.assertEqual("~A", sentence1.to_string())
+        sentence2 = sentence1.transform_not()
+        self.assertEqual("~A", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+        # Test Complex
+        # No not
+        sentence1 = Sentence("a and b")
+        self.assertEqual("A AND B", sentence1.to_string())
+        sentence2 = sentence1.transform_not()
+        self.assertEqual("A AND B", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+        # With a not and phrase
+        sentence1 = Sentence("~(a and b)")
+        self.assertEqual("~(A AND B)", sentence1.to_string())
+        sentence2 = sentence1.transform_not()
+        self.assertEqual("~A OR ~B", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+        # With a not or phrase
+        sentence1 = Sentence("~(a or b)")
+        self.assertEqual("~(A OR B)", sentence1.to_string())
+        sentence2 = sentence1.transform_not()
+        self.assertEqual("~A AND ~B", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+        # With a double negated phrase - OR
+        sentence1 = Sentence("~(a or b)", negated=True)
+        self.assertEqual("~~(A OR B)", sentence1.to_string())
+        sentence2 = sentence1.transform_not()
+        self.assertEqual("A OR B", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+        # With a double negated phrase - AND
+        sentence1 = Sentence("~(a and b)", negated=True)
+        self.assertEqual("~~(A AND B)", sentence1.to_string())
+        sentence2 = sentence1.transform_not()
+        self.assertEqual("A AND B", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+        # Two levels of AND and OR mixed
+        sentence1 = Sentence("~(a and b) and (c or d) and e")
+        self.assertEqual("~(A AND B) AND (C OR D) AND E", sentence1.to_string())
+        sentence2 = sentence1.transform_not()
+        self.assertEqual("(~A OR ~B) AND (C OR D) AND E", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+
 

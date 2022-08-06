@@ -674,7 +674,7 @@ class Sentence:
             check2: bool = self._truth_table_check_all(sentence, symbols.clone(), copy_model2)
             return check1 and check2
 
-    def is_equivalent(self, sentence: Union[Sentence, str]):
+    def is_equivalent(self, sentence: Union[Sentence, str]) -> bool:
         if isinstance(sentence, str):
             sentence = Sentence(sentence)
 
@@ -691,10 +691,10 @@ class Sentence:
         # All the symbols match, so move on to create the truth table
         return self._truth_table_check_all(sentence, symbols1.clone(), symbols1.clone())
 
-    def clone(self):
+    def clone(self) -> Sentence:
         return deepcopy(self)
 
-    def convert_to_cnf(self):
+    def convert_to_cnf(self) -> Sentence:
         # This function transforms the sentence into Conjunctive Normal Form
         # CNF is a form made up of Ors connected by ANDs i.e. (A OR B OR C) AND (D OR E OR F)
         # 3-CNF is the 3-SAT problem
@@ -703,7 +703,7 @@ class Sentence:
         # sentence = sentence.transform_conditionals()
         # sentence = sentence.transform_nots()
 
-    def transform_conditionals(self):
+    def transform_conditionals(self) -> Sentence:
         # Start with a clone to avoid any side effect
         sentence: Sentence = self.clone()
         # Transform top level bi-conditional
@@ -733,7 +733,6 @@ class Sentence:
             # neg_first_sentence = neg_first_sentence.transform_conditionals()
             sentence.logic_operator = LogicOperatorTypes.Or
             sentence.first_sentence = neg_first_sentence
-
         # Top level should now be transformed -- if sentence is not atomic, recurse down the chain
         if not sentence.is_atomic:
             # We have completed the current top node and it's not a condition, so we need to traverse down
@@ -742,3 +741,45 @@ class Sentence:
                 sentence.second_sentence = sentence.second_sentence.transform_conditionals()
         # Return final result
         return sentence
+
+    def move_not_inward(self) -> Sentence:
+        sentence: Sentence = self.clone()
+        # Flip the negation on this sentence
+        if sentence.negation:
+            sentence.negation = False
+        else:
+            sentence.negation = True
+        # If we now have a non-negated sentence without an operator, then we need to pull it all up one level
+        if sentence.logic_operator == LogicOperatorTypes.NoOperator and not sentence.negation \
+                and sentence.first_sentence is not None and sentence.second_sentence is None:
+            sentence = sentence.first_sentence
+        return sentence
+
+    def transform_not(self) -> Sentence:
+        sentence: Sentence = self.clone()
+        # CNF requires not (~) to appear only in literals
+        if sentence.is_atomic:
+            # if sentence is atomic we just want to leave it as is
+            return sentence
+        else:
+            # sentence is complex
+            if self.negation:
+                sentence.negation = False
+                # A negated sentence has only one sub-sentence, so deal with that first
+                if sentence.logic_operator is LogicOperatorTypes.NoOperator:
+                    sentence = sentence.first_sentence.move_not_inward().transform_not()
+                else:  # sentence.logic_operator is a regular operator
+                    # Flip ands and ors
+                    if sentence.logic_operator == LogicOperatorTypes.And:
+                        sentence.logic_operator = LogicOperatorTypes.Or
+                    elif sentence.logic_operator == LogicOperatorTypes.Or:
+                        sentence.logic_operator = LogicOperatorTypes.And
+                    # Recurse down both paths
+                    sentence.first_sentence = sentence.first_sentence.move_not_inward().transform_not()
+                    sentence.second_sentence = sentence.second_sentence.move_not_inward().transform_not()
+            else:
+                # top level of sentence is not negated, so recurse down without moving not inward
+                sentence.first_sentence = sentence.first_sentence.transform_not()
+                sentence.second_sentence = sentence.second_sentence.transform_not()
+
+            return sentence
