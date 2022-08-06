@@ -331,11 +331,18 @@ class PLKnowledgeBase:
         self._sentences = []
         self._is_cnf = False
 
-    def exists(self, sentence: Union[Sentence, str]) -> bool:
+    def exists(self, sentence: Union[Sentence, str], check_logical_equivalence: bool = False) -> bool:
         if isinstance(sentence, Sentence):
             for a_sentence in self._sentences:
-                if a_sentence.to_string(True) == sentence.to_string(True):
-                    return True
+                if not check_logical_equivalence:
+                    # Using quick check is preferred, it just makes sure the two sentences resolve to same string
+                    if a_sentence.to_string(True) == sentence.to_string(True):
+                        return True
+                else:  # not check_logical_equivalence
+                    # Slow check will instead seek if any of these sentences is logically equivalent
+                    if a_sentence == sentence:
+                        return True
+            # Didn't find a match, so doesn't exist
             return False
         elif isinstance(sentence, str):
             self._parser.set_input(sentence)
