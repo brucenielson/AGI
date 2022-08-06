@@ -1985,12 +1985,35 @@ class TestSentence(TestCase):
         self.assertEqual("A AND B OR ~C AND ~D OR ~E", sentence2.to_string())
         self.assertTrue(sentence1 == sentence2)
 
+    def test_redistribute_or(self):
+        sentence1 = Sentence("A AND B")
+        or_clause = Sentence("C OR D")
+        sentence2 = sentence1._redistribute_or(or_clause)
+        self.assertEqual("(A OR C OR D) AND (B OR C OR D)", sentence2.to_string())
+
+    def test_transform_distribute_ors(self):
+        # Simple example
+        sentence1 = Sentence("(A AND B) OR C")
+        self.assertEqual("((A AND B) OR C)", sentence1.to_string(True))
+        sentence2 = sentence1._transform_distribute_ors()
+        self.assertEqual("(A OR C) AND (B OR C)", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+        # Complex example
+        sentence1 = Sentence("(A AND B) OR (C AND D)")
+        self.assertEqual("((A AND B) OR (C AND D))", sentence1.to_string(True))
+        sentence2 = sentence1._transform_distribute_ors()
+        self.assertEqual("(C OR A) AND (D OR A) AND (C OR B) AND (D OR B)", sentence2.to_string())
+        self.assertTrue(sentence1 == sentence2)
+        # Very complex example
+        sentence1 = Sentence("(A AND B) OR (C AND D) AND D OR E AND (Q OR T) OR (C AND Z)")
+        sentence2 = sentence1._transform_distribute_ors()
+        self.assertTrue(sentence1 == sentence2)
+
     def test_convert_to_cnf(self):
         # Final test on transform_not
         sentence1 = Sentence("~(a and b) and (c or d) and e")
         self.assertEqual("~(A AND B) AND (C OR D) AND E", sentence1.to_string())
         sentence2 = sentence1.convert_to_cnf()
-        self.assertEqual("(~A OR ~B) AND (C OR D) AND E", sentence2.to_string())
         self.assertTrue(sentence1 == sentence2)
         # Final test on transform_conditionals
         # Test Multiple Bi-Conditional

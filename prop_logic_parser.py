@@ -790,3 +790,54 @@ class Sentence:
                 sentence.second_sentence = sentence.second_sentence._transform_not()
             # Return final complex sentence
             return sentence
+
+    def _redistribute_or(self, sub_sentence: Sentence) -> Sentence:
+        sentence: Sentence = self.clone()
+        # This function should only be called if a) self is guaranteed to be an AND clause,
+        if self.logic_operator != LogicOperatorTypes.And:
+            raise SentenceError("redistribute_or can only be called on a sentence whose top node is an AND clause.")
+        else:
+            # Do the redistribution
+            sentence.first_sentence = Sentence(sentence.first_sentence, LogicOperatorTypes.Or, sub_sentence)
+            sentence.second_sentence = Sentence(sentence.second_sentence, LogicOperatorTypes.Or, sub_sentence)
+            return sentence
+
+    def _transform_distribute_ors(self) -> Sentence:
+        sentence: Sentence = self.clone()
+        sub_sentence: Sentence
+        # This function assumes there are no logical operators except AND and OR plus NOT next to only literals
+        # Anything else will throw an error
+        if sentence.is_atomic:
+            # Atomic sentences don't need to change, so just return them
+            return sentence
+        elif sentence.logic_operator == LogicOperatorTypes.Or:
+            # Top level is an Or operator
+            if sentence.first_sentence.logic_operator == LogicOperatorTypes.And:
+                # We have an OR above an AND on right side
+                # Grab the left side to redistribute over the right side
+                sub_sentence = sentence.second_sentence.clone()
+                # Drop the right side
+                sentence = sentence.first_sentence.clone()
+                # Now traverse the AND plus any more beneath it and put the left under each AND clause
+                sentence = sentence._redistribute_or(sub_sentence)
+            elif sentence.second_sentence.logic_operator == LogicOperatorTypes.And:
+                # We have an OR above an AND on right side
+                # Grab the left side to redistribute over the right side
+                sub_sentence = sentence.first_sentence.clone()
+                # Drop the right side
+                sentence = sentence.second_sentence.clone()
+                # Now traverse the AND plus any more beneath it and put the left under each AND clause
+                sentence = sentence._redistribute_or(sub_sentence)
+            # Recurse down
+            sentence.first_sentence = sentence.first_sentence._transform_distribute_ors()
+            sentence.second_sentence = sentence.second_sentence._transform_distribute_ors()
+        elif sentence.logic_operator == LogicOperatorTypes.And:
+            # We are on an AND parent, so descend
+            sentence.first_sentence = sentence.first_sentence._transform_distribute_ors()
+            sentence.second_sentence = sentence.second_sentence._transform_distribute_ors()
+        elif sentence.logic_operator == LogicOperatorTypes.NoOperator:
+            # This sentence has only one sub sentence
+            sentence.first_sentence = sentence.first_sentence._transform_distribute_ors()
+        else:
+            raise SentenceError("Encountered an illegal operator type in _transform_distribute_ors.")
+        return sentence
