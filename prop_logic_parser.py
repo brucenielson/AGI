@@ -706,43 +706,39 @@ class Sentence:
     def transform_conditionals(self):
         # Start with a clone to avoid any side effect
         sentence: Sentence = self.clone()
-        if sentence.is_atomic:
-            return sentence
-        else:  # if sentence is complex
-            if sentence.logic_operator == LogicOperatorTypes.Biconditional:
-                # Replace bi-conditional (a <=> b) with a => b AND b => a
-                clone_ab: Sentence
-                clone_ba: Sentence
-                temp: Sentence
-                # a => b
-                clone_ab = sentence.clone()
-                clone_ab.negation = False
-                clone_ab.logic_operator = LogicOperatorTypes.Implies
-                # b => a
-                clone_ba = sentence.clone()
-                clone_ba.negation = False
-                temp = clone_ba.first_sentence
-                clone_ba.first_sentence = clone_ba.second_sentence
-                clone_ba.second_sentence = temp
-                clone_ba.logic_operator = LogicOperatorTypes.Implies
-                # Recurse
-                clone_ab = clone_ab.transform_conditionals()
-                clone_ba = clone_ba.transform_conditionals()
-                # And
-                new_sentence: Sentence = Sentence(clone_ab, LogicOperatorTypes.And, clone_ba, negated=sentence.negation)
-                return new_sentence
-            elif sentence.logic_operator == LogicOperatorTypes.Implies:
-                # Replace implies (a => b) with ~a OR b
-                neg_first_sentence: Sentence
-                neg_first_sentence = Sentence(sentence.first_sentence, negated=True)
-                neg_first_sentence = neg_first_sentence.transform_conditionals()
-                sentence.logic_operator = LogicOperatorTypes.Or
-                sentence.first_sentence = neg_first_sentence
+        # Transform top level bi-conditional
+        if sentence.logic_operator == LogicOperatorTypes.Biconditional:
+            # Replace bi-conditional (a <=> b) with a => b AND b => a
+            clone_ab: Sentence
+            clone_ba: Sentence
+            temp: Sentence
+            # a => b
+            clone_ab = sentence.clone()
+            clone_ab.negation = False
+            clone_ab.logic_operator = LogicOperatorTypes.Implies
+            # b => a
+            clone_ba = sentence.clone()
+            clone_ba.negation = False
+            temp = clone_ba.first_sentence
+            clone_ba.first_sentence = clone_ba.second_sentence
+            clone_ba.second_sentence = temp
+            clone_ba.logic_operator = LogicOperatorTypes.Implies
+            # And
+            sentence = Sentence(clone_ab, LogicOperatorTypes.And, clone_ba, negated=sentence.negation)
+        # Transform top level Implies
+        if sentence.logic_operator == LogicOperatorTypes.Implies:
+            # Replace implies (a => b) with ~a OR b
+            neg_first_sentence: Sentence
+            neg_first_sentence = Sentence(sentence.first_sentence, negated=True)
+            # neg_first_sentence = neg_first_sentence.transform_conditionals()
+            sentence.logic_operator = LogicOperatorTypes.Or
+            sentence.first_sentence = neg_first_sentence
+
+        # Top level should now be transformed -- if sentence is not atomic, recurse down the chain
+        if not sentence.is_atomic:
+            # We have completed the current top node and it's not a condition, so we need to traverse down
+            sentence.first_sentence = sentence.first_sentence.transform_conditionals()
+            if sentence.second_sentence is not None:
                 sentence.second_sentence = sentence.second_sentence.transform_conditionals()
-                return sentence
-            else:
-                # We have completed the current top node and it's not a condition, so we need to traverse down
-                sentence.first_sentence = sentence.first_sentence.transform_conditionals()
-                if sentence.second_sentence is not None:
-                    sentence.second_sentence = sentence.second_sentence.transform_conditionals()
-                return sentence
+        # Return final result
+        return sentence
