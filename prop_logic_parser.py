@@ -567,7 +567,10 @@ class Sentence:
                 ret_val += "~"
 
             if self.is_atomic:
-                ret_val += self.symbol
+                if self.symbol is not None:
+                    ret_val += self.symbol
+                else:
+                    ret_val += ""
             elif self.logic_operator == LogicOperatorTypes.NoOperator and self.negation \
                     and self.first_sentence is not None:
                 # We have a lone negation of another sentence
@@ -582,7 +585,10 @@ class Sentence:
         else:
             if self.is_atomic:
                 # Handle atomic sentence
-                ret_val += self.to_string(True)
+                if self.symbol is not None:
+                    ret_val += self.to_string(True)
+                else:
+                    ret_val += ""
             elif self.logic_operator == LogicOperatorTypes.NoOperator and self.negation \
                     and self.first_sentence is not None and self.second_sentence is None:
                 # Handle lone negation
@@ -699,9 +705,13 @@ class Sentence:
         # CNF is a form made up of Ors connected by ANDs i.e. (A OR B OR C) AND (D OR E OR F)
         # 3-CNF is the 3-SAT problem
         sentence: Sentence = self.clone()
-        temp_sentence: Sentence
         sentence = sentence._transform_conditionals()
         sentence = sentence._transform_not()
+        # Now loop over redistributing ORs until nothing changes any more
+        temp_sentence: Sentence = Sentence()
+        while temp_sentence.to_string(True) != sentence.to_string(True):
+            temp_sentence = sentence.clone()
+            sentence = sentence._transform_distribute_ors()
         return sentence
 
     def _transform_conditionals(self) -> Sentence:
