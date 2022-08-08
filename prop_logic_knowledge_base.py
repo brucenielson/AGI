@@ -349,7 +349,7 @@ class PLKnowledgeBase:
             new_sentence: Sentence = self._parser.parse_line()
             if self._parser.line_count > 0:
                 raise KnowledgeBaseError("Call to 'exists' only works for a single logical line.")
-            return self.exists(new_sentence)
+            return self.exists(new_sentence, check_logical_equivalence=check_logical_equivalence)
         else:
             raise KnowledgeBaseError("Call to 'exists' call requires a Sentence or string.")
 
