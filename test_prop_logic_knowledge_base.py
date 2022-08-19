@@ -1,6 +1,6 @@
 from unittest import TestCase
 from prop_logic_knowledge_base import LogicSymbol, LogicValue, PLKnowledgeBase, Sentence, \
-    KnowledgeBaseError, SymbolList
+    KnowledgeBaseError, SymbolList, SymbolListError
 
 
 class TestLogicSymbol(TestCase):
@@ -340,3 +340,84 @@ class TestPLKnowledgeBase(TestCase):
             message = err.args[0]
         self.assertEqual(True, fail)
         self.assertEqual("Call to 'exists' only works for a single logical line.", message)
+
+    def test_evaluate_knowledge_base(self):
+        # Tests for evaluate_knowledge_base(model), is_true(model), is_false(model)
+        # Incidentally tests get_symbol_list
+        kb = PLKnowledgeBase()
+        input_str: str
+        input_str = "A"
+        input_str += "\n"
+        input_str = input_str + "B"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND B => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND P => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "B AND L => M"
+        input_str = input_str + "\n"
+        input_str = input_str + "L AND M => P"
+        input_str = input_str + "\n"
+        input_str = input_str + "P => Q"
+        input_str = input_str + "\n"
+        input_str = input_str + "~A => Z"
+        input_str = input_str + "\n"
+        input_str = input_str + "A and Z => W"
+        input_str = input_str + "\n"
+        input_str = input_str + "A or Z => ~X"
+
+        kb.add(input_str)
+        sl: SymbolList = kb.get_symbol_list()
+
+        # Test symbol list
+        self.assertEqual("A", sl.get_symbol(0).name)
+        self.assertEqual("B", sl.get_symbol(1).name)
+        self.assertEqual("L", sl.get_symbol(2).name)
+        self.assertEqual("M", sl.get_symbol(3).name)
+        self.assertEqual("P", sl.get_symbol(4).name)
+        self.assertEqual("Q", sl.get_symbol(5).name)
+        self.assertEqual("W", sl.get_symbol(6).name)
+        self.assertEqual("X", sl.get_symbol(7).name)
+        self.assertEqual("Z", sl.get_symbol(8).name)
+
+        # Test if there is a 9th symbol (there shouldn't be)
+        error = False
+        try:
+            result = sl.get_symbol(9)
+        except SymbolListError as err:
+            error = True
+        self.assertEqual(True, error)
+
+        # Now test evaluate knowledge base
+        # Test an undefined set
+        sl.set_value("a", True)
+        sl.set_value("b", True)
+        self.assertTrue(kb.evaluate_knowledge_base(sl) == LogicValue.UNDEFINED)
+        self.assertFalse(kb.is_false(sl))
+        self.assertFalse(kb.is_true(sl))
+
+        # Test a valid set
+        sl.set_value("l", True)
+        sl.set_value("m", True)
+        sl.set_value("p", True)
+        sl.set_value("q", True)
+        sl.set_value("w", True)
+        sl.set_value("x", False)
+        sl.set_value("z", False)
+        self.assertTrue(kb.evaluate_knowledge_base(sl) == LogicValue.TRUE)
+        self.assertTrue(kb.is_true(sl))
+        self.assertFalse(kb.is_false(sl))
+
+        # Now test an invalid set of symbols
+        sl.set_value("b", False)
+        self.assertTrue(kb.evaluate_knowledge_base(sl) == LogicValue.FALSE)
+        self.assertFalse(kb.is_true(sl))
+        self.assertTrue(kb.is_false(sl))
+
+        # Test having only partial info, but still at least one caluse is know to be false
+        sl = kb.get_symbol_list()
+        sl.set_value("b", False)
+        self.assertTrue(kb.evaluate_knowledge_base(sl) == LogicValue.FALSE)
+        self.assertFalse(kb.is_true(sl))
+        self.assertTrue(kb.is_false(sl))
+        

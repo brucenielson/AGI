@@ -378,3 +378,30 @@ class PLKnowledgeBase:
 
     def clone(self):
         return deepcopy(self)
+
+    def get_symbol_list(self) -> SymbolList:
+        # Traverse the knowledge base tree and find each symbol
+        sl: SymbolList = SymbolList()
+        for sentence in self._sentences:
+            sl.add(sentence.get_symbol_list())
+        return sl
+
+    def is_false(self, model: SymbolList) -> bool:
+        return self.evaluate_knowledge_base(model) == LogicValue.FALSE
+
+    def is_true(self, model: SymbolList) -> bool:
+        return self.evaluate_knowledge_base(model) == LogicValue.TRUE
+
+    def evaluate_knowledge_base(self, model: SymbolList) -> LogicValue:
+        # Take the model (a SymbolList with values) and evaluate each Sentence in the knowledge base.
+        # If all are true, the whole is true. If any are false the whole is false.
+        # If there isn't enough information available, return Undefined.
+        result: LogicValue = LogicValue.TRUE
+        for sentence in self._sentences:
+            if sentence.evaluate(model) == LogicValue.FALSE:
+                # If one sentence is false, the whole knowledge base is false
+                return LogicValue.FALSE
+            elif sentence.evaluate(model) == LogicValue.UNDEFINED:
+                # We have at least one Undefined, so the default is now Undefined
+                result = LogicValue.UNDEFINED
+        return result
