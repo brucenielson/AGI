@@ -487,7 +487,8 @@ class PLKnowledgeBase:
             query = Sentence(query)
         # Make a list of symbols all reset to undefined
         symbols: SymbolList = self.get_symbol_list()
-        model: SymbolList = self.get_symbol_list()
+        symbols.add(query.get_symbol_list())
+        model: SymbolList = symbols.clone()
         self._query_true_count = 0
         self._query_false_count = 0
         return self._truth_table_check_all(query, symbols, model)

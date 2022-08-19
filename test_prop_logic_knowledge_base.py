@@ -477,7 +477,7 @@ class TestPLKnowledgeBase(TestCase):
         input_str = input_str + "A or Z => ~X"
 
         kb.add(input_str)
-        # Q is True
+        # evaluates to True
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('q'))
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~x'))
         # Z is Undefined
@@ -506,4 +506,6 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('a and ~a'))
         self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('z and ~z'))
         # Always False even though not in the model
-        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('y and ~y'))
+        self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('y and ~y'))
+        # Always True even though not in the model
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('y or ~y'))
