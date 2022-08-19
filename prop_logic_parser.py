@@ -697,7 +697,7 @@ class Sentence:
             return False
         else:
             for i in range(0, symbols1.length):
-                # Abort if there is every a mismatch between symbol names because they can't be equivalent then
+                # Abort if there is ever a mismatch between symbol names because they can't be equivalent then
                 if symbols1[i] != symbols2[i]:
                     return False
         # All the symbols match, so move on to create the truth table

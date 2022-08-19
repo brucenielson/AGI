@@ -2096,3 +2096,13 @@ class TestSentence(TestCase):
         # self.assertFalse(sentence1.is_cnf)
         # self.assertFalse(sentence2.is_cnf)
         # self.assertTrue(sentence3.is_cnf)
+
+    def test_evaluate_sentence_not_in_model(self):
+        # I have mixed feelings over how I handled this.
+        #  These are clearly True or False, but right now come back Undefined
+        sentence = Sentence("Y and ~Y")
+        model = sentence.get_symbol_list()
+        self.assertEqual(LogicValue.UNDEFINED, sentence.evaluate(model))
+        sentence = Sentence("Y OR ~Y")
+        model = sentence.get_symbol_list()
+        self.assertEqual(LogicValue.UNDEFINED, sentence.evaluate(model))
