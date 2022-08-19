@@ -49,6 +49,22 @@ class LogicValue(Enum):
         elif self == LogicValue.FALSE:
             return "False"
 
+    def and_op(self, other_value: LogicValue):
+        if self == LogicValue.TRUE and other_value == LogicValue.TRUE:
+            return LogicValue.TRUE
+        elif self == LogicValue.FALSE or other_value == LogicValue.FALSE:
+            return LogicValue.FALSE
+        else:
+            return LogicValue.UNDEFINED
+
+    def or_op(self, other_value: LogicValue):
+        if self == LogicValue.TRUE or other_value == LogicValue.TRUE:
+            return LogicValue.TRUE
+        elif self == LogicValue.FALSE and other_value == LogicValue.FALSE:
+            return LogicValue.FALSE
+        else:
+            return LogicValue.UNDEFINED
+
 
 class LogicSymbol:
     def __init__(self, name: str, value: LogicValue = LogicValue.UNDEFINED):
@@ -85,6 +101,12 @@ class LogicSymbol:
         else:
             final_value = value
         self._value = final_value
+
+    def and_op(self, other_value: LogicValue):
+        return self.value.and_op(other_value)
+
+    def or_op(self, other_value: LogicValue):
+        return self.value.or_op(other_value)
 
 
 class SymbolListError(Exception):
@@ -301,10 +323,20 @@ class SymbolList:
 
     def get_value(self, symbol_name: str) -> LogicValue:
         symbol: LogicSymbol = self.find(symbol_name)
-        return symbol.value
+        if symbol is None:
+            return LogicValue.UNDEFINED
+        else:
+            return symbol.value
 
     def clone(self):
         return deepcopy(self)
+
+    def extend_model(self, symbol_name: str, value: bool) -> SymbolList:
+        # Like set_value except that it clone the model first and returns the clone
+        # thereby leaving the original unchanged
+        copy_model: SymbolList = self.clone()
+        copy_model.set_value(symbol_name, value)
+        return copy_model
 
 
 class PLKnowledgeBase:
@@ -381,6 +413,7 @@ class PLKnowledgeBase:
 
     def get_symbol_list(self) -> SymbolList:
         # Traverse the knowledge base tree and find each symbol
+        # This returns a list of symbols all set to undefined rather than to values they currently hold
         sl: SymbolList = SymbolList()
         for sentence in self._sentences:
             sl.add(sentence.get_symbol_list())
@@ -405,3 +438,56 @@ class PLKnowledgeBase:
                 # We have at least one Undefined, so the default is now Undefined
                 result = LogicValue.UNDEFINED
         return result
+
+    def _truth_table_check_all(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> LogicValue:
+        # This function does the work of creating a truth table and thus evaluating the query against the knowledge base
+        if symbols is None or symbols.length == 0:
+            # You've arrived at a full model (every symbol is now set!), so do evaluation
+            eval_kb: LogicValue = self.evaluate_knowledge_base(model)
+            if eval_kb == LogicValue.TRUE:
+                # For any model that is true for the knowledge base, evaluate the new query sentence as well
+                eval_query: LogicValue = query.evaluate(model)
+                if eval_query == LogicValue.TRUE:
+                    self._query_true_count += 1
+                elif eval_query == LogicValue.FALSE:
+                    self._query_false_count += 1
+                return eval_query
+            elif eval_kb == LogicValue.FALSE:
+                # If the model is false for the knowledge base, we 'throw it away' - i.e. treat it as True
+                return LogicValue.TRUE
+            else:
+                # Otherwise the model is neither True nor False, we return Undefined
+                return LogicValue.UNDEFINED
+        else:
+            # You don't yet have a full model - so get next symbol to try out
+            next_symbol: str = symbols.get_next_symbol().name
+            # Extend model as both True and False
+            copy_model1: SymbolList = model.extend_model(next_symbol, True)
+            copy_model2: SymbolList = model.extend_model(next_symbol, False)
+            # Try both extended models
+            check1: LogicValue = self._truth_table_check_all(query, symbols.clone(), copy_model1)
+            check2: LogicValue = self._truth_table_check_all(query, symbols.clone(), copy_model2)
+            # Now evaluate outcome
+            # If both are true, return True
+            if check1 == LogicValue.TRUE and check2 == LogicValue.TRUE:
+                return LogicValue.TRUE
+            # If both are False return False
+            elif check1 == LogicValue.FALSE and check2 == LogicValue.FALSE:
+                return LogicValue.FALSE
+            elif check1 == LogicValue.FALSE or check2 == LogicValue.FALSE:
+                if self._query_true_count > 0 and self._query_false_count > 0:
+                    return LogicValue.UNDEFINED
+                else:
+                    return LogicValue.FALSE
+            else:
+                return LogicValue.UNDEFINED
+
+    def truth_table_entails(self, query: Union[Sentence, str]) -> LogicValue:
+        if isinstance(query, str):
+            query = Sentence(query)
+        # Make a list of symbols all reset to undefined
+        symbols: SymbolList = self.get_symbol_list()
+        model: SymbolList = self.get_symbol_list()
+        self._query_true_count = 0
+        self._query_false_count = 0
+        return self._truth_table_check_all(query, symbols, model)

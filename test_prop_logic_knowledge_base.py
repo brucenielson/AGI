@@ -11,6 +11,34 @@ class TestLogicSymbol(TestCase):
         self.assertEqual("P1", symbol.name)
         self.assertNotEqual("P2", symbol.name)
 
+    def test_operators(self):
+        # And
+        symbol1: LogicSymbol = LogicSymbol('A', LogicValue.TRUE)
+        self.assertEqual(LogicValue.TRUE, symbol1.and_op(LogicValue.TRUE))
+        self.assertEqual(LogicValue.FALSE, symbol1.and_op(LogicValue.FALSE))
+        self.assertEqual(LogicValue.UNDEFINED, symbol1.and_op(LogicValue.UNDEFINED))
+        symbol2: LogicSymbol = LogicSymbol('B', LogicValue.FALSE)
+        self.assertEqual(LogicValue.FALSE, symbol2.and_op(LogicValue.TRUE))
+        self.assertEqual(LogicValue.FALSE, symbol2.and_op(LogicValue.FALSE))
+        self.assertEqual(LogicValue.FALSE, symbol2.and_op(LogicValue.UNDEFINED))
+        symbol3: LogicSymbol = LogicSymbol('C', LogicValue.UNDEFINED)
+        self.assertEqual(LogicValue.UNDEFINED, symbol3.and_op(LogicValue.TRUE))
+        self.assertEqual(LogicValue.FALSE, symbol3.and_op(LogicValue.FALSE))
+        self.assertEqual(LogicValue.UNDEFINED, symbol3.and_op(LogicValue.UNDEFINED))
+        # Or
+        symbol1: LogicSymbol = LogicSymbol('A', LogicValue.TRUE)
+        self.assertEqual(LogicValue.TRUE, symbol1.or_op(LogicValue.TRUE))
+        self.assertEqual(LogicValue.TRUE, symbol1.or_op(LogicValue.FALSE))
+        self.assertEqual(LogicValue.TRUE, symbol1.or_op(LogicValue.UNDEFINED))
+        symbol2: LogicSymbol = LogicSymbol('B', LogicValue.FALSE)
+        self.assertEqual(LogicValue.TRUE, symbol2.or_op(LogicValue.TRUE))
+        self.assertEqual(LogicValue.FALSE, symbol2.or_op(LogicValue.FALSE))
+        self.assertEqual(LogicValue.UNDEFINED, symbol2.or_op(LogicValue.UNDEFINED))
+        symbol3: LogicSymbol = LogicSymbol('C', LogicValue.UNDEFINED)
+        self.assertEqual(LogicValue.TRUE, symbol3.or_op(LogicValue.TRUE))
+        self.assertEqual(LogicValue.UNDEFINED, symbol3.or_op(LogicValue.FALSE))
+        self.assertEqual(LogicValue.UNDEFINED, symbol3.or_op(LogicValue.UNDEFINED))
+
 
 class TestSymbolList(TestCase):
     def test_add_symbol_list(self):
@@ -383,8 +411,8 @@ class TestPLKnowledgeBase(TestCase):
         # Test if there is a 9th symbol (there shouldn't be)
         error = False
         try:
-            result = sl.get_symbol(9)
-        except SymbolListError as err:
+            sl.get_symbol(9)
+        except SymbolListError:
             error = True
         self.assertEqual(True, error)
 
@@ -414,10 +442,51 @@ class TestPLKnowledgeBase(TestCase):
         self.assertFalse(kb.is_true(sl))
         self.assertTrue(kb.is_false(sl))
 
-        # Test having only partial info, but still at least one caluse is know to be false
+        # Test having only partial info, but still at least one clause is know to be false
         sl = kb.get_symbol_list()
         sl.set_value("b", False)
         self.assertTrue(kb.evaluate_knowledge_base(sl) == LogicValue.FALSE)
         self.assertFalse(kb.is_true(sl))
         self.assertTrue(kb.is_false(sl))
-        
+
+    def test_truth_table_entails(self):
+        # This tests out "TruthTableEntails()" plus it's "IsQueryTrue()" and "IsQueryFalse()" counterparts.
+        # I  need to keep the tests to a minimum because this is an expensive action time wise
+        # since it's an NP-Complete Exponential problem. So most of the tests will stay commented out and
+        # the tests I run over and over will stay to a minimum to make sure things haven't broken.
+        kb = PLKnowledgeBase()
+        input_str: str
+        input_str = "A"
+        input_str += "\n"
+        input_str = input_str + "B"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND B => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "B AND L => M"
+        input_str = input_str + "\n"
+        input_str = input_str + "L AND M => P"
+        input_str = input_str + "\n"
+        input_str = input_str + "P => Q"
+        input_str = input_str + "\n"
+        input_str = input_str + "~A => Z"
+
+        kb.add(input_str)
+        # Q is True
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('q'))
+        # Z is Undefined
+        self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('z'))
+        # Since z is undefined ~z should be also
+        self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('~z'))
+        # Y is Undefined because it is not in the model
+        self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('y'))
+        # Entailments
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a'))
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('l'))
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('p'))
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a and b and l and m and p and q'))
+        # Ors shouldn't matter
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~z or z'))
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a or ~a'))
+        # False statements
+        self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('~a'))
+        self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('a and ~a'))

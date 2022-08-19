@@ -616,6 +616,7 @@ class Sentence:
         #  For each symbol, check if it's already in the list and, if not, add it
         #  then return the full list. It will default to value undefined for everything.
         #  then handle the rest, i.e. atomic vs. complex
+        # This returns a list of symbols all set to undefined rather than to values they currently hold
         if temp_symbol_list is None:
             temp_symbol_list = kb.SymbolList()
         if sub_sentence is None:
