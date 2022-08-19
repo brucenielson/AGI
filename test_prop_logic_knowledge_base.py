@@ -462,6 +462,8 @@ class TestPLKnowledgeBase(TestCase):
         input_str = input_str + "\n"
         input_str = input_str + "A AND B => L"
         input_str = input_str + "\n"
+        input_str = input_str + "A AND P => L"
+        input_str = input_str + "\n"
         input_str = input_str + "B AND L => M"
         input_str = input_str + "\n"
         input_str = input_str + "L AND M => P"
@@ -469,24 +471,38 @@ class TestPLKnowledgeBase(TestCase):
         input_str = input_str + "P => Q"
         input_str = input_str + "\n"
         input_str = input_str + "~A => Z"
+        input_str = input_str + "\n"
+        input_str = input_str + "A and Z => W"
+        input_str = input_str + "\n"
+        input_str = input_str + "A or Z => ~X"
 
         kb.add(input_str)
         # Q is True
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('q'))
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~x'))
         # Z is Undefined
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('z'))
-        # Since z is undefined ~z should be also
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('~z'))
+        self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('w'))
+        self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('~w'))
+        # Always True even if otherwise undefined
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~w or w'))
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~z or z'))
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a or ~a'))
         # Y is Undefined because it is not in the model
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('y'))
+        # False
+        self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('x'))
         # Entailments
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a'))
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('l'))
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('p'))
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a and b and l and m and p and q'))
-        # Ors shouldn't matter
-        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~z or z'))
-        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a or ~a'))
+        self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('a and b and l and m and p and q and ~a'))
+        self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('a and b and l and m and p and q and z'))
         # False statements
         self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('~a'))
+        # Always False
         self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('a and ~a'))
+        self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('z and ~z'))
+        self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('y and ~y'))
