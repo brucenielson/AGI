@@ -441,42 +441,37 @@ class PLKnowledgeBase:
 
     def _truth_table_check_all(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> LogicValue:
         # This function does the work of creating a truth table and thus evaluating the query against the knowledge base
-        if symbols is not None and symbols.length > 0:
-            # You don't yet have a full model - so get next symbol to try out
-            next_symbol: str = symbols.get_next_symbol().name
-            # Extend model as both True and False
-            copy_model1: SymbolList = model.extend_model(next_symbol, True)
-            copy_model2: SymbolList = model.extend_model(next_symbol, False)
-            # Try both extended models
-            self._truth_table_check_all(query, symbols.clone(), copy_model1)
-            self._truth_table_check_all(query, symbols.clone(), copy_model2)
-        else:
-            # You've arrived at a full model (every symbol is now set!), so do evaluation
-            eval_kb: LogicValue = self.evaluate_knowledge_base(model)
-            if eval_kb == LogicValue.TRUE:
-                # For any model that is true for the knowledge base, evaluate the new query sentence as well
+        if symbols is None or symbols.length == 0:
+            if self.evaluate_knowledge_base(model) == LogicValue.TRUE:
                 eval_query: LogicValue = query.evaluate(model)
                 if eval_query == LogicValue.TRUE:
                     self._query_true_count += 1
                 elif eval_query == LogicValue.FALSE:
                     self._query_false_count += 1
                 return eval_query
-            elif eval_kb == LogicValue.FALSE:
-                # If the model is false for the knowledge base, we 'throw it away' - i.e. treat it as True
-                return LogicValue.TRUE
             else:
-                # Otherwise the model is neither True nor False, we return Undefined
-                return LogicValue.UNDEFINED
-
-        # Do final evaluation
-        if self._query_true_count > 0 and self._query_false_count == 0:
-            # All True Knowledge Bases evaluate this query as True
-            return LogicValue.TRUE
-        elif self._query_true_count == 0 and self._query_false_count > 0:
-            # All True Knowledge Bases evaluate this query as False
-            return LogicValue.FALSE
+                return LogicValue.TRUE
         else:
-            return LogicValue.UNDEFINED
+            # You don't yet have a full model - so get next symbol to try out
+            next_symbol: str = symbols.get_next_symbol().name
+            # Extend model as both True and False
+            copy_model1: SymbolList = model.extend_model(next_symbol, True)
+            copy_model2: SymbolList = model.extend_model(next_symbol, False)
+            # Try both extended models
+            check1: LogicValue = self._truth_table_check_all(query, symbols.clone(), copy_model1)
+            check2: LogicValue = self._truth_table_check_all(query, symbols.clone(), copy_model2)
+            # return check1.and_op(check2)
+
+            # Do final evaluation
+            if self._query_true_count > 0 and self._query_false_count == 0:
+                # All True Knowledge Bases evaluate this query as True
+                return LogicValue.TRUE
+            elif self._query_true_count == 0 and self._query_false_count > 0:
+                # All True Knowledge Bases evaluate this query as False
+                return LogicValue.FALSE
+            else:
+                # It is a weird mix, so we don't know
+                return LogicValue.UNDEFINED
 
     def truth_table_entails(self, query: Union[Sentence, str]) -> LogicValue:
         if isinstance(query, str):

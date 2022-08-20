@@ -469,18 +469,18 @@ class TestPLKnowledgeBase(TestCase):
         input_str = input_str + "L AND M => P"
         input_str = input_str + "\n"
         input_str = input_str + "P => Q"
-        # input_str = input_str + "\n"
-        # input_str = input_str + "~A => Z"
-        # input_str = input_str + "\n"
-        # input_str = input_str + "A and Z => W"
-        # input_str = input_str + "\n"
-        # input_str = input_str + "A or Z => ~X"
+        input_str = input_str + "\n"
+        input_str = input_str + "~A => Z"
+        input_str = input_str + "\n"
+        input_str = input_str + "A and Z => W"
+        input_str = input_str + "\n"
+        input_str = input_str + "A or Z => ~X"
 
         kb.add(input_str)
         # evaluates to True
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('q'))
         # Removed to speed up tests
-        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~x'))
+        self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~x'))
         # Z is Undefined
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('z'))
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('~z'))
@@ -494,7 +494,7 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('y'))
         # False
         # Removed to speed up tests
-        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('x'))
+        self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('x'))
         # Entailments
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a'))
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('l'))
