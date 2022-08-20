@@ -479,3 +479,9 @@ class PLKnowledgeBase:
         else:
             # It is a weird mix, so we don't know
             return LogicValue.UNDEFINED
+
+    def is_query_true(self, query: Union[Sentence, str]):
+        return self.truth_table_entails(query) == LogicValue.TRUE
+
+    def is_query_false(self, query: Union[Sentence, str]):
+        return self.truth_table_entails(query) == LogicValue.FALSE

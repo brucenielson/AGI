@@ -479,10 +479,14 @@ class TestPLKnowledgeBase(TestCase):
         kb.add(input_str)
         # evaluates to True
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('q'))
+        self.assertTrue(kb.is_query_true('q'))
+        self.assertFalse(kb.is_query_false('q'))
         # Removed to speed up tests
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~x'))
         # Z is Undefined
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('z'))
+        self.assertFalse(kb.is_query_true('z'))
+        self.assertFalse(kb.is_query_false('z'))
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('~z'))
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('w'))
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('~w'))
@@ -504,6 +508,8 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('a and b and l and m and p and q and z'))
         # False statements
         self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('~a'))
+        self.assertFalse(kb.is_query_true('~a'))
+        self.assertTrue(kb.is_query_false('~a'))
         # Always False
         self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('a and ~a'))
         self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('z and ~z'))
