@@ -1,5 +1,5 @@
 from __future__ import annotations
-from prop_logic_parser import PropLogicParser, Sentence
+from prop_logic_parser import PropLogicParser, Sentence, LogicOperatorTypes
 from typing import Optional, List, Union
 from enum import Enum
 from copy import deepcopy
@@ -355,6 +355,10 @@ class PLKnowledgeBase:
     def is_cnf(self) -> bool:
         return self._is_cnf
 
+    @property
+    def sentences(self) -> List[Sentence] :
+        return self._sentences
+
     def clear(self) -> None:
         self._sentences = []
         self._is_cnf = False
@@ -480,8 +484,64 @@ class PLKnowledgeBase:
             # It is a weird mix, so we don't know
             return LogicValue.UNDEFINED
 
-    def is_query_true(self, query: Union[Sentence, str]):
+    def is_query_true(self, query: Union[Sentence, str]) -> bool:
         return self.truth_table_entails(query) == LogicValue.TRUE
 
-    def is_query_false(self, query: Union[Sentence, str]):
+    def is_query_false(self, query: Union[Sentence, str]) -> bool:
         return self.truth_table_entails(query) == LogicValue.FALSE
+
+    def convert_to_cnf(self) -> List[Sentence]:
+        kb: PLKnowledgeBase = self.cnf_clone()
+        return kb.sentences
+
+    def build_cnf_knowledge_base(self, sentence: Sentence):
+        # This function takes a CNF Sentence and builds a knowledge base out of it where each OR clause
+        # becomes becomes a single sentence in the knowledge base.
+        # Assumption: this sentence is already in CNF form -- if it isn't, the results are unpredictable
+        # every time it's called, the top node must be an AND operator or symbol
+        #
+        # This function will traverse a sentence finding disjunctions and splicing it all up into sentences
+        # that are added to the knowledge base passed in.
+        #
+        # Strategy: recurse through the whole sentence tree and find each AND clause and then grab the clauses
+        # in between (which are either OR clauses or symbols) and stuff them separately into the knowledge base
+
+        if sentence.logic_operator == LogicOperatorTypes.And:
+            if sentence.first_sentence.logic_operator == LogicOperatorTypes.Or or sentence.first_sentence.is_atomic:
+                # This is the top of an OR clause or it's atomic, so add it
+                self.add(sentence.first_sentence)
+            elif sentence.first_sentence.logic_operator == LogicOperatorTypes.And:
+                self.build_cnf_knowledge_base(sentence.first_sentence)
+            else:
+                raise KnowledgeBaseError("build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
+
+            if sentence.second_sentence.logic_operator == LogicOperatorTypes.Or or sentence.second_sentence.is_atomic:
+                # This is the top of an OR clause or it's atomic, so add it
+                self.add(sentence.second_sentence)
+            elif sentence.second_sentence.logic_operator == LogicOperatorTypes.And:
+                self.build_cnf_knowledge_base(sentence.second_sentence)
+            else:
+                raise KnowledgeBaseError("build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
+        elif sentence.is_atomic:
+            # It's a symbol, so just put it into the database
+            self.add(sentence)
+        else:
+            raise KnowledgeBaseError("build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
+
+    def cnf_clone(self) -> PLKnowledgeBase:
+        # This function takes the whole knowledge base and converts it to a single knowledge base in CNF form
+        # with each sentence in the knowledge base being one OR clause
+        cnf_kb: str = ""
+        for sentence in self._sentences:
+            # TODO is there a more efficient way to do this then to make into a string then convert back to Sentence?
+            if len(cnf_kb) > 0:
+                cnf_kb += " AND "
+            cnf_kb += sentence.to_string(True)
+        sentence = Sentence(cnf_kb)
+        sentence = sentence.convert_to_cnf()
+        # "sentence" now contains the entire knowledge base in a single logical sentence
+        # Now loop through and find each OR clause and build a new knowledge base out of it
+        new_kb: PLKnowledgeBase = PLKnowledgeBase()
+        new_kb.build_cnf_knowledge_base(sentence)
+        new_kb._is_cnf = True
+        return new_kb

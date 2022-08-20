@@ -517,3 +517,65 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('y and ~y'))
         # Always True even though not in the model
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('y or ~y'))
+
+    def test_convert_to_cnf(self):
+        kb: PLKnowledgeBase = PLKnowledgeBase()
+        input_str: str
+        input_str = "A"
+        input_str += "\n"
+        input_str = input_str + "B"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND B => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND P => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "B AND L => M"
+        input_str = input_str + "\n"
+        input_str = input_str + "L AND M => P"
+        input_str = input_str + "\n"
+        input_str = input_str + "P => Q"
+        # Verify before conversion
+        kb.add(input_str)
+        self.assertEqual(7, kb.line_count)
+        self.assertTrue(kb.get_sentence(0).is_atomic)
+        self.assertEqual("A", kb.get_sentence(0).to_string(True))
+        self.assertTrue(kb.get_sentence(1).is_atomic)
+        self.assertEqual("B", kb.get_sentence(1).to_string(True))
+        self.assertFalse(kb.get_sentence(2).is_atomic)
+        self.assertEqual("((A AND B) => L)", kb.get_sentence(2).to_string(True))
+        self.assertFalse(kb.get_sentence(3).is_atomic)
+        self.assertEqual("((A AND P) => L)", kb.get_sentence(3).to_string(True))
+        self.assertFalse(kb.get_sentence(4).is_atomic)
+        self.assertEqual("((B AND L) => M)", kb.get_sentence(4).to_string(True))
+        self.assertFalse(kb.get_sentence(5).is_atomic)
+        self.assertEqual("((L AND M) => P)", kb.get_sentence(5).to_string(True))
+        self.assertFalse(kb.get_sentence(6).is_atomic)
+        self.assertEqual("(P => Q)", kb.get_sentence(6).to_string(True))
+        # Now verify after conversion
+        kb = kb.cnf_clone()
+        self.assertEqual(7, kb.line_count)
+        self.assertTrue(kb.get_sentence(0).is_atomic)
+        self.assertEqual("A", kb.get_sentence(0).to_string(True))
+        self.assertTrue(kb.get_sentence(1).is_atomic)
+        self.assertEqual("B", kb.get_sentence(1).to_string(True))
+        self.assertFalse(kb.get_sentence(2).is_atomic)
+        self.assertEqual("~A OR ~B OR L", kb.get_sentence(2).to_string())
+        self.assertFalse(kb.get_sentence(3).is_atomic)
+        self.assertEqual("~A OR ~P OR L", kb.get_sentence(3).to_string())
+        self.assertFalse(kb.get_sentence(4).is_atomic)
+        self.assertEqual("~B OR ~L OR M", kb.get_sentence(4).to_string())
+        self.assertFalse(kb.get_sentence(5).is_atomic)
+        self.assertEqual("~L OR ~M OR P", kb.get_sentence(5).to_string())
+        self.assertFalse(kb.get_sentence(6).is_atomic)
+        self.assertEqual("~P OR Q", kb.get_sentence(6).to_string())
+        # Test a single line
+        kb.clear()
+        input_str = "A"
+        kb.add(input_str)
+        self.assertEqual(1, kb.line_count)
+        self.assertTrue(kb.get_sentence(0).is_atomic)
+        self.assertEqual("A", kb.get_sentence(0).to_string(True))
+        kb = kb.cnf_clone()
+        self.assertEqual(1, kb.line_count)
+        self.assertTrue(kb.get_sentence(0).is_atomic)
+        self.assertEqual("A", kb.get_sentence(0).to_string(True))
