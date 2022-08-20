@@ -437,6 +437,7 @@ class PLKnowledgeBase:
 
     def _truth_table_check_all_sub(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> (int, int):
         # This function does the work of creating a truth table and thus evaluating the query against the knowledge base
+        # It counts up True and False results returning (True count, False count)
         if symbols is None or symbols.length == 0:
             if self.evaluate_knowledge_base(model) == LogicValue.TRUE:
                 eval_query: LogicValue = query.evaluate(model)
@@ -446,6 +447,7 @@ class PLKnowledgeBase:
                     return 0, 1
                 return 0, 0
             else:
+                # If the model is not specifically True, then throw it away
                 return 0, 0
         else:
             # You don't yet have a full model - so get next symbol to try out
@@ -454,17 +456,17 @@ class PLKnowledgeBase:
             copy_model1: SymbolList = model.extend_model(next_symbol, True)
             copy_model2: SymbolList = model.extend_model(next_symbol, False)
             # Try both extended models
-            check1: (int, int) = self._truth_table_check_all_sub(query, symbols.clone(), copy_model1)
-            check2: (int, int) = self._truth_table_check_all_sub(query, symbols.clone(), copy_model2)
-            return check1[0] + check2[0], check1[1] + check2[1]
+            true_count1, false_count1 = self._truth_table_check_all_sub(query, symbols.clone(), copy_model1)
+            true_count2, false_count2 = self._truth_table_check_all_sub(query, symbols.clone(), copy_model2)
+            return true_count1 + true_count2, false_count1 + false_count2
 
     def _truth_table_check_all(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> LogicValue:
-        result = self._truth_table_check_all_sub(query, symbols, model)
+        true_count, false_count = self._truth_table_check_all_sub(query, symbols, model)
         # Do final evaluation
-        if result[0] > 0 and result[1] == 0:
+        if true_count > 0 and false_count == 0:
             # All True Knowledge Bases evaluate this query as True
             return LogicValue.TRUE
-        elif result[0] == 0 and result[1] > 0:
+        elif true_count == 0 and false_count > 0:
             # All True Knowledge Bases evaluate this query as False
             return LogicValue.FALSE
         else:
