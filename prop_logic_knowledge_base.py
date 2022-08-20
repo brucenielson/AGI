@@ -435,7 +435,7 @@ class PLKnowledgeBase:
                 result = LogicValue.UNDEFINED
         return result
 
-    def _truth_table_check_all_sub(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> (int, int):
+    def _truth_table_check_all(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> (int, int):
         # This function does the work of creating a truth table and thus evaluating the query against the knowledge base
         # It counts up True and False results returning (True count, False count)
         if symbols is None or symbols.length == 0:
@@ -456,12 +456,19 @@ class PLKnowledgeBase:
             copy_model1: SymbolList = model.extend_model(next_symbol, True)
             copy_model2: SymbolList = model.extend_model(next_symbol, False)
             # Try both extended models
-            true_count1, false_count1 = self._truth_table_check_all_sub(query, symbols.clone(), copy_model1)
-            true_count2, false_count2 = self._truth_table_check_all_sub(query, symbols.clone(), copy_model2)
+            true_count1, false_count1 = self._truth_table_check_all(query, symbols.clone(), copy_model1)
+            true_count2, false_count2 = self._truth_table_check_all(query, symbols.clone(), copy_model2)
             return true_count1 + true_count2, false_count1 + false_count2
 
-    def _truth_table_check_all(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> LogicValue:
-        true_count, false_count = self._truth_table_check_all_sub(query, symbols, model)
+    def truth_table_entails(self, query: Union[Sentence, str]) -> LogicValue:
+        if isinstance(query, str):
+            query = Sentence(query)
+        # Make a list of symbols all reset to undefined
+        symbols: SymbolList = self.get_symbol_list()
+        symbols.add(query.get_symbol_list())
+        model: SymbolList = symbols.clone()
+        # Get true and false counts
+        true_count, false_count = self._truth_table_check_all(query, symbols, model)
         # Do final evaluation
         if true_count > 0 and false_count == 0:
             # All True Knowledge Bases evaluate this query as True
@@ -472,12 +479,3 @@ class PLKnowledgeBase:
         else:
             # It is a weird mix, so we don't know
             return LogicValue.UNDEFINED
-
-    def truth_table_entails(self, query: Union[Sentence, str]) -> LogicValue:
-        if isinstance(query, str):
-            query = Sentence(query)
-        # Make a list of symbols all reset to undefined
-        symbols: SymbolList = self.get_symbol_list()
-        symbols.add(query.get_symbol_list())
-        model: SymbolList = symbols.clone()
-        return self._truth_table_check_all(query, symbols, model)
