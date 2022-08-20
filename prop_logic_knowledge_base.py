@@ -346,10 +346,6 @@ class PLKnowledgeBase:
     def __init__(self) -> None:
         # A propositional logic knowledge base is really just an array of propositional logic sentences
         self._sentences: List[Sentence] = []
-        # These are used to determine number of true and false -- I need this to determine if
-        # the query being entailed is true, false, or indeterminate
-        self._query_true_count: int = 0
-        self._query_false_count: int = 0
         # Used for finding symbol that is a unit clause
         self._possible_unit_clause: LogicSymbol
         self._count_of_symbols: int = 0
@@ -439,18 +435,18 @@ class PLKnowledgeBase:
                 result = LogicValue.UNDEFINED
         return result
 
-    def _truth_table_check_all(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> LogicValue:
+    def _truth_table_check_all_sub(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> (int, int):
         # This function does the work of creating a truth table and thus evaluating the query against the knowledge base
         if symbols is None or symbols.length == 0:
             if self.evaluate_knowledge_base(model) == LogicValue.TRUE:
                 eval_query: LogicValue = query.evaluate(model)
                 if eval_query == LogicValue.TRUE:
-                    self._query_true_count += 1
+                    return 1, 0
                 elif eval_query == LogicValue.FALSE:
-                    self._query_false_count += 1
-                return eval_query
+                    return 0, 1
+                return 0, 0
             else:
-                return LogicValue.TRUE
+                return 0, 0
         else:
             # You don't yet have a full model - so get next symbol to try out
             next_symbol: str = symbols.get_next_symbol().name
@@ -458,20 +454,22 @@ class PLKnowledgeBase:
             copy_model1: SymbolList = model.extend_model(next_symbol, True)
             copy_model2: SymbolList = model.extend_model(next_symbol, False)
             # Try both extended models
-            check1: LogicValue = self._truth_table_check_all(query, symbols.clone(), copy_model1)
-            check2: LogicValue = self._truth_table_check_all(query, symbols.clone(), copy_model2)
-            # return check1.and_op(check2)
+            check1: (int, int) = self._truth_table_check_all_sub(query, symbols.clone(), copy_model1)
+            check2: (int, int) = self._truth_table_check_all_sub(query, symbols.clone(), copy_model2)
+            return check1[0] + check2[0], check1[1] + check2[1]
 
-            # Do final evaluation
-            if self._query_true_count > 0 and self._query_false_count == 0:
-                # All True Knowledge Bases evaluate this query as True
-                return LogicValue.TRUE
-            elif self._query_true_count == 0 and self._query_false_count > 0:
-                # All True Knowledge Bases evaluate this query as False
-                return LogicValue.FALSE
-            else:
-                # It is a weird mix, so we don't know
-                return LogicValue.UNDEFINED
+    def _truth_table_check_all(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> LogicValue:
+        result = self._truth_table_check_all_sub(query, symbols, model)
+        # Do final evaluation
+        if result[0] > 0 and result[1] == 0:
+            # All True Knowledge Bases evaluate this query as True
+            return LogicValue.TRUE
+        elif result[0] == 0 and result[1] > 0:
+            # All True Knowledge Bases evaluate this query as False
+            return LogicValue.FALSE
+        else:
+            # It is a weird mix, so we don't know
+            return LogicValue.UNDEFINED
 
     def truth_table_entails(self, query: Union[Sentence, str]) -> LogicValue:
         if isinstance(query, str):
@@ -480,6 +478,4 @@ class PLKnowledgeBase:
         symbols: SymbolList = self.get_symbol_list()
         symbols.add(query.get_symbol_list())
         model: SymbolList = symbols.clone()
-        self._query_true_count = 0
-        self._query_false_count = 0
         return self._truth_table_check_all(query, symbols, model)
