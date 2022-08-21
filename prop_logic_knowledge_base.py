@@ -376,7 +376,7 @@ class PLKnowledgeBase:
         return self._is_cnf
 
     @property
-    def sentences(self) -> List[Sentence] :
+    def sentences(self) -> List[Sentence]:
         return self._sentences
 
     def clear(self) -> None:
