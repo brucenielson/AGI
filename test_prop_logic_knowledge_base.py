@@ -609,8 +609,8 @@ class TestPLKnowledgeBase(TestCase):
         kb.add(input_str)
         # evaluates to True
         self.assertTrue(kb.dpll_entails('q'))
-        # self.assertTrue(kb.is_query_true('q'))
-        # self.assertFalse(kb.is_query_false('q'))
+        self.assertTrue(kb.is_query_true('q'))
+        self.assertFalse(kb.is_query_false('q'))
         # # Removed to speed up tests
         # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~x'))
         # # Z is Undefined

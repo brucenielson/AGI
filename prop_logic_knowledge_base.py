@@ -504,10 +504,12 @@ class PLKnowledgeBase:
             return LogicValue.UNDEFINED
 
     def is_query_true(self, query: Union[Sentence, str]) -> bool:
-        return self.truth_table_entails(query) == LogicValue.TRUE
+        return self.dpll_entails(query)
 
     def is_query_false(self, query: Union[Sentence, str]) -> bool:
-        return self.truth_table_entails(query) == LogicValue.FALSE
+        sentence: Sentence() = sentence_or_str(query)
+        sentence.negate_sentence()
+        return self.dpll_entails(sentence)
 
     def _build_cnf_knowledge_base(self, sentence: Sentence):
         # This function takes a CNF Sentence and builds a knowledge base out of it where each OR clause
