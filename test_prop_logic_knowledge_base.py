@@ -420,7 +420,7 @@ class TestPLKnowledgeBase(TestCase):
         # Test an undefined set
         sl.set_value("a", True)
         sl.set_value("b", True)
-        self.assertTrue(kb.evaluate_knowledge_base(sl) == LogicValue.UNDEFINED)
+        self.assertTrue(kb.evaluate(sl) == LogicValue.UNDEFINED)
         self.assertFalse(kb.is_false(sl))
         self.assertFalse(kb.is_true(sl))
 
@@ -432,20 +432,20 @@ class TestPLKnowledgeBase(TestCase):
         sl.set_value("w", True)
         sl.set_value("x", False)
         sl.set_value("z", False)
-        self.assertTrue(kb.evaluate_knowledge_base(sl) == LogicValue.TRUE)
+        self.assertTrue(kb.evaluate(sl) == LogicValue.TRUE)
         self.assertTrue(kb.is_true(sl))
         self.assertFalse(kb.is_false(sl))
 
         # Now test an invalid set of symbols
         sl.set_value("b", False)
-        self.assertTrue(kb.evaluate_knowledge_base(sl) == LogicValue.FALSE)
+        self.assertTrue(kb.evaluate(sl) == LogicValue.FALSE)
         self.assertFalse(kb.is_true(sl))
         self.assertTrue(kb.is_false(sl))
 
         # Test having only partial info, but still at least one clause is know to be false
         sl = kb.get_symbol_list()
         sl.set_value("b", False)
-        self.assertTrue(kb.evaluate_knowledge_base(sl) == LogicValue.FALSE)
+        self.assertTrue(kb.evaluate(sl) == LogicValue.FALSE)
         self.assertFalse(kb.is_true(sl))
         self.assertTrue(kb.is_false(sl))
 
@@ -536,6 +536,7 @@ class TestPLKnowledgeBase(TestCase):
         input_str = input_str + "P => Q"
         # Verify before conversion
         kb.add(input_str)
+        self.assertFalse(kb.is_cnf)
         self.assertEqual(7, kb.line_count)
         self.assertTrue(kb.get_sentence(0).is_atomic)
         self.assertEqual("A", kb.get_sentence(0).to_string(True))
@@ -552,7 +553,8 @@ class TestPLKnowledgeBase(TestCase):
         self.assertFalse(kb.get_sentence(6).is_atomic)
         self.assertEqual("(P => Q)", kb.get_sentence(6).to_string(True))
         # Now verify after conversion
-        kb = kb.cnf_clone()
+        kb = kb.convert_to_cnf()
+        self.assertTrue(kb.is_cnf)
         self.assertEqual(7, kb.line_count)
         self.assertTrue(kb.get_sentence(0).is_atomic)
         self.assertEqual("A", kb.get_sentence(0).to_string(True))
@@ -575,7 +577,73 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual(1, kb.line_count)
         self.assertTrue(kb.get_sentence(0).is_atomic)
         self.assertEqual("A", kb.get_sentence(0).to_string(True))
-        kb = kb.cnf_clone()
+        kb = kb.convert_to_cnf()
         self.assertEqual(1, kb.line_count)
         self.assertTrue(kb.get_sentence(0).is_atomic)
         self.assertEqual("A", kb.get_sentence(0).to_string(True))
+
+    # noinspection SpellCheckingInspection
+    def test_dpll_entails(self):
+        kb = PLKnowledgeBase()
+        input_str: str
+        input_str = "A"
+        input_str += "\n"
+        input_str = input_str + "B"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND B => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND P => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "B AND L => M"
+        input_str = input_str + "\n"
+        input_str = input_str + "L AND M => P"
+        input_str = input_str + "\n"
+        input_str = input_str + "P => Q"
+        input_str = input_str + "\n"
+        input_str = input_str + "~A => Z"
+        input_str = input_str + "\n"
+        input_str = input_str + "A and Z => W"
+        input_str = input_str + "\n"
+        input_str = input_str + "A or Z => ~X"
+
+        kb.add(input_str)
+        # evaluates to True
+        self.assertTrue(kb.dpll_entails('q'))
+        # self.assertTrue(kb.is_query_true('q'))
+        # self.assertFalse(kb.is_query_false('q'))
+        # # Removed to speed up tests
+        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~x'))
+        # # Z is Undefined
+        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('z'))
+        # self.assertFalse(kb.is_query_true('z'))
+        # self.assertFalse(kb.is_query_false('z'))
+        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('~z'))
+        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('w'))
+        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('~w'))
+        # # Always True even if otherwise undefined
+        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~w or w'))
+        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~z or z'))
+        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a or ~a'))
+        # # Y is Undefined because it is not in the model
+        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('y'))
+        # # False
+        # # Removed to speed up tests
+        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('x'))
+        # # Entailments
+        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a'))
+        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('l'))
+        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('p'))
+        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a and b and l and m and p and q'))
+        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('a and b and l and m and p and q and ~a'))
+        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('a and b and l and m and p and q and z'))
+        # # False statements
+        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('~a'))
+        # self.assertFalse(kb.is_query_true('~a'))
+        # self.assertTrue(kb.is_query_false('~a'))
+        # # Always False
+        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('a and ~a'))
+        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('z and ~z'))
+        # # Always False even though not in the model
+        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('y and ~y'))
+        # # Always True even though not in the model
+        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('y or ~y'))

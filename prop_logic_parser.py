@@ -333,7 +333,7 @@ class PropLogicParser:
 
 
 class Sentence:
-    def __init__(self, symbol1_or_sentence1: Union[Sentence, str] = None, logical_operator: LogicOperatorTypes = None,
+    def __init__(self, sentence1: Union[Sentence, str] = None, logical_operator: LogicOperatorTypes = None,
                  sentence2: Union[Sentence, str] = None, negated: bool = False):
         # set default values
         self._symbol: Optional[str] = None
@@ -345,8 +345,8 @@ class Sentence:
         # Set negation
         self._negation: bool = negated
         # A blank symbol should be treated as a None
-        if symbol1_or_sentence1 == "":
-            symbol1_or_sentence1 = None
+        if sentence1 == "":
+            sentence1 = None
         if sentence2 == "":
             sentence2 = None
         # Handle logical operator
@@ -374,36 +374,36 @@ class Sentence:
                 raise SentenceError("The second sentence (sentence2) must be a string symbol, a Sentence, or None.")
 
         # Handle first sentence (or symbol)
-        if symbol1_or_sentence1 is None:
+        if sentence1 is None:
             # Creating an empty Sentence, probably for a lone not
             self._symbol = None
-        elif isinstance(symbol1_or_sentence1, Sentence):
+        elif isinstance(sentence1, Sentence):
             # This is a Sentence. Cases:
             # One sentence only...
             if self._second_sentence is None and self._logic_operator == LogicOperatorTypes.NoOperator:
                 # No other parameters, so do a shallow copy instead
-                self.copy(symbol1_or_sentence1, negated=negated)
+                self.copy(sentence1, negated=negated)
             else:
                 # Make this first sentence because it is part of other parameters
-                self._first_sentence = symbol1_or_sentence1
-        elif isinstance(symbol1_or_sentence1, str):
-            symbol1_or_sentence1 = symbol1_or_sentence1.upper()
+                self._first_sentence = sentence1
+        elif isinstance(sentence1, str):
+            sentence1 = sentence1.upper()
             # This is a string, so it could be a symbol or a string that is to be parsed to a Sentence
             # Is this just a lone parameter 1 passed as a string?
             if logical_operator is not None or sentence2 is not None:
                 # There is more than a single parameter being passed, so process this as first sentence
-                self._first_sentence = Sentence(symbol1_or_sentence1)
+                self._first_sentence = Sentence(sentence1)
             else:
                 # Only parameter 1 was passed, so check if it is a symbol or sentence needing parsing?
-                if symbol1_or_sentence1.isalnum() and symbol1_or_sentence1[0].isalpha():
+                if sentence1.isalnum() and sentence1[0].isalpha():
                     # This is a single symbol
-                    self._symbol = symbol1_or_sentence1
-                elif symbol1_or_sentence1.isalnum() and symbol1_or_sentence1[0].isalpha():
+                    self._symbol = sentence1
+                elif sentence1.isalnum() and sentence1[0].isalpha():
                     # Invalid value for a symbol since it doesn't start with a letter
                     SentenceError("Symbols must start with a letter.")
                 else:
                     # Only first parameter was passed and it wasn't alpha numeric, so is it a full sentence?
-                    result: Sentence = parse_sentence(symbol1_or_sentence1)  # Attempting to parse
+                    result: Sentence = parse_sentence(sentence1)  # Attempting to parse
                     # This was a full sentence, so do a shallow copy
                     self.copy(result, negated=negated)
         else:
@@ -519,9 +519,8 @@ class Sentence:
         else:
             raise SentenceError("Illegal parameters. Operator cannot be 'None' and Tokens cannot be blank.")
 
-    def negate_sentence(self, sentence: Sentence) -> None:
-        if sentence is None:
-            raise SentenceError("Illegal parameters. The sentence parameter can't be None.")
+    def negate_sentence(self) -> None:
+        sentence = self.clone()
         self._negation = True
         self._logic_operator = LogicOperatorTypes.NoOperator
         self._symbol = None
@@ -686,7 +685,8 @@ class Sentence:
             check2: bool = self._truth_table_check_all(sentence, symbols.clone(), copy_model2)
             return check1 and check2
 
-    def is_equivalent(self, sentence: Union[Sentence, str]) -> bool:
+    def is_equivalent(self, other_sentence: Union[Sentence, str]) -> bool:
+        sentence: Sentence = kb.sentence_or_str(other_sentence)
         if isinstance(sentence, str):
             sentence = Sentence(sentence)
 
@@ -803,7 +803,8 @@ class Sentence:
                     # Flip negation sign on one level down because we just removed the negation at this level
                     sentence.second_sentence = sentence.second_sentence._move_not_inward()
             # Recurse down to the level
-            sentence.first_sentence = sentence.first_sentence._transform_not()
+            if sentence.first_sentence is not None:
+                sentence.first_sentence = sentence.first_sentence._transform_not()
             if sentence.second_sentence is not None:
                 sentence.second_sentence = sentence.second_sentence._transform_not()
             # Return final complex sentence

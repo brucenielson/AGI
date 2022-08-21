@@ -1236,13 +1236,13 @@ class TestSentence(TestCase):
         # Illegal attempt to create an Atomic Sentence
         failed: bool = False
         try:
-            Sentence(symbol1_or_sentence1=None, logical_operator=LogicOperatorTypes.And)
+            Sentence(sentence1=None, logical_operator=LogicOperatorTypes.And)
         except SentenceError:
             failed = True
         self.assertTrue(failed)
         failed = False
         try:
-            Sentence(symbol1_or_sentence1=None, sentence2="Test")
+            Sentence(sentence1=None, sentence2="Test")
         except SentenceError:
             failed = True
         self.assertTrue(failed)

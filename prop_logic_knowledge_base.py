@@ -202,6 +202,14 @@ class SymbolList:
             raise SymbolListError("Call to get_symbol was out of bounds.")
         return self._symbols[position]
 
+    def pop_symbol(self, symbol_name: str) -> LogicSymbol:
+        symbol: LogicSymbol
+        position: int
+        symbol, position = self.find_with_index(symbol_name)
+        if symbol is not None:
+            self._symbols.pop(position)
+        return symbol
+
     def get_next_symbol(self) -> Optional[LogicSymbol]:
         # This function returns the first symbol in the list while removing it
         if len(self._symbols) == 0 or self._symbols is None:
@@ -290,13 +298,12 @@ class SymbolList:
 
     def add(self, symbol_or_list: Union[str, LogicSymbol, SymbolList],
             value: Union[LogicValue, bool] = LogicValue.UNDEFINED) -> None:
+        symbol: LogicSymbol
         if isinstance(symbol_or_list, SymbolList):
             # Concatenate the SymbolList into this SymbolList
-            symbol: LogicSymbol
             for symbol in symbol_or_list:
                 self.add(symbol)
         else:
-            symbol: LogicSymbol
             if isinstance(symbol_or_list, str):
                 symbol_or_list = symbol_or_list.upper()
                 symbol = LogicSymbol(symbol_or_list, value)
@@ -337,6 +344,19 @@ class SymbolList:
         copy_model: SymbolList = self.clone()
         copy_model.set_value(symbol_name, value)
         return copy_model
+
+
+def sentence_or_str(sentence_in: Union[Sentence, str]) -> Sentence:
+    # Pass in a Sentence or string and out comes a definitive Sentence
+    sentence_out: Sentence
+    # Make sure in right format
+    if isinstance(sentence_in, Sentence):
+        sentence_out = sentence_in
+    elif isinstance(sentence_in, str):
+        sentence_out = Sentence(sentence_in)
+    else:
+        raise KnowledgeBaseError("Attempted to pass an invalid type as 'query' parameter.")
+    return sentence_out
 
 
 class PLKnowledgeBase:
@@ -420,12 +440,12 @@ class PLKnowledgeBase:
         return sl
 
     def is_false(self, model: SymbolList) -> bool:
-        return self.evaluate_knowledge_base(model) == LogicValue.FALSE
+        return self.evaluate(model) == LogicValue.FALSE
 
     def is_true(self, model: SymbolList) -> bool:
-        return self.evaluate_knowledge_base(model) == LogicValue.TRUE
+        return self.evaluate(model) == LogicValue.TRUE
 
-    def evaluate_knowledge_base(self, model: SymbolList) -> LogicValue:
+    def evaluate(self, model: SymbolList) -> LogicValue:
         # Take the model (a SymbolList with values) and evaluate each Sentence in the knowledge base.
         # If all are true, the whole is true. If any are false the whole is false.
         # If there isn't enough information available, return Undefined.
@@ -443,7 +463,7 @@ class PLKnowledgeBase:
         # This function does the work of creating a truth table and thus evaluating the query against the knowledge base
         # It counts up True and False results returning (True count, False count)
         if symbols is None or symbols.length == 0:
-            if self.evaluate_knowledge_base(model) == LogicValue.TRUE:
+            if self.evaluate(model) == LogicValue.TRUE:
                 eval_query: LogicValue = query.evaluate(model)
                 if eval_query == LogicValue.TRUE:
                     return 1, 0
@@ -465,14 +485,13 @@ class PLKnowledgeBase:
             return true_count1 + true_count2, false_count1 + false_count2
 
     def truth_table_entails(self, query: Union[Sentence, str]) -> LogicValue:
-        if isinstance(query, str):
-            query = Sentence(query)
+        query_sentence: Sentence = sentence_or_str(query)
         # Make a list of symbols all reset to undefined
         symbols: SymbolList = self.get_symbol_list()
-        symbols.add(query.get_symbol_list())
+        symbols.add(query_sentence.get_symbol_list())
         model: SymbolList = symbols.clone()
         # Get true and false counts
-        true_count, false_count = self._truth_table_check_all(query, symbols, model)
+        true_count, false_count = self._truth_table_check_all(query_sentence, symbols, model)
         # Do final evaluation
         if true_count > 0 and false_count == 0:
             # All True Knowledge Bases evaluate this query as True
@@ -490,11 +509,7 @@ class PLKnowledgeBase:
     def is_query_false(self, query: Union[Sentence, str]) -> bool:
         return self.truth_table_entails(query) == LogicValue.FALSE
 
-    def convert_to_cnf(self) -> List[Sentence]:
-        kb: PLKnowledgeBase = self.cnf_clone()
-        return kb.sentences
-
-    def build_cnf_knowledge_base(self, sentence: Sentence):
+    def _build_cnf_knowledge_base(self, sentence: Sentence):
         # This function takes a CNF Sentence and builds a knowledge base out of it where each OR clause
         # becomes becomes a single sentence in the knowledge base.
         # Assumption: this sentence is already in CNF form -- if it isn't, the results are unpredictable
@@ -505,30 +520,27 @@ class PLKnowledgeBase:
         #
         # Strategy: recurse through the whole sentence tree and find each AND clause and then grab the clauses
         # in between (which are either OR clauses or symbols) and stuff them separately into the knowledge base
+        def recurse_sentence(a_sentence: Sentence):
+            if a_sentence.logic_operator == LogicOperatorTypes.Or or a_sentence.is_atomic:
+                # This is the top of an OR clause or it's atomic, so add it
+                self.add(a_sentence)
+            elif a_sentence.logic_operator == LogicOperatorTypes.And:
+                # It is an and clause, so recurse
+                self._build_cnf_knowledge_base(a_sentence)
+            else:
+                # It is neither an and nor an or, so we must not be in CNF form. Raise error.
+                raise KnowledgeBaseError("_build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
 
         if sentence.logic_operator == LogicOperatorTypes.And:
-            if sentence.first_sentence.logic_operator == LogicOperatorTypes.Or or sentence.first_sentence.is_atomic:
-                # This is the top of an OR clause or it's atomic, so add it
-                self.add(sentence.first_sentence)
-            elif sentence.first_sentence.logic_operator == LogicOperatorTypes.And:
-                self.build_cnf_knowledge_base(sentence.first_sentence)
-            else:
-                raise KnowledgeBaseError("build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
-
-            if sentence.second_sentence.logic_operator == LogicOperatorTypes.Or or sentence.second_sentence.is_atomic:
-                # This is the top of an OR clause or it's atomic, so add it
-                self.add(sentence.second_sentence)
-            elif sentence.second_sentence.logic_operator == LogicOperatorTypes.And:
-                self.build_cnf_knowledge_base(sentence.second_sentence)
-            else:
-                raise KnowledgeBaseError("build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
+            recurse_sentence(sentence.first_sentence)
+            recurse_sentence(sentence.second_sentence)
         elif sentence.is_atomic:
             # It's a symbol, so just put it into the database
             self.add(sentence)
         else:
-            raise KnowledgeBaseError("build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
+            raise KnowledgeBaseError("_build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
 
-    def cnf_clone(self) -> PLKnowledgeBase:
+    def convert_to_cnf(self) -> PLKnowledgeBase:
         # This function takes the whole knowledge base and converts it to a single knowledge base in CNF form
         # with each sentence in the knowledge base being one OR clause
         cnf_kb: str = ""
@@ -542,6 +554,78 @@ class PLKnowledgeBase:
         # "sentence" now contains the entire knowledge base in a single logical sentence
         # Now loop through and find each OR clause and build a new knowledge base out of it
         new_kb: PLKnowledgeBase = PLKnowledgeBase()
-        new_kb.build_cnf_knowledge_base(sentence)
+        new_kb._build_cnf_knowledge_base(sentence)
         new_kb._is_cnf = True
         return new_kb
+
+    # noinspection SpellCheckingInspection
+    def dpll(self, symbols: SymbolList, model: SymbolList) -> bool:
+        def symbol_list_to_model(symbol: LogicSymbol, symbol_list: SymbolList, a_model: SymbolList):
+            if symbol is not None:
+                # Remove symbol from the list of symbols
+                symbol_list = symbol_list.clone()
+                symbol_list.pop_symbol(symbol.name)
+                # Extend the model with this symbol and value
+                a_model = a_model.clone()
+                a_model.set_value(symbol.name, symbol.value)
+                return symbol_list, a_model
+
+        # This function evaluates the query against the knowledge base, but does so with the DPLL algorithm
+        # instead of a full brute truth table - thus it's faster
+        # The query passed must be the entire knowledge base plus the query in CNF form
+        # If it isn't, it will error out
+
+        # Strategy 1: Early Termination
+        # If every clause in clauses is True in model then return True
+        if self.is_true(model):
+            return True
+        # If some clause in clauses is False in model then return False
+        if self.is_false(model):
+            return False
+        # Otherwise, we are still "Undefined" and so we need to keep recursively building the model
+        # Strategy 2: Handle pure symbols
+        # TODO: Does this need to be opmtimized?
+        # symbol: LogicSymbol = self.find_pure_symbol(model)
+        # if symbol is not None:
+        #     return self.dpll(symbol_list_to_model(symbol, symbols, model))
+        # # Strategy 3: Handle unit clauses
+        # symbol = self.find_unit_clause(model)
+        # if symbol is not None:
+        #     return self.dpll(symbol_list_to_model(symbol, symbols, model))
+
+        # Done with pure symbol and unit clause short cuts for now
+        # Now extend the model with both True and False (simlar to truth table entails)
+        # You don't yet have a full model - so get next symbol to try out
+        next_symbol: str = symbols.get_next_symbol().name
+        # Extend model as both True and False
+        copy_model1: SymbolList = model.extend_model(next_symbol, True)
+        copy_model2: SymbolList = model.extend_model(next_symbol, False)
+        # Try both extended models
+        return self.dpll(symbols.clone(), copy_model1) or self.dpll(symbols.clone(), copy_model2)
+
+    # noinspection SpellCheckingInspection
+    def dpll_entails(self, query: Union[Sentence, str]) -> bool:
+        #  satisfiability is the same as entails via this formula
+        #  a entails b if a AND ~b are unsatisfiable
+        #  so we change the query to be it's negation
+        symbols: SymbolList = SymbolList()
+        model: SymbolList
+        query_sentence: Sentence
+        # Make sure in right format
+        query_sentence = sentence_or_str(query)
+        # Check for CNF format
+        if not self.is_cnf:
+            cnf_clauses = self.clone()
+            query_sentence.negate_sentence()
+            cnf_clauses.add(query_sentence)
+            cnf_clauses = cnf_clauses.convert_to_cnf()
+            symbols = cnf_clauses.get_symbol_list()
+            model = symbols.clone()
+            return not cnf_clauses.dpll(symbols, model)
+        else:
+            symbol = self.get_symbol_list()
+            model = symbol.clone()
+            return not self.dpll(symbols, model)
+
+    def entails(self, query):
+        return self.dpll_entails(query)
