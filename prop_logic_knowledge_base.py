@@ -561,7 +561,7 @@ class PLKnowledgeBase:
         return new_kb
 
     # noinspection SpellCheckingInspection
-    def dpll(self, symbols: SymbolList, model: SymbolList) -> bool:
+    def _dpll(self, symbols: SymbolList, model: SymbolList) -> bool:
         def symbol_list_to_model(symbol: LogicSymbol, symbol_list: SymbolList, a_model: SymbolList):
             if symbol is not None:
                 # Remove symbol from the list of symbols
@@ -603,7 +603,7 @@ class PLKnowledgeBase:
         copy_model1: SymbolList = model.extend_model(next_symbol, True)
         copy_model2: SymbolList = model.extend_model(next_symbol, False)
         # Try both extended models
-        return self.dpll(symbols.clone(), copy_model1) or self.dpll(symbols.clone(), copy_model2)
+        return self._dpll(symbols.clone(), copy_model1) or self._dpll(symbols.clone(), copy_model2)
 
     # noinspection SpellCheckingInspection
     def dpll_entails(self, query: Union[Sentence, str]) -> bool:
@@ -623,11 +623,11 @@ class PLKnowledgeBase:
             cnf_clauses = cnf_clauses.convert_to_cnf()
             symbols = cnf_clauses.get_symbol_list()
             model = symbols.clone()
-            return not cnf_clauses.dpll(symbols, model)
+            return not cnf_clauses._dpll(symbols, model)
         else:
             symbol = self.get_symbol_list()
             model = symbol.clone()
-            return not self.dpll(symbols, model)
+            return not self._dpll(symbols, model)
 
     def entails(self, query):
         return self.dpll_entails(query)
