@@ -511,6 +511,14 @@ class PLKnowledgeBase:
         sentence.negate_sentence()
         return self.dpll_entails(sentence)
 
+    def is_query_undefined(self, query: Union[Sentence, str]) -> bool:
+        is_true: bool = self.is_query_true(query)
+        is_false: bool = self.is_query_false(query)
+        if not is_true and not is_false:
+            return True
+        else:
+            return False
+
     def _build_cnf_knowledge_base(self, sentence: Sentence):
         # This function takes a CNF Sentence and builds a knowledge base out of it where each OR clause
         # becomes becomes a single sentence in the knowledge base.

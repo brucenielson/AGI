@@ -615,35 +615,34 @@ class TestPLKnowledgeBase(TestCase):
         self.assertTrue(kb.dpll_entails('~x'))
         # Z is Undefined
         self.assertFalse(kb.dpll_entails('z'))
-        self.assertFalse(kb.is_query_true('z'))
-        self.assertFalse(kb.is_query_false('z'))
-        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('~z'))
-        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('w'))
-        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('~w'))
-        # # Always True even if otherwise undefined
-        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~w or w'))
-        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('~z or z'))
-        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a or ~a'))
-        # # Y is Undefined because it is not in the model
-        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('y'))
-        # # False
-        # # Removed to speed up tests
-        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('x'))
-        # # Entailments
-        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a'))
-        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('l'))
-        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('p'))
-        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('a and b and l and m and p and q'))
-        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('a and b and l and m and p and q and ~a'))
-        # self.assertEqual(LogicValue.UNDEFINED, kb.truth_table_entails('a and b and l and m and p and q and z'))
-        # # False statements
-        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('~a'))
-        # self.assertFalse(kb.is_query_true('~a'))
-        # self.assertTrue(kb.is_query_false('~a'))
-        # # Always False
-        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('a and ~a'))
-        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('z and ~z'))
-        # # Always False even though not in the model
-        # self.assertEqual(LogicValue.FALSE, kb.truth_table_entails('y and ~y'))
-        # # Always True even though not in the model
-        # self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('y or ~y'))
+        self.assertTrue(kb.is_query_undefined('z'))
+        self.assertTrue(kb.is_query_undefined('~z'))
+        self.assertTrue(kb.is_query_undefined('w'))
+        self.assertTrue(kb.is_query_undefined('~w'))
+        # Always True even if otherwise undefined
+        self.assertTrue(kb.is_query_true('~w or w'))
+        self.assertTrue(kb.is_query_true('~z or z'))
+        self.assertTrue(kb.is_query_true('~z or z'))
+        # Y is Undefined because it is not in the model
+        self.assertTrue(kb.is_query_undefined('y'))
+        # False
+        # Removed to speed up tests
+        self.assertFalse(kb.dpll_entails('x'))
+        # Entailments
+        self.assertTrue(kb.dpll_entails('a'))
+        self.assertTrue(kb.dpll_entails('l'))
+        self.assertTrue(kb.dpll_entails('p'))
+        self.assertTrue(kb.dpll_entails('a and b and l and m and p and q'))
+        self.assertFalse(kb.dpll_entails('a and b and l and m and p and q and ~a'))
+        self.assertTrue(kb.is_query_undefined('a and b and l and m and p and q and z'))
+        # False statements
+        self.assertFalse(kb.dpll_entails('~a'))
+        self.assertFalse(kb.is_query_true('~a'))
+        self.assertTrue(kb.is_query_false('~a'))
+        # Always False
+        self.assertTrue(kb.is_query_false('a and ~a'))
+        self.assertTrue(kb.is_query_false('z and ~z'))
+        # Always False even though not in the model
+        self.assertTrue(kb.is_query_false('y and ~y'))
+        # Always True even though not in the model
+        self.assertTrue(kb.is_query_true('y or ~y'))
