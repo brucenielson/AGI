@@ -335,7 +335,7 @@ class PropLogicParser:
 class Sentence:
     def __init__(self, sentence1: Union[Sentence, str] = None, logical_operator: LogicOperatorTypes = None,
                  sentence2: Union[Sentence, str] = None, negated: bool = False):
-        # set default values
+        # Set default values
         self._symbol: Optional[str] = None
         self._first_sentence: Optional[Sentence] = None
         self._second_sentence: Optional[Sentence] = None

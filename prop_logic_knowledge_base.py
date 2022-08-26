@@ -570,7 +570,8 @@ class PLKnowledgeBase:
 
     # noinspection SpellCheckingInspection
     def _dpll(self, symbols: SymbolList, model: SymbolList) -> bool:
-        def symbol_list_to_model(symbol: LogicSymbol, symbol_list: SymbolList, a_model: SymbolList):
+        def move_symbol_to_model(symbol: LogicSymbol, symbol_list: SymbolList, a_model: SymbolList) \
+                -> (SymbolList, SymbolList):
             if symbol is not None:
                 # Remove symbol from the list of symbols
                 symbol_list = symbol_list.clone()
@@ -594,14 +595,16 @@ class PLKnowledgeBase:
             return False
         # Otherwise, we are still "Undefined" and so we need to keep recursively building the model
         # Strategy 2: Handle pure symbols
-        # TODO: Does this need to be opmtimized?
+        # TODO: Does this need to be opmtimized? Seems to slow things down right now.
         # symbol: LogicSymbol = self.find_pure_symbol(model)
         # if symbol is not None:
         #     return self.dpll(symbol_list_to_model(symbol, symbols, model))
-        # # Strategy 3: Handle unit clauses
-        # symbol = self.find_unit_clause(model)
-        # if symbol is not None:
-        #     return self.dpll(symbol_list_to_model(symbol, symbols, model))
+        # Strategy 3: Handle unit clauses
+        unit_symbol: LogicSymbol = self.find_unit_clause(model)
+        if unit_symbol is not None:
+            # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
+            symbols, model = move_symbol_to_model(unit_symbol, symbols, model)
+            return self._dpll(symbols, model)
 
         # Done with pure symbol and unit clause short cuts for now
         # Now extend the model with both True and False (simlar to truth table entails)
@@ -622,20 +625,94 @@ class PLKnowledgeBase:
         model: SymbolList
         query_sentence: Sentence
         # Make sure in right format
-        query_sentence = sentence_or_str(query)
+        query_sentence: Sentence = sentence_or_str(query)
         # Check for CNF format
         if not self.is_cnf:
-            cnf_clauses = self.clone()
+            cnf_clauses: PLKnowledgeBase = self.clone()
             query_sentence.negate_sentence()
             cnf_clauses.add(query_sentence)
             cnf_clauses = cnf_clauses.convert_to_cnf()
-            symbols = cnf_clauses.get_symbol_list()
-            model = symbols.clone()
+            symbols: SymbolList = cnf_clauses.get_symbol_list()
+            model: SymbolList = symbols.clone()
             return not cnf_clauses._dpll(symbols, model)
         else:
-            symbol = self.get_symbol_list()
-            model = symbol.clone()
+            symbol: SymbolList = self.get_symbol_list()
+            model: SymbolList = symbol.clone()
             return not self._dpll(symbols, model)
 
     def entails(self, query):
         return self.dpll_entails(query)
+
+    def find_unit_clause(self, model: SymbolList) -> Optional[LogicSymbol]:
+        def search_for_unit_symbol(clause: Sentence, a_model: SymbolList) -> Optional[LogicSymbol]:
+            possible_unit: Optional[LogicSymbol]
+            total_count: int
+            possible_unit, total_count = search_for_unit_symbol_sub(clause, a_model)
+            if total_count == -1 or total_count > 1:
+                return None
+            else:
+                return possible_unit
+
+        def search_for_unit_symbol_sub(clause: Sentence, a_model: SymbolList) -> (LogicSymbol, int):
+            # Pass in a sentence and, if possible, it returns a unit clause symbol
+            # Recursively look through this sentence for one and only one symbol name
+            # that has no assignment in the model.
+            # Assumption: we are in CNF format
+            if clause is None:
+                return None, 0
+            # elif not clause.is_cnf:
+            #     raise KnowledgeBaseError("Attempt to call search_for_unit_symbol without first being in CNF format.")
+
+            total_count: int = 0
+            possible_unit: Optional[LogicSymbol]
+            if clause.is_atomic:
+                # This is just a lone symbol
+                value: LogicValue = a_model.get_value(clause.symbol)
+                if value == LogicValue.UNDEFINED:
+                    # This one has no value assigned yet, so it is a potential unit clause
+                    possible_unit = LogicSymbol(clause.symbol)
+                    # Set value to positive if no negation and negative otherwise
+                    possible_unit.value = not clause.negation
+                    return possible_unit, 1
+                else:  # if value is TRUE or FALSE
+                    # The other condition for a unit clause is that all other literals in the clause are False
+                    literal_value: bool = (value == LogicValue.TRUE)
+                    # If the clause is negated, then treat a True as a False and vice versa
+                    if clause.negation:
+                        literal_value = not literal_value
+                    if literal_value:
+                        # literal_value is True, so this can't be a unit clause
+                        return None, -1
+                    else:
+                        return None, 0
+            elif clause.logic_operator == LogicOperatorTypes.Or:
+                # This is not a lone symbol, so recurse
+                # Search first sentence
+                count: int
+                possible_unit, count = search_for_unit_symbol_sub(clause.first_sentence, a_model)
+                total_count += count
+                if total_count == -1 or total_count > 1:
+                    # Abort search
+                    return None, -1
+                possible_unit, count = search_for_unit_symbol_sub(clause.second_sentence, a_model)
+                total_count += count
+                if total_count == -1 or total_count > 1:
+                    # Abort search
+                    return None, -1
+                # Continue search
+                return possible_unit, total_count
+            else:
+                # There should be only OR clauses and unit clauses in each clause if in CNF format
+                raise KnowledgeBaseError("find_unit_clause was called for a sentence not in CNF format")
+
+        # This function searches the sentence and, given the model, determines if this sentence is a unit clause
+        # A unit clause is defined as either a sentence made up of a single symbol (negated or not)
+        # or a clause with all the other symbols evaluating to false (as per model) save one
+        # Assumption: This function assumes we're in CNF or else we get an error
+        if not self.is_cnf:
+            raise KnowledgeBaseError("Attempt to call find_unit_clause without first being in CNF format.")
+        for sentence in self._sentences:
+            unit_symbol: LogicSymbol = search_for_unit_symbol(sentence, model)
+            if unit_symbol is not None:
+                return unit_symbol
+        return None
