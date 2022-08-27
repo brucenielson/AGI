@@ -413,7 +413,10 @@ class PLKnowledgeBase:
         elif isinstance(sentence_or_list, Sentence):
             if not self.exists(sentence_or_list):
                 self._sentences.append(sentence_or_list)
-            self._is_cnf = False
+            if sentence_or_list.is_valid_cnf():
+                self._is_cnf = True
+            else:
+                self._is_cnf = False
         else:
             for sentence in sentence_or_list:
                 self.add(sentence)
@@ -602,11 +605,11 @@ class PLKnowledgeBase:
         #     symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
         #     return self._dpll(symbols, model)
         # Strategy 3: Handle unit clauses
-        unit_symbol: LogicSymbol = self.find_unit_clause(model)
-        if unit_symbol is not None:
-            # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-            symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
-            return self._dpll(symbols, model)
+        # unit_symbol: LogicSymbol = self.find_unit_clause(model)
+        # if unit_symbol is not None:
+        #     # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
+        #     symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+        #     return self._dpll(symbols, model)
 
         # Done with pure symbol and unit clause short cuts for now
         # Now extend the model with both True and False (simlar to truth table entails)
@@ -640,10 +643,11 @@ class PLKnowledgeBase:
             model: SymbolList = symbols.clone()
             return not cnf_clauses._dpll(symbols, model)
         else:
-            self.add(query_sentence)
-            symbol: SymbolList = self.get_symbol_list()
-            model: SymbolList = symbol.clone()
-            return not self._dpll(symbols, model)
+            kb_clone: PLKnowledgeBase = self.clone()
+            kb_clone.add(query_sentence)
+            symbols: SymbolList = kb_clone.get_symbol_list()
+            model: SymbolList = symbols.clone()
+            return not kb_clone._dpll(symbols, model)
 
     def entails(self, query):
         return self.dpll_entails(query)
