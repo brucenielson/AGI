@@ -706,10 +706,12 @@ class Sentence:
     def clone(self) -> Sentence:
         return deepcopy(self)
 
-    def convert_to_cnf(self) -> Sentence:
+    def convert_to_cnf(self, or_clauses_only=False) -> Union[Sentence, List[Sentence]]:
         # This function transforms the sentence into Conjunctive Normal Form
         # CNF is a form made up of Ors connected by ANDs i.e. (A OR B OR C) AND (D OR E OR F)
         # 3-CNF is the 3-SAT problem
+        # If you set or_clauses_only to True, you'll get back not a Sentence but a list of Sentences that can then
+        # be freely added to a knowledge base in CNF format without resetting it to no longer being in CNF format.
         sentence: Sentence = self.clone()
         sentence = sentence._transform_conditionals()
         sentence = sentence._transform_not()
@@ -720,7 +722,15 @@ class Sentence:
             sentence = sentence._transform_distribute_ors()
         # Mark this sentence as in cnf format
         sentence._is_cnf = True
-        return sentence
+        # Is this to be converted into a list of CNF clauses with only or clauses?
+        if or_clauses_only:
+            temp_kb: kb.PLKnowledgeBase = kb.PLKnowledgeBase()
+            temp_kb.add(sentence)
+            temp_kb = temp_kb.convert_to_cnf()
+            # Set each sentence in the list to is_cnf = True
+            return temp_kb.sentences
+        else:
+            return sentence
 
     def _transform_conditionals(self) -> Sentence:
         # Start with a clone to avoid any side effect
@@ -764,10 +774,7 @@ class Sentence:
     def _move_not_inward(self) -> Sentence:
         sentence: Sentence = self.clone()
         # Flip the negation on this sentence
-        if sentence.negation:
-            sentence.negation = False
-        else:
-            sentence.negation = True
+        sentence.negation = not sentence.negation
         # If we now have a non-negated sentence without an operator, then we need to pull it all up one level
         if sentence.logic_operator == LogicOperatorTypes.NoOperator and not sentence.negation \
                 and sentence.first_sentence is not None and sentence.second_sentence is None:
@@ -789,6 +796,8 @@ class Sentence:
                 if sentence.second_sentence is None:
                     # This is a 'negation' only sentence, so pull it up one level
                     sentence = sentence.first_sentence._move_not_inward()
+                    if not sentence.is_atomic:
+                        sentence = sentence._transform_not()
                 else:  # if sentence.second_sentence is not None:
                     # This ia a regular two sentence logical operation
                     sentence.first_sentence = sentence.first_sentence._move_not_inward()
@@ -860,15 +869,43 @@ class Sentence:
             sentence.second_sentence = sentence.second_sentence._transform_distribute_ors()
         return sentence
 
-    def is_valid_cnf(self, previous_or: bool = False) -> bool:
+    def _is_valid_cnf_or_only(self) -> bool:
+        # The rules are the same as for the _is_valid_cnf_include_and version except for the following:
+        # 1 & 3. There are no AND operators period
+        # This more stringent (but easier to check for) standard is required if you are going to allow
+        # this sentence to be inserted into a knowledge base in CNF format because CNF knowledge bases
+        # Don't use AND clauses and instead just make them separate lines.
+        def is_valid_node(sentence: Sentence) -> bool:
+            if sentence.is_atomic:
+                return True
+            elif not sentence.is_atomic and sentence.second_sentence is None:
+                # CNF should always have a second sentence unless it is atomic
+                return False
+            elif not sentence.is_atomic and sentence.negation:
+                # CNF should never have negated sentences unless they are literals (i.e. atomic)
+                return False
+            elif sentence.logic_operator == LogicOperatorTypes.Or:
+                # Full CNF format never has OR clauses only
+                return True
+            else:
+                return False
+        # Recursively validate entire sentence is CNF format
+        if self.is_atomic:
+            return is_valid_node(self)
+        else:
+            return is_valid_node() and self.first_sentence._is_valid_cnf_or_only() \
+                     and self.second_sentence._is_valid_cnf_or_only()
+
+    def _is_valid_cnf_include_and(self,  previous_or: bool):
+        # This function will verify that the current sentence is really in CNF formatting
+        # A Sentence is in CNF format if the following are true:
+        # 1. There are no AND operators under an OR operator
+        # 2. OR Operators have either atomic sentences under them or other OR sentences
+        # 3. AND Operators have either atomic sentences under them, or AND sentences, or OR sentences
+        # 4. We never bump into any other type of operator
+        # 5. We never have a 'negated sentence' i.e. a complex sentence without a second sentence
+        # or_clauses_only set to True will enforce that the following replacement rules (the rest will remain):
         def is_valid_node(sentence: Sentence, current_previous_or: bool) -> bool:
-            # This function will verify that the current sentence is really in CNF formatting
-            # A Sentence is in CNF format if the following are true:
-            # 1. There are no AND operators under an OR operator
-            # 2. OR Operators have either atomic sentences under them or other OR sentences
-            # 3. AND Operators have either atomic sentences under them, or AND sentences, or OR sentences
-            # 4. We never bump into any other type of operator
-            # 5. We never have a 'negated sentence' i.e. a complex sentence without a second sentence
             if sentence.is_atomic:
                 return True
             elif not sentence.is_atomic and sentence.second_sentence is None:
@@ -891,16 +928,25 @@ class Sentence:
                     return True
             else:
                 return False
-
+        # Recursively validate entire sentence is CNF format
         if self.logic_operator == LogicOperatorTypes.Or:
             previous_or = True
-        result = is_valid_node(self, previous_or)
-        if not self.is_atomic:
-            result = result and self.first_sentence.is_valid_cnf(previous_or=previous_or) \
-                     and self.second_sentence.is_valid_cnf(previous_or=previous_or)
+        if self.is_atomic:
+            return is_valid_node(self, previous_or)
+        else:
+            return is_valid_node(self, previous_or) \
+                   and self.first_sentence._is_valid_cnf_include_and(previous_or=previous_or) \
+                   and self.second_sentence._is_valid_cnf_include_and(previous_or=previous_or)
+
+    def is_valid_cnf(self, or_clauses_only=False) -> bool:
+        result: bool
+        if or_clauses_only:
+            result = self._is_valid_cnf_or_only()
+        else:
+            result = self._is_valid_cnf_include_and(previous_or=False)
+        # Set if this sentence is in cnf format
         if result:
             self._is_cnf = True
         else:
             self._is_cnf = False
-
         return result

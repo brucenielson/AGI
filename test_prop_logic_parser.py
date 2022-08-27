@@ -2030,6 +2030,11 @@ class TestSentence(TestCase):
         self.assertTrue(sentence1 == sentence3)
         sentence4 = sentence1.convert_to_cnf()
         self.assertTrue(sentence1 == sentence4)
+        # Test negated complex sentence with only one symbol
+        sentence1 = Sentence("~w or w")
+        sentence1.negate_sentence()
+        sentence1 = sentence1.convert_to_cnf()
+        self.assertEqual("W AND ~W", sentence1.to_string())
 
     def test_is_valid_cnf(self):
         # Test atomic

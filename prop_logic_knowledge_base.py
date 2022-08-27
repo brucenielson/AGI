@@ -547,6 +547,8 @@ class PLKnowledgeBase:
         if sentence.logic_operator == LogicOperatorTypes.And:
             recurse_sentence(sentence.first_sentence)
             recurse_sentence(sentence.second_sentence)
+        elif sentence.logic_operator == LogicOperatorTypes.Or:
+            recurse_sentence(sentence)
         elif sentence.is_atomic:
             # It's a symbol, so just put it into the database
             self.add(sentence)
@@ -569,6 +571,9 @@ class PLKnowledgeBase:
         new_kb: PLKnowledgeBase = PLKnowledgeBase()
         new_kb._build_cnf_knowledge_base(sentence)
         new_kb._is_cnf = True
+        # Set each sentence in the knowledge base to is_cnf = True also
+        for sentence in new_kb.sentences:
+            sentence._is_cnf = True
         return new_kb
 
     # noinspection SpellCheckingInspection
@@ -605,11 +610,11 @@ class PLKnowledgeBase:
         #     symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
         #     return self._dpll(symbols, model)
         # Strategy 3: Handle unit clauses
-        # unit_symbol: LogicSymbol = self.find_unit_clause(model)
-        # if unit_symbol is not None:
-        #     # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-        #     symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
-        #     return self._dpll(symbols, model)
+        unit_symbol: LogicSymbol = self.find_unit_clause(model)
+        if unit_symbol is not None:
+            # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
+            symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+            return self._dpll(symbols, model)
 
         # Done with pure symbol and unit clause short cuts for now
         # Now extend the model with both True and False (simlar to truth table entails)
@@ -626,28 +631,27 @@ class PLKnowledgeBase:
         #  satisfiability is the same as entails via this formula
         #  a entails b if a AND ~b are unsatisfiable
         #  so we change the query to be it's negation
-        symbols: SymbolList = SymbolList()
         model: SymbolList
         # Make sure in right format
         query_sentence: Sentence = sentence_or_str(query)
         # Negate query before adding to the knowledge base
         query_sentence.negate_sentence()
-        # Make sure query is in CNF format
-        query_sentence = query_sentence.convert_to_cnf()
         # Check for CNF format
-        if not self.is_cnf:
+        if self.is_cnf:
+            kb_clone: PLKnowledgeBase = self.clone()
+            # Make sure query is in CNF format
+            query_list: List[Sentence] = query_sentence.convert_to_cnf(or_clauses_only=True)
+            kb_clone.add(query_list)
+            symbols: SymbolList = kb_clone.get_symbol_list()
+            model: SymbolList = symbols.clone()
+            return not kb_clone._dpll(symbols, model)
+        else:
             cnf_clauses: PLKnowledgeBase = self.clone()
             cnf_clauses.add(query_sentence)
             cnf_clauses = cnf_clauses.convert_to_cnf()
             symbols: SymbolList = cnf_clauses.get_symbol_list()
             model: SymbolList = symbols.clone()
             return not cnf_clauses._dpll(symbols, model)
-        else:
-            kb_clone: PLKnowledgeBase = self.clone()
-            kb_clone.add(query_sentence)
-            symbols: SymbolList = kb_clone.get_symbol_list()
-            model: SymbolList = symbols.clone()
-            return not kb_clone._dpll(symbols, model)
 
     def entails(self, query):
         return self.dpll_entails(query)
