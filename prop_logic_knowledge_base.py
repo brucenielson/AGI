@@ -570,7 +570,7 @@ class PLKnowledgeBase:
 
     # noinspection SpellCheckingInspection
     def _dpll(self, symbols: SymbolList, model: SymbolList) -> bool:
-        def move_symbol_to_model(symbol: LogicSymbol, symbol_list: SymbolList, a_model: SymbolList) \
+        def set_symbol_in_model(symbol: LogicSymbol, symbol_list: SymbolList, a_model: SymbolList) \
                 -> (SymbolList, SymbolList):
             if symbol is not None:
                 # Remove symbol from the list of symbols
@@ -596,14 +596,16 @@ class PLKnowledgeBase:
         # Otherwise, we are still "Undefined" and so we need to keep recursively building the model
         # Strategy 2: Handle pure symbols
         # TODO: Does this need to be opmtimized? Seems to slow things down right now.
-        # symbol: LogicSymbol = self.find_pure_symbol(model)
-        # if symbol is not None:
-        #     return self.dpll(symbol_list_to_model(symbol, symbols, model))
+        # pure_symbol: LogicSymbol = self.find_pure_symbol(symbols, model)
+        # if pure_symbol is not None:
+        #     # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
+        #     symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
+        #     return self._dpll(symbols, model)
         # Strategy 3: Handle unit clauses
         unit_symbol: LogicSymbol = self.find_unit_clause(model)
         if unit_symbol is not None:
             # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-            symbols, model = move_symbol_to_model(unit_symbol, symbols, model)
+            symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
             return self._dpll(symbols, model)
 
         # Done with pure symbol and unit clause short cuts for now
@@ -623,19 +625,22 @@ class PLKnowledgeBase:
         #  so we change the query to be it's negation
         symbols: SymbolList = SymbolList()
         model: SymbolList
-        query_sentence: Sentence
         # Make sure in right format
         query_sentence: Sentence = sentence_or_str(query)
+        # Negate query before adding to the knowledge base
+        query_sentence.negate_sentence()
+        # Make sure query is in CNF format
+        query_sentence = query_sentence.convert_to_cnf()
         # Check for CNF format
         if not self.is_cnf:
             cnf_clauses: PLKnowledgeBase = self.clone()
-            query_sentence.negate_sentence()
             cnf_clauses.add(query_sentence)
             cnf_clauses = cnf_clauses.convert_to_cnf()
             symbols: SymbolList = cnf_clauses.get_symbol_list()
             model: SymbolList = symbols.clone()
             return not cnf_clauses._dpll(symbols, model)
         else:
+            self.add(query_sentence)
             symbol: SymbolList = self.get_symbol_list()
             model: SymbolList = symbol.clone()
             return not self._dpll(symbols, model)
@@ -690,13 +695,21 @@ class PLKnowledgeBase:
                 # Search first sentence
                 count: int
                 possible_unit, count = search_for_unit_symbol_sub(clause.first_sentence, a_model)
-                total_count += count
-                if total_count == -1 or total_count > 1:
+                if count == -1:
+                    # Abort search
+                    return None, -1
+                else:
+                    total_count += count
+                if total_count > 1:
                     # Abort search
                     return None, -1
                 possible_unit, count = search_for_unit_symbol_sub(clause.second_sentence, a_model)
-                total_count += count
-                if total_count == -1 or total_count > 1:
+                if count == -1:
+                    # Abort search
+                    return None, -1
+                else:
+                    total_count += count
+                if total_count > 1:
                     # Abort search
                     return None, -1
                 # Continue search
@@ -715,4 +728,47 @@ class PLKnowledgeBase:
             unit_symbol: LogicSymbol = search_for_unit_symbol(sentence, model)
             if unit_symbol is not None:
                 return unit_symbol
+        return None
+
+    def is_pure_symbol(self, model: SymbolList, search_symbol: str, negation: bool) -> bool:
+        def assess_symbol(a_sentence: Sentence) -> bool:
+            # Recursively look through this sentence for symbol_name and return True if there
+            # are no negated versions of the symbol in this sentence.
+            if a_sentence.logic_operator == LogicOperatorTypes.Or:
+                return assess_symbol(a_sentence.first_sentence) and assess_symbol(a_sentence.second_sentence)
+            elif a_sentence.is_atomic:
+                if a_sentence.symbol == search_symbol and a_sentence.negation == negation:
+                    # We found the symbol with its correct sign
+                    return True
+                elif a_sentence.symbol == search_symbol and a_sentence.negation != negation:
+                    # We found an opposite sign, so now the whole of it is False
+                    return False
+                else:
+                    # Not finding our symbol counts as pure
+                    return True
+            else:
+                # There should be only OR clauses and unit clauses in each clause if in CNF format
+                raise KnowledgeBaseError("is_pure_symbol was called for a sentence not in CNF format")
+        is_pure: bool = True
+        for sentence in self._sentences:
+            # if not sentence.is_cnf:
+            #     raise KnowledgeBaseError("Called is_pure_symbol without being in CNF format.")
+            if sentence.evaluate(model) == LogicValue.UNDEFINED:  # TODO: This seems inefficient
+                if not assess_symbol(sentence):
+                    is_pure = False
+                    break
+        return is_pure
+
+    def find_pure_symbol(self, symbols: SymbolList, model: SymbolList) -> Optional[LogicSymbol]:
+        # Traverse the entire 'clauses' knowledge base looking for a 'pure symbol' which is a symbol that
+        # is either all not negated or all negated. These are symbols we can easily decide to set in the model
+        # to either True (if not negated) or False (if negated).
+        for symbol in symbols:
+            # TODO: Seems like I could somehow combine the two calls to is_pure_symbol into one call and optimize it
+            if self.is_pure_symbol(model, symbol.name, False):
+                symbol.value = LogicValue.TRUE  # Does this create a side effect?
+                return symbol
+            if self.is_pure_symbol(model, symbol.name, True):
+                symbol.value = LogicValue.TRUE  # Does this create a side effect?
+                return symbol
         return None
