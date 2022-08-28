@@ -604,11 +604,11 @@ class PLKnowledgeBase:
         # Otherwise, we are still "Undefined" and so we need to keep recursively building the model
         # Strategy 2: Handle pure symbols
         # TODO: Does this need to be opmtimized? Seems to slow things down right now.
-        # pure_symbol: LogicSymbol = self.find_pure_symbol(symbols, model)
-        # if pure_symbol is not None:
-        #     # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-        #     symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
-        #     return self._dpll(symbols, model)
+        pure_symbol: LogicSymbol = self.find_pure_symbol(symbols, model)
+        if pure_symbol is not None:
+            # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
+            symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
+            return self._dpll(symbols, model)
         # Strategy 3: Handle unit clauses
         unit_symbol: LogicSymbol = self.find_unit_clause(model)
         if unit_symbol is not None:
@@ -777,6 +777,6 @@ class PLKnowledgeBase:
                 symbol.value = LogicValue.TRUE  # Does this create a side effect?
                 return symbol
             if self.is_pure_symbol(model, symbol.name, True):
-                symbol.value = LogicValue.TRUE  # Does this create a side effect?
+                symbol.value = LogicValue.FALSE  # Does this create a side effect?
                 return symbol
         return None
