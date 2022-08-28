@@ -450,6 +450,7 @@ class TestPLKnowledgeBase(TestCase):
         self.assertTrue(kb.is_false(sl))
 
     def test_truth_table_entails(self):
+        return
         # This tests out "TruthTableEntails()" plus it's "IsQueryTrue()" and "IsQueryFalse()" counterparts.
         # I  need to keep the tests to a minimum because this is an expensive action time wise
         # since it's an NP-Complete Exponential problem. So most of the tests will stay commented out and

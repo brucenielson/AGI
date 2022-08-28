@@ -660,19 +660,21 @@ class PLKnowledgeBase:
         def search_for_unit_symbol(clause: Sentence, a_model: SymbolList) -> Optional[LogicSymbol]:
             possible_unit: Optional[LogicSymbol]
             total_count: int
-            possible_unit, total_count = search_for_unit_symbol_sub(clause, a_model)
+            possible_unit, total_count = _search_for_unit_symbol(clause, a_model)
             if total_count == -1 or total_count > 1:
                 return None
             else:
                 return possible_unit
 
-        def search_for_unit_symbol_sub(clause: Sentence, a_model: SymbolList) -> (LogicSymbol, int):
-            # Pass in a sentence and, if possible, it returns a unit clause symbol
+        def _search_for_unit_symbol(clause: Sentence, a_model: SymbolList) -> (LogicSymbol, int):
+            # Pass in a sentence and, if possible, it returns a unit clause symbol.
             # Recursively look through this sentence for one and only one symbol name
             # that has no assignment in the model.
             # Assumption: we are in CNF format
+            # Return values consist of a potential unit symbol and a count so far
             if clause is None:
                 return None, 0
+            # TODO: Fix this
             # elif not clause.is_cnf:
             #     raise KnowledgeBaseError("Attempt to call search_for_unit_symbol without first being in CNF format.")
 
@@ -697,28 +699,29 @@ class PLKnowledgeBase:
                         # literal_value is True, so this can't be a unit clause
                         return None, -1
                     else:
+                        # This literal value is false, so continue processing.
                         return None, 0
             elif clause.logic_operator == LogicOperatorTypes.Or:
                 # This is not a lone symbol, so recurse
                 # Search first sentence
                 count: int
-                possible_unit, count = search_for_unit_symbol_sub(clause.first_sentence, a_model)
+                possible_unit, count = _search_for_unit_symbol(clause.first_sentence, a_model)
                 if count == -1:
                     # Abort search
                     return None, -1
                 else:
                     total_count += count
                 if total_count > 1:
-                    # Abort search
+                    # Abort search because this symbol isn't a single unit clause
                     return None, -1
-                possible_unit, count = search_for_unit_symbol_sub(clause.second_sentence, a_model)
+                possible_unit, count = _search_for_unit_symbol(clause.second_sentence, a_model)
                 if count == -1:
                     # Abort search
                     return None, -1
                 else:
                     total_count += count
                 if total_count > 1:
-                    # Abort search
+                    # Abort search because this symbol isn't a single unit clause
                     return None, -1
                 # Continue search
                 return possible_unit, total_count
@@ -728,7 +731,7 @@ class PLKnowledgeBase:
 
         # This function searches the sentence and, given the model, determines if this sentence is a unit clause
         # A unit clause is defined as either a sentence made up of a single symbol (negated or not)
-        # or a clause with all the other symbols evaluating to false (as per model) save one
+        # or a clause with all the other symbols evaluating to false (as per model) save one.
         # Assumption: This function assumes we're in CNF or else we get an error
         if not self.is_cnf:
             raise KnowledgeBaseError("Attempt to call find_unit_clause without first being in CNF format.")
@@ -736,6 +739,7 @@ class PLKnowledgeBase:
             unit_symbol: LogicSymbol = search_for_unit_symbol(sentence, model)
             if unit_symbol is not None:
                 return unit_symbol
+        # We didn't find a unit symbol so return None
         return None
 
     def is_pure_symbol(self, model: SymbolList, search_symbol: str, negation: bool) -> bool:
