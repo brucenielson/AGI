@@ -367,7 +367,6 @@ class PLKnowledgeBase:
         # A propositional logic knowledge base is really just an array of propositional logic sentences
         self._sentences: List[Sentence] = []
         # Used for finding symbol that is a unit clause
-        self._possible_unit_clause: LogicSymbol
         self._count_of_symbols: int = 0
         self._is_cnf: bool = False
 
