@@ -299,6 +299,11 @@ class TestSymbolList(TestCase):
         self.assertEqual("E", new_symbols[1].name)
         self.assertEqual(LogicValue.FALSE, symbols[1].value)
         self.assertEqual(2, new_symbols.length)
+        # Test del with key name
+        del new_symbols['B']
+        self.assertEqual("E", new_symbols[0].name)
+        self.assertEqual(LogicValue.UNDEFINED, symbols[0].value)
+        self.assertEqual(1, new_symbols.length)
 
 
 class TestPLKnowledgeBase(TestCase):
