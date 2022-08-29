@@ -2,6 +2,8 @@ from unittest import TestCase
 from prop_logic_knowledge_base import LogicSymbol, LogicValue, PLKnowledgeBase, Sentence, \
     KnowledgeBaseError, SymbolList, SymbolListError
 
+# How to add regions
+# https://www.jetbrains.com/help/rider/Coding_Assistance__Surrounding_with_Region.html#managing-regions-in-the-editor
 
 class TestLogicSymbol(TestCase):
     def test_logic_symbol_class(self):
