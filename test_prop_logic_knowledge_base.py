@@ -51,14 +51,13 @@ class TestSymbolList(TestCase):
         symbols.add("c")
 
         self.assertEqual(3, symbols.length)
-        self.assertIsNotNone(symbols.find('a'))
-        self.assertIsNotNone(symbols.find('B'))
-        self.assertIsNotNone(symbols.find('C'))
-        self.assertIsNone(symbols.find('d'))
+        self.assertIsNotNone(symbols.get_symbol('a'))
+        self.assertIsNotNone(symbols.get_symbol('B'))
+        self.assertIsNotNone(symbols.get_symbol('C'))
+        self.assertIsNone(symbols.get_symbol('d'))
 
     def test_sort_symbol_list(self):
         symbols = SymbolList()
-        symbols.auto_sort = False
         symbols.add("b")
         self.assertEqual(1, symbols.length)
         symbols.add("c")
@@ -67,16 +66,16 @@ class TestSymbolList(TestCase):
         symbols.add("A")
         self.assertEqual(3, symbols.length)
 
-        self.assertEqual(2, symbols.find_with_index('a')[1])
-        self.assertEqual(0, symbols.find_with_index('B')[1])
-        self.assertEqual(1, symbols.find_with_index('C')[1])
-        self.assertIsNone(symbols.find('d'))
+        self.assertEqual(0, symbols.index('a'))
+        self.assertEqual(1, symbols.index('B'))
+        self.assertEqual(2, symbols.index('C'))
+        self.assertIsNone(symbols.index('d'))
 
         symbols.auto_sort = True
-        self.assertEqual(0, symbols.find_with_index('a')[1])
-        self.assertEqual(1, symbols.find_with_index('B')[1])
-        self.assertEqual(2, symbols.find_with_index('C')[1])
-        self.assertIsNone(symbols.find('d'))
+        self.assertEqual(0, symbols.index('a'))
+        self.assertEqual(1, symbols.index('B'))
+        self.assertEqual(2, symbols.index('C'))
+        self.assertIsNone(symbols.index('d'))
 
         symbols = SymbolList()
         symbols.add("b")
@@ -87,10 +86,10 @@ class TestSymbolList(TestCase):
         symbols.add("A")
         self.assertEqual(3, symbols.length)
 
-        self.assertEqual(0, symbols.find_with_index('a')[1])
-        self.assertEqual(1, symbols.find_with_index('B')[1])
-        self.assertEqual(2, symbols.find_with_index('C')[1])
-        self.assertIsNone(symbols.find('d'))
+        self.assertEqual(0, symbols.index('a'))
+        self.assertEqual(1, symbols.index('B'))
+        self.assertEqual(2, symbols.index('C'))
+        self.assertIsNone(symbols.index('d'))
 
         symbols = SymbolList()
         symbols.add("Q3")
@@ -104,17 +103,17 @@ class TestSymbolList(TestCase):
         symbols.add("P4")
         symbols.add("UA45")
 
-        self.assertEqual(0, symbols.find_with_index('a2')[1])
-        self.assertEqual(1, symbols.find_with_index('h356')[1])
-        self.assertEqual(2, symbols.find_with_index('P1')[1])
-        self.assertEqual(3, symbols.find_with_index('P14')[1])
-        self.assertEqual(4, symbols.find_with_index('P2')[1])
-        self.assertEqual(5, symbols.find_with_index('P4')[1])
-        self.assertEqual(6, symbols.find_with_index('Q23')[1])
-        self.assertEqual(7, symbols.find_with_index('Q3')[1])
-        self.assertEqual(8, symbols.find_with_index('UA45')[1])
+        self.assertEqual(0, symbols.index('a2'))
+        self.assertEqual(1, symbols.index('h356'))
+        self.assertEqual(2, symbols.index('P1'))
+        self.assertEqual(3, symbols.index('P14'))
+        self.assertEqual(4, symbols.index('P2'))
+        self.assertEqual(5, symbols.index('P4'))
+        self.assertEqual(6, symbols.index('Q23'))
+        self.assertEqual(7, symbols.index('Q3'))
+        self.assertEqual(8, symbols.index('UA45'))
         self.assertEqual(9, symbols.length)
-        self.assertIsNone(symbols.find('d'))
+        self.assertIsNone(symbols.index('d'))
         self.assertEqual('A2', symbols[0].name)
         self.assertEqual('H356', symbols[1].name)
         self.assertEqual('P1', symbols[2].name)
@@ -158,7 +157,7 @@ class TestSymbolList(TestCase):
         self.assertEqual(LogicValue.UNDEFINED, symbols.get_value('A2'))
         self.assertEqual(LogicValue.UNDEFINED, symbols.get_value('H356'))
         self.assertEqual(LogicValue.UNDEFINED, symbols.get_value('UA45'))
-        self.assertIsNone(symbols.find('d'))
+        self.assertIsNone(symbols.get_symbol('d'))
 
     def test_find_with_index_symbol_list_insertion_point(self):
         symbols = SymbolList()
@@ -167,36 +166,36 @@ class TestSymbolList(TestCase):
         symbols.add("C")
         symbols.add("E")
 
-        self.assertEqual(0, symbols.find_with_index('B')[1])
-        self.assertEqual(1, symbols.find_with_index('C')[1])
-        self.assertEqual(2, symbols.find_with_index('D')[1])
-        self.assertEqual(3, symbols.find_with_index('E')[1])
+        self.assertEqual(0, symbols.index('B'))
+        self.assertEqual(1, symbols.index('C'))
+        self.assertEqual(2, symbols.index('D'))
+        self.assertEqual(3, symbols.index('E'))
 
         symbols.add("A")
-        self.assertEqual(0, symbols.find_with_index('A')[1])
+        self.assertEqual(0, symbols.index('A'))
         symbols.add("B1")
-        self.assertEqual(2, symbols.find_with_index('B1')[1])
+        self.assertEqual(2, symbols.index('B1'))
         symbols.add("A1")
-        self.assertEqual(1, symbols.find_with_index('A1')[1])
+        self.assertEqual(1, symbols.index('A1'))
 
         symbols.add("F")
-        self.assertEqual(7, symbols.find_with_index('F')[1])
+        self.assertEqual(7, symbols.index('F'))
         symbols.add("E1")
-        self.assertEqual(7, symbols.find_with_index('E1')[1])
+        self.assertEqual(7, symbols.index('E1'))
         symbols.add("E2")
-        self.assertEqual(8, symbols.find_with_index('E2')[1])
+        self.assertEqual(8, symbols.index('E2'))
 
         self.assertEqual(10, symbols.length)
-        self.assertEqual(0, symbols.find_with_index('A')[1])
-        self.assertEqual(1, symbols.find_with_index('A1')[1])
-        self.assertEqual(2, symbols.find_with_index('B')[1])
-        self.assertEqual(3, symbols.find_with_index('B1')[1])
-        self.assertEqual(4, symbols.find_with_index('C')[1])
-        self.assertEqual(5, symbols.find_with_index('D')[1])
-        self.assertEqual(6, symbols.find_with_index('E')[1])
-        self.assertEqual(7, symbols.find_with_index('E1')[1])
-        self.assertEqual(8, symbols.find_with_index('E2')[1])
-        self.assertEqual(9, symbols.find_with_index('F')[1])
+        self.assertEqual(0, symbols.index('A'))
+        self.assertEqual(1, symbols.index('A1'))
+        self.assertEqual(2, symbols.index('B'))
+        self.assertEqual(3, symbols.index('B1'))
+        self.assertEqual(4, symbols.index('C'))
+        self.assertEqual(5, symbols.index('D'))
+        self.assertEqual(6, symbols.index('E'))
+        self.assertEqual(7, symbols.index('E1'))
+        self.assertEqual(8, symbols.index('E2'))
+        self.assertEqual(9, symbols.index('F'))
 
     def test_add_symbol_list_via_sentence(self):
         sentence1: Sentence = Sentence.string_to_sentence("a and c and b => d")
@@ -226,6 +225,7 @@ class TestSymbolList(TestCase):
         self.assertEqual("A: True; B: False; C: Undefined; D: Undefined; ", repr(symbol_list))
 
     def test_indexing_and_slicing(self):
+        return
         symbols = SymbolList()
         symbols.add("B")
         symbols.add("D")
@@ -450,7 +450,6 @@ class TestPLKnowledgeBase(TestCase):
         self.assertTrue(kb.is_false(sl))
 
     def test_truth_table_entails(self):
-        return
         # This tests out "TruthTableEntails()" plus it's "IsQueryTrue()" and "IsQueryFalse()" counterparts.
         # I  need to keep the tests to a minimum because this is an expensive action time wise
         # since it's an NP-Complete Exponential problem. So most of the tests will stay commented out and
@@ -585,7 +584,6 @@ class TestPLKnowledgeBase(TestCase):
 
     # noinspection SpellCheckingInspection
     def test_dpll_entails(self):
-        return
         kb = PLKnowledgeBase()
         input_str: str
         input_str = "A"

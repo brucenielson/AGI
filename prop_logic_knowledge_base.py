@@ -66,6 +66,16 @@ class LogicValue(Enum):
             return LogicValue.UNDEFINED
 
 
+def bool_to_logic_value(value: Union[bool, LogicValue]) -> LogicValue:
+    if isinstance(value, bool):
+        if value:
+            return LogicValue.TRUE
+        else:
+            return LogicValue.FALSE
+    else:
+        return value
+
+
 class LogicSymbol:
     def __init__(self, name: str, value: LogicValue = LogicValue.UNDEFINED):
         self._name = name
@@ -121,13 +131,13 @@ class KnowledgeBaseError(Exception):
 
 class SymbolListIterator:
     def __init__(self, symbol_list: SymbolList):
-        self._symbol_list = symbol_list
+        self._symbol_list: List[str] = symbol_list.get_keys()
         self._index: int = 0
 
     def __next__(self):
-        result: LogicSymbol
-        if self._index < self._symbol_list.length:
-            result = self._symbol_list.get_symbols()[self._index]
+        result: str
+        if self._index < len(self._symbol_list):
+            result = self._symbol_list[self._index]
             self._index += 1
             return result
         else:
@@ -137,203 +147,192 @@ class SymbolListIterator:
 class SymbolList:
     # See https://riptutorial.com/python/example/1571/indexing-custom-classes----getitem------setitem---and---delitem--
     # for now to implement getitem setitem related stuff
-    def __init__(self):
-        self._symbols: List[LogicSymbol] = []
-        self._auto_sort: bool = True
-        self._is_sorted: bool = False
+    def __init__(self) -> None:
+        self._symbols: dict[str, LogicValue] = {}
 
     def __iter__(self) -> SymbolListIterator:
         return SymbolListIterator(self)
 
     def __repr__(self) -> str:
         repr_str: str = ""
-        for symbol in self._symbols:
-            repr_str += repr(symbol) + "; "
+        keys: List[str] = self.get_keys()
+        for symbol_name in keys:
+            repr_str += symbol_name + ": " + repr(self._symbols[symbol_name]) + "; "
         return repr_str
 
-    def __getitem__(self, indexes) -> Union[LogicSymbol, SymbolList]:
-        index_list: List[int] = create_index(indexes, self.length)
-        # If there is only one element in the index_list, then return a single LogicSymbol
-        if len(index_list) == 1:
-            return self.get_symbol(index_list[0])
-        # We have a list of indexes, now turn it into a new SymbolList
-        output: List[LogicSymbol] = [self.get_symbol(i) for i in index_list]
-        new_symbol_list: SymbolList = SymbolList()
-        new_symbol_list._symbols = output
-        return new_symbol_list
-
-    def __setitem__(self, key, value):
-        if isinstance(key, int):
-            self.set_value(self.get_symbol(key).name, value)
+    def __getitem__(self, index: Union[str, int]) -> Union[LogicSymbol, LogicValue, SymbolList]:
+        if isinstance(index, str):
+            return self.get_symbol(index).value
         else:
-            for i in key:
-                self.set_value(self.get_symbol(i).name, value)
+            return self.get_symbol(index)
 
-    def __delitem__(self, indexes):
-        index_list: List[int] = create_index(indexes, self.length)
-        index_list.reverse()
-        for i in index_list:
-            del self._symbols[i]
+    def __setitem__(self, symbol_name: str, value: LogicValue) -> None:
+        self._symbols[symbol_name] = value
 
-    def get_symbols(self) -> List[LogicSymbol]:
+    def __delitem__(self, symbol_name) -> None:
+        self._symbols.pop(symbol_name)
+
+    def get_symbols(self) -> dict[str, LogicValue]:
         return self._symbols
 
-    @property
-    def auto_sort(self) -> bool:
-        return self._auto_sort
+    def get_keys(self) -> List[str]:
+        keys: list[str] = list(self._symbols.keys())
+        keys.sort()
+        return keys
 
-    @auto_sort.setter
-    def auto_sort(self, auto_sort: bool) -> None:
-        if auto_sort:
-            self.sort()
-        else:
-            self._auto_sort = False
+    # @property
+    # def auto_sort(self) -> bool:
+    #     return self._auto_sort
 
-    @property
-    def is_sorted(self) -> bool:
-        return self._is_sorted
+    # @auto_sort.setter
+    # def auto_sort(self, auto_sort: bool) -> None:
+    #     if auto_sort:
+    #         self.sort()
+    #     else:
+    #         self._auto_sort = False
+
+    # @property
+    # def is_sorted(self) -> bool:
+    #     return self._is_sorted
 
     @property
     def length(self) -> int:
         return len(self._symbols)
 
-    def get_symbol(self, position: int) -> LogicSymbol:
-        if position > len(self._symbols) - 1 or position < 0:
-            raise SymbolListError("Call to get_symbol was out of bounds.")
-        return self._symbols[position]
+    def get_symbol(self, index: Optional[str, int]) -> LogicSymbol:
+        if isinstance(index, str):
+            index = index.upper()
+            if index in self._symbols:
+                return LogicSymbol(index, self._symbols[index])
+        else:
+            if index > len(self._symbols) - 1 or index < 0:
+                raise SymbolListError("Call to get_symbol was out of bounds.")
+            keys: List[str] = self.get_keys()
+            if keys[index] in self._symbols:
+                return LogicSymbol(keys[index], self._symbols[keys[index]])
 
-    def pop_symbol(self, symbol_name: str) -> LogicSymbol:
-        symbol: LogicSymbol
-        position: int
-        symbol, position = self.find_with_index(symbol_name)
-        if symbol is not None:
-            self._symbols.pop(position)
-        return symbol
+    def pop(self, symbol_name: str) -> LogicSymbol:
+        return LogicSymbol(symbol_name, self._symbols.pop(symbol_name))
 
     def get_next_symbol(self) -> Optional[LogicSymbol]:
         # This function returns the first symbol in the list while removing it
         if len(self._symbols) == 0 or self._symbols is None:
             return None
         else:
-            return self._symbols.pop(0)
+            symbol_keys: List[str] = self.get_keys()
+            return self.pop(symbol_keys[0])
 
-    def find(self, symbol_name: str) -> Optional[LogicSymbol]:
-        return self.find_with_index(symbol_name)[0]
-
-    def find_with_index(self, symbol_name: str) -> (Optional[LogicSymbol], int):
-        # Finds the symbol you ask for with the index of where it was found
-        # If it doesn't find the symbol, it returns None for the symbol and the index value of where it would go
+    def index(self, symbol_name: str) -> Optional[int]:
         symbol_name = symbol_name.upper()
-        symbol: LogicSymbol
-        mid: int = 0
-        if self._is_sorted:
-            # List is currently sorted so do binary search
-            low: int = 0
-            high: int = self.length - 1
-            while 0 <= low <= high < self.length:
-                mid: int = (low + high) // 2
-                if symbol_name == self._symbols[mid].name:
-                    return self._symbols[mid], mid
-                elif symbol_name > self._symbols[mid].name:
-                    low = mid + 1
-                else:
-                    high = mid - 1
-            # If we aborted the search by going off the edge, so a correction to mid so we get insertion point right
-            if low == self.length:
-                mid = self.length
-            elif high < 0:
-                mid = 0
-            elif low > high:
-                mid = low
+        keys: List[str] = self.get_keys()
+        index: Optional[int]
+        try:
+            index = keys.index(symbol_name)
+        except ValueError:
+            index = None
+        return index
 
-        else:
-            # List is currently unsorted so do full search
-            i: int = 0
-            for symbol in self._symbols:
-                if symbol.name == symbol_name:
-                    return symbol, i
-                i += 1
-        # Didn't find anything
-        return None, mid
+    # def find_with_index(self, symbol_name: str) -> (Optional[LogicSymbol], int):
+    #     # Finds the symbol you ask for with the index of where it was found
+    #     # If it doesn't find the symbol, it returns None for the symbol and the index value of where it would go
+    #     symbol_name = symbol_name.upper()
+    #     symbol: LogicSymbol
+    #     mid: int = 0
+    #     if self._is_sorted:
+    #         # List is currently sorted so do binary search
+    #         low: int = 0
+    #         high: int = self.length - 1
+    #         while 0 <= low <= high < self.length:
+    #             mid: int = (low + high) // 2
+    #             if symbol_name == self._symbols[mid].name:
+    #                 return self._symbols[mid], mid
+    #             elif symbol_name > self._symbols[mid].name:
+    #                 low = mid + 1
+    #             else:
+    #                 high = mid - 1
+    #         # If we aborted the search by going off the edge, so a correction to mid so we get insertion point right
+    #         if low == self.length:
+    #             mid = self.length
+    #         elif high < 0:
+    #             mid = 0
+    #         elif low > high:
+    #             mid = low
+    #
+    #     else:
+    #         # List is currently unsorted so do full search
+    #         i: int = 0
+    #         for symbol in self._symbols:
+    #             if symbol.name == symbol_name:
+    #                 return symbol, i
+    #             i += 1
+    #     # Didn't find anything
+    #     return None, mid
 
-    def sort(self) -> None:
-        # Do a quick sort of the list of symbols
-        self._quick_sort(0, len(self._symbols)-1)
-        self._is_sorted = True
+    # def sort(self) -> None:
+    #     # Do a quick sort of the list of symbols
+    #     self._quick_sort(0, len(self._symbols)-1)
+    #     self._is_sorted = True
+    #
+    # def _quick_sort(self, left: int, right: int) -> None:
+    #     assert right >= left
+    #     length: int = (right - left) + 1
+    #     right_symbols: List[LogicSymbol] = []
+    #     left_symbols: List[LogicSymbol] = []
+    #     pivot_symbol: LogicSymbol
+    #
+    #     # Abort once we have a single symbol we are sorting
+    #     if length <= 1:
+    #         return
+    #     middle: int = (length // 2) + left
+    #     left_counter: int = left
+    #     right_counter: int = right
+    #     pivot_symbol = self._symbols[middle]
+    #     i: int
+    #     for i in range(left, right+1):
+    #         # skip over the pivot point
+    #         if i == middle:
+    #             continue
+    #         elif self._symbols[i].name < pivot_symbol.name:
+    #             # Send left
+    #             left_symbols.append(self._symbols[i])
+    #             left_counter += 1
+    #         else:
+    #             # Send right
+    #             right_symbols.append(self._symbols[i])
+    #             right_counter -= 1
+    #     # Create new list
+    #     self._symbols = self._symbols[:left] + left_symbols + [pivot_symbol] + right_symbols + self._symbols[right+1:]
+    #     # Do recursive calls
+    #     if left < left_counter - 1:
+    #         self._quick_sort(left, left_counter-1)
+    #     if left_counter + 1 < right:
+    #         self._quick_sort(left_counter + 1, right)
 
-    def _quick_sort(self, left: int, right: int) -> None:
-        assert right >= left
-        length: int = (right - left) + 1
-        right_symbols: List[LogicSymbol] = []
-        left_symbols: List[LogicSymbol] = []
-        pivot_symbol: LogicSymbol
-
-        # Abort once we have a single symbol we are sorting
-        if length <= 1:
-            return
-        middle: int = (length // 2) + left
-        left_counter: int = left
-        right_counter: int = right
-        pivot_symbol = self._symbols[middle]
-        i: int
-        for i in range(left, right+1):
-            # skip over the pivot point
-            if i == middle:
-                continue
-            elif self._symbols[i].name < pivot_symbol.name:
-                # Send left
-                left_symbols.append(self._symbols[i])
-                left_counter += 1
-            else:
-                # Send right
-                right_symbols.append(self._symbols[i])
-                right_counter -= 1
-        # Create new list
-        self._symbols = self._symbols[:left] + left_symbols + [pivot_symbol] + right_symbols + self._symbols[right+1:]
-        # Do recursive calls
-        if left < left_counter - 1:
-            self._quick_sort(left, left_counter-1)
-        if left_counter + 1 < right:
-            self._quick_sort(left_counter + 1, right)
-
-    def add(self, symbol_or_list: Union[str, LogicSymbol, SymbolList],
+    def add(self, symbol_or_list: Union[str, SymbolList],
             value: Union[LogicValue, bool] = LogicValue.UNDEFINED) -> None:
-        symbol: LogicSymbol
+
+        logic_value: LogicValue = bool_to_logic_value(value)
         if isinstance(symbol_or_list, SymbolList):
             # Concatenate the SymbolList into this SymbolList
-            for symbol in symbol_or_list:
-                self.add(symbol)
+            keys: List[str] = symbol_or_list.get_keys()
+            for symbol in keys:
+                self.add(symbol, symbol_or_list[symbol])
+        elif isinstance(symbol_or_list, str):
+            symbol_or_list = symbol_or_list.upper()
+            self._symbols[symbol_or_list] = logic_value
         else:
-            if isinstance(symbol_or_list, str):
-                symbol_or_list = symbol_or_list.upper()
-                symbol = LogicSymbol(symbol_or_list, value)
-            elif isinstance(symbol_or_list, LogicSymbol):
-                symbol = symbol_or_list
-            else:
-                raise SymbolListError("The 'add' command requires a string symbol, LogicSymbol, or a SymbolList")
-            # Add the symbol to this list
-            found_symbol: LogicSymbol
-            index: int
-            # Only add if this symbol is not already in the list
-            (found_symbol, index) = self.find_with_index(symbol.name)
-            if found_symbol is None:
-                if self._auto_sort:
-                    self._symbols.insert(index, symbol)
-                    self._is_sorted = True
-                else:
-                    self._symbols.append(symbol)
-                    self._is_sorted = False
+            raise SymbolListError("The 'add' command requires a string symbol, LogicSymbol, or a SymbolList")
 
     def set_value(self, symbol_name: str, value: Optional[Union[LogicValue, bool]]) -> None:
-        symbol: LogicSymbol = self.find(symbol_name)
-        symbol.value = value
+        symbol_name = symbol_name.upper()
+        logic_value: LogicValue = bool_to_logic_value(value)
+        self._symbols[symbol_name] = logic_value
 
     def get_value(self, symbol_name: str) -> LogicValue:
-        symbol: LogicSymbol = self.find(symbol_name)
-        if symbol is None:
+        if symbol_name is None:
             return LogicValue.UNDEFINED
         else:
-            return symbol.value
+            return self._symbols[symbol_name]
 
     def clone(self):
         return deepcopy(self)
@@ -582,7 +581,7 @@ class PLKnowledgeBase:
             if symbol is not None:
                 # Remove symbol from the list of symbols
                 symbol_list = symbol_list.clone()
-                symbol_list.pop_symbol(symbol.name)
+                symbol_list.pop(symbol.name)
                 # Extend the model with this symbol and value
                 a_model = a_model.clone()
                 a_model.set_value(symbol.name, symbol.value)
@@ -774,12 +773,14 @@ class PLKnowledgeBase:
         # Traverse the entire 'clauses' knowledge base looking for a 'pure symbol' which is a symbol that
         # is either all not negated or all negated. These are symbols we can easily decide to set in the model
         # to either True (if not negated) or False (if negated).
-        for symbol in symbols:
+        keys: List[str] = symbols.get_keys()
+        for key in keys:
+            symbol: LogicSymbol = LogicSymbol(key)
             # TODO: Seems like I could somehow combine the two calls to is_pure_symbol into one call and optimize it
             if self.is_pure_symbol(model, symbol.name, False):
-                symbol.value = LogicValue.TRUE  # Does this create a side effect?
+                symbol.value = LogicValue.TRUE  # TODO: Does this create a side effect?
                 return symbol
             if self.is_pure_symbol(model, symbol.name, True):
-                symbol.value = LogicValue.FALSE  # Does this create a side effect?
+                symbol.value = LogicValue.FALSE  # TODO: Does this create a side effect?
                 return symbol
         return None
