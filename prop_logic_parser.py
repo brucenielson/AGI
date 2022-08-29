@@ -893,7 +893,7 @@ class Sentence:
         if self.is_atomic:
             return is_valid_node(self)
         else:
-            return is_valid_node() and self.first_sentence._is_valid_cnf_or_only() \
+            return is_valid_node(self) and self.first_sentence._is_valid_cnf_or_only() \
                      and self.second_sentence._is_valid_cnf_or_only()
 
     def _is_valid_cnf_include_and(self,  previous_or: bool):

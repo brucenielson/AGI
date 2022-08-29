@@ -225,7 +225,6 @@ class TestSymbolList(TestCase):
         self.assertEqual("A: True; B: False; C: Undefined; D: Undefined; ", repr(symbol_list))
 
     def test_indexing_and_slicing(self):
-        return
         symbols = SymbolList()
         symbols.add("B")
         symbols.add("D")
