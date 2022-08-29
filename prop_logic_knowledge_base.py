@@ -1,8 +1,9 @@
 from __future__ import annotations
-from prop_logic_parser import PropLogicParser, Sentence, LogicOperatorTypes
+from pl_parser import PropLogicParser
+from sentence import Sentence, LogicOperatorTypes
 from typing import Optional, List, Union, Tuple
-from enum import Enum
 from copy import deepcopy
+from enum import Enum
 
 
 def slice_to_ints(a_slice: slice, max_index: int):
