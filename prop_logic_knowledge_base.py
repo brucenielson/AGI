@@ -1,6 +1,6 @@
 from __future__ import annotations
 from prop_logic_parser import PropLogicParser, Sentence, LogicOperatorTypes
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Tuple
 from enum import Enum
 from copy import deepcopy
 
@@ -160,7 +160,8 @@ class SymbolList:
             repr_str += symbol_name + ": " + repr(self._symbols[symbol_name]) + "; "
         return repr_str
 
-    def __getitem__(self, indexes: Union[str, int, list]) -> Union[LogicSymbol, LogicValue, SymbolList]:
+    def __getitem__(self, indexes: Union[Tuple[int, int], str, int, list]) \
+            -> Union[LogicSymbol, LogicValue, SymbolList]:
         if isinstance(indexes, str):
             return self.get_symbol(indexes).value
         else:
@@ -234,7 +235,7 @@ class SymbolList:
             index = None
         return index
 
-    def add(self, symbol_or_list: Union[LogicSymbol, str, SymbolList, List[str, int]],
+    def add(self, symbol_or_list: Union[LogicSymbol, str, SymbolList, List[LogicSymbol], List[str, int]],
             value: Union[LogicValue, bool] = LogicValue.UNDEFINED) -> None:
 
         logic_value: LogicValue = bool_to_logic_value(value)
