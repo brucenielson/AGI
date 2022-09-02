@@ -405,6 +405,64 @@ class PLKnowledgeBase:
                 result = LogicValue.UNDEFINED
         return result
 
+    def _truth_table(self, query: Sentence, symbols: SymbolList, model: SymbolList, use_speedup=False) \
+            -> (int, int):
+        # Verify we're in cnf format if using the unit clause speedup, otherwise disable the speedup
+        if use_speedup and not self.is_cnf:
+            use_speedup = False
+
+        # This function is a truth table check that utilizes dpll speed ups
+        # An experiment to see if this is faster/better
+
+        # If we have no more symbols to try, then start doing evaluations
+        if symbols is None or symbols.length == 0:
+            if self.is_true(model):
+                eval_query: LogicValue = query.evaluate(model)
+                if eval_query == LogicValue.TRUE:
+                    return 1, 0
+                elif eval_query == LogicValue.FALSE:
+                    return 0, 1
+                else:
+                    # This query is undefined for this model, so this model can be ignored
+                    return 0, 0
+            else:
+                # If the model is not specifically True, then throw it away
+                return 0, 0
+        elif self.is_true(model):
+            # Part of strategy 1: early termination
+            eval_query: LogicValue = query.evaluate(model)
+            if eval_query == LogicValue.TRUE:
+                return 1, 0
+            elif eval_query == LogicValue.FALSE:
+                return 0, 1
+            # Else this query is undefined for this model, so this model so process normally
+        elif self.is_false(model):
+            # Part of strategy 1: early termination
+            return 0, 0
+        elif use_speedup:
+            # Strategy 3: Handle unit clauses
+            unit_symbol: LogicSymbol = self.find_unit_clause(model)
+            if unit_symbol is not None:
+                # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
+                symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+                return self._truth_table(query, symbols, model, use_speedup=use_speedup)
+
+        # Done with pure symbol and unit clause short cuts for now
+        # Now extend the model with both True and False (similar to truth table entails)
+        # You don't yet have a full model - so get next symbol to try out
+        next_symbol: str = symbols.get_next_symbol().name
+        # Extend model as both True and False
+        copy_model1: SymbolList = model.extend_model(next_symbol, True)
+        copy_model2: SymbolList = model.extend_model(next_symbol, False)
+        # Try both extended models
+        true_count1, false_count1 = self._truth_table(query, symbols.clone(), copy_model1, use_speedup=use_speedup)
+        if true_count1 > 0 and false_count1 > 0:
+            return 1, 1
+        true_count2, false_count2 = self._truth_table(query, symbols.clone(), copy_model2, use_speedup=use_speedup)
+        if true_count2 > 0 and false_count2 > 0:
+            return 1, 1
+        return true_count1 + true_count2, false_count1 + false_count2
+
     def truth_table_entails(self, query: Union[Sentence, str]) -> LogicValue:
         query_sentence: Sentence = sentence_or_str(query)
         # Make a list of symbols all reset to undefined
@@ -432,13 +490,16 @@ class PLKnowledgeBase:
         sentence.negate_sentence()
         return self.dpll_entails(sentence)
 
-    def is_query_undefined(self, query: Union[Sentence, str]) -> bool:
-        is_true: bool = self.is_query_true(query)
-        is_false: bool = self.is_query_false(query)
-        if not is_true and not is_false:
-            return True
+    def is_query_undefined(self, query: Union[Sentence, str], use_dpll=False) -> bool:
+        if use_dpll:
+            is_true: bool = self.is_query_true(query)
+            is_false: bool = self.is_query_false(query)
+            if not is_true and not is_false:
+                return True
+            else:
+                return False
         else:
-            return False
+            return self.truth_table_entails(query) == LogicValue.UNDEFINED
 
     def _build_cnf_knowledge_base(self, sentence: Sentence):
         # This function takes a CNF Sentence and builds a knowledge base out of it where each OR clause
@@ -493,70 +554,6 @@ class PLKnowledgeBase:
         for sentence in new_kb.sentences:
             sentence._is_cnf = True
         return new_kb
-
-    def _truth_table(self, query: Sentence, symbols: SymbolList, model: SymbolList, use_speedup=False) \
-            -> (int, int):
-        # Verify we're in cnf format if using the unit clause speedup, otherwise disable the speedup
-        if use_speedup and not self.is_cnf:
-            use_speedup = False
-
-        # This function is a truth table check that utilizes dpll speed ups
-        # An experiment to see if this is faster/better
-
-        # If we have no more symbols to try, then start doing evaluations
-        if symbols is None or symbols.length == 0:
-            if self.is_true(model):
-                eval_query: LogicValue = query.evaluate(model)
-                if eval_query == LogicValue.TRUE:
-                    return 1, 0
-                elif eval_query == LogicValue.FALSE:
-                    return 0, 1
-                else:
-                    # This query is undefined for this model, so this model can be ignored
-                    return 0, 0
-            else:
-                # If the model is not specifically True, then throw it away
-                return 0, 0
-        elif self.is_true(model):
-            # Part of strategy 1: early termination
-            eval_query: LogicValue = query.evaluate(model)
-            if eval_query == LogicValue.TRUE:
-                return 1, 0
-            elif eval_query == LogicValue.FALSE:
-                return 0, 1
-            # Else this query is undefined for this model, so this model so process normally
-        elif self.is_false(model):
-            # Part of strategy 1: early termination
-            return 0, 0
-        elif use_speedup:
-            # # Strategy 2: Handle pure symbols
-            # pure_symbol: LogicSymbol = self.find_pure_symbol(symbols, model)
-            # if pure_symbol is not None:
-            #     # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-            #     symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
-            #     return self._advanced_truth_table(query, symbols, model, use_dpll=use_dpll)
-            # Strategy 3: Handle unit clauses
-            unit_symbol: LogicSymbol = self.find_unit_clause(model)
-            if unit_symbol is not None:
-                # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-                symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
-                return self._truth_table(query, symbols, model, use_speedup=use_speedup)
-
-        # Done with pure symbol and unit clause short cuts for now
-        # Now extend the model with both True and False (similar to truth table entails)
-        # You don't yet have a full model - so get next symbol to try out
-        next_symbol: str = symbols.get_next_symbol().name
-        # Extend model as both True and False
-        copy_model1: SymbolList = model.extend_model(next_symbol, True)
-        copy_model2: SymbolList = model.extend_model(next_symbol, False)
-        # Try both extended models
-        true_count1, false_count1 = self._truth_table(query, symbols.clone(), copy_model1, use_speedup=use_speedup)
-        if true_count1 > 0 and false_count1 > 0:
-            return 1, 1
-        true_count2, false_count2 = self._truth_table(query, symbols.clone(), copy_model2, use_speedup=use_speedup)
-        if true_count2 > 0 and false_count2 > 0:
-            return 1, 1
-        return true_count1 + true_count2, false_count1 + false_count2
 
     def _dpll(self, symbols: SymbolList, model: SymbolList) -> bool:
         # This function evaluates the query against the knowledge base, but does so with the DPLL algorithm
