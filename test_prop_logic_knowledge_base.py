@@ -5,7 +5,6 @@ from prop_logic_knowledge_base import LogicSymbol, LogicValue, PLKnowledgeBase, 
 # How to add regions
 # https://www.jetbrains.com/help/rider/Coding_Assistance__Surrounding_with_Region.html#managing-regions-in-the-editor
 
-
 class TestLogicSymbol(TestCase):
     def test_logic_symbol_class(self):
         symbol: LogicSymbol = LogicSymbol("P1", LogicValue.TRUE)
@@ -616,13 +615,13 @@ class TestPLKnowledgeBase(TestCase):
         kb.add(input_str)
         kb = kb.convert_to_cnf()
         # evaluates to True
-        self.assertEqual(LogicValue.TRUE, kb.dpll_entails('q'))
+        self.assertTrue(kb.dpll_entails('q'))
         self.assertTrue(kb.is_query_true('q'))
         self.assertFalse(kb.is_query_false('q'))
         # Removed to speed up tests
-        self.assertEqual(LogicValue.TRUE, kb.dpll_entails('~x'))
+        self.assertTrue(kb.dpll_entails('~x'))
         # Z is Undefined
-        self.assertEqual(LogicValue.UNDEFINED, kb.dpll_entails('z'))
+        self.assertFalse(kb.dpll_entails('z'))
         self.assertTrue(kb.is_query_undefined('z'))
         self.assertTrue(kb.is_query_undefined('~z'))
         self.assertTrue(kb.is_query_undefined('w'))
@@ -635,16 +634,16 @@ class TestPLKnowledgeBase(TestCase):
         self.assertTrue(kb.is_query_undefined('y'))
         # False
         # Removed to speed up tests
-        self.assertEqual(LogicValue.FALSE, kb.dpll_entails('x'))
+        self.assertFalse(kb.dpll_entails('x'))
         # Entailments
-        self.assertEqual(LogicValue.TRUE, kb.dpll_entails('a'))
-        self.assertEqual(LogicValue.TRUE, kb.dpll_entails('l'))
-        self.assertEqual(LogicValue.TRUE, kb.dpll_entails('p'))
-        self.assertEqual(LogicValue.TRUE, kb.dpll_entails('a and b and l and m and p and q'))
-        self.assertEqual(LogicValue.FALSE, kb.dpll_entails('a and b and l and m and p and q and ~a'))
+        self.assertTrue(kb.dpll_entails('a'))
+        self.assertTrue(kb.dpll_entails('l'))
+        self.assertTrue(kb.dpll_entails('p'))
+        self.assertTrue(kb.dpll_entails('a and b and l and m and p and q'))
+        self.assertFalse(kb.dpll_entails('a and b and l and m and p and q and ~a'))
         self.assertTrue(kb.is_query_undefined('a and b and l and m and p and q and z'))
         # False statements
-        self.assertEqual(LogicValue.FALSE, kb.dpll_entails('~a'))
+        self.assertFalse(kb.dpll_entails('~a'))
         self.assertFalse(kb.is_query_true('~a'))
         self.assertTrue(kb.is_query_false('~a'))
         # Always False

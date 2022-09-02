@@ -405,7 +405,7 @@ class PLKnowledgeBase:
                 result = LogicValue.UNDEFINED
         return result
 
-    def _truth_table_check_all(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> (int, int):
+    def _truth_table_check_all_old(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> (int, int):
         # This function does the work of creating a truth table and thus evaluating the query against the knowledge base
         # It counts up True and False results returning (True count, False count)
         if symbols is None or symbols.length == 0:
@@ -454,16 +454,14 @@ class PLKnowledgeBase:
             return LogicValue.UNDEFINED
 
     def is_query_true(self, query: Union[Sentence, str]) -> bool:
-        return self.dpll_entails(query) == LogicValue.TRUE
+        return self.dpll_entails(query)
 
     def is_query_false(self, query: Union[Sentence, str]) -> bool:
-        return self.dpll_entails(query) == LogicValue.FALSE
         sentence: Sentence() = sentence_or_str(query)
         sentence.negate_sentence()
         return self.dpll_entails(sentence)
 
     def is_query_undefined(self, query: Union[Sentence, str]) -> bool:
-        return self.dpll_entails(query) == LogicValue.UNDEFINED
         is_true: bool = self.is_query_true(query)
         is_false: bool = self.is_query_false(query)
         if not is_true and not is_false:
@@ -525,11 +523,11 @@ class PLKnowledgeBase:
             sentence._is_cnf = True
         return new_kb
 
-    def _advanced_truth_table(self, query: Sentence, symbols: SymbolList, model: SymbolList, use_dpll=False) \
+    def _truth_table_check_all(self, query: Sentence, symbols: SymbolList, model: SymbolList, use_speedup=False) \
             -> (int, int):
-        # Verify we're in cnf format
-        if use_dpll and not self.is_cnf:
-            use_dpll = False
+        # Verify we're in cnf format if using the unit clause speedup, otherwise disable the speedup
+        if use_speedup and not self.is_cnf:
+            use_speedup = False
 
         # This function is a truth table check that utilizes dpll speed ups
         # An experiment to see if this is faster/better
@@ -549,6 +547,7 @@ class PLKnowledgeBase:
                 # If the model is not specifically True, then throw it away
                 return 0, 0
         elif self.is_true(model):
+            # Part of strategy 1: early termination
             eval_query: LogicValue = query.evaluate(model)
             if eval_query == LogicValue.TRUE:
                 return 1, 0
@@ -556,28 +555,21 @@ class PLKnowledgeBase:
                 return 0, 1
             # Else this query is undefined for this model, so this model so process normally
         elif self.is_false(model):
+            # Part of strategy 1: early termination
             return 0, 0
-        elif use_dpll:
-            # Strategy 1: Early Termination
-            # If every clause in clauses is True in model then return True
-            if self.is_true(model):
-                return 1, 0
-            # If some clause in clauses is False in model then return False
-            if self.is_false(model):
-                return 0, 1
-
-            # Strategy 2: Handle pure symbols
-            pure_symbol: LogicSymbol = self.find_pure_symbol(symbols, model)
-            if pure_symbol is not None:
-                # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-                symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
-                return self._advanced_truth_table(query, symbols, model)
+        elif use_speedup:
+            # # Strategy 2: Handle pure symbols
+            # pure_symbol: LogicSymbol = self.find_pure_symbol(symbols, model)
+            # if pure_symbol is not None:
+            #     # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
+            #     symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
+            #     return self._advanced_truth_table(query, symbols, model, use_dpll=use_dpll)
             # Strategy 3: Handle unit clauses
             unit_symbol: LogicSymbol = self.find_unit_clause(model)
             if unit_symbol is not None:
                 # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
                 symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
-                return self._advanced_truth_table(query, symbols, model)
+                return self._truth_table_check_all(query, symbols, model, use_speedup=use_speedup)
 
         # Done with pure symbol and unit clause short cuts for now
         # Now extend the model with both True and False (similar to truth table entails)
@@ -587,10 +579,10 @@ class PLKnowledgeBase:
         copy_model1: SymbolList = model.extend_model(next_symbol, True)
         copy_model2: SymbolList = model.extend_model(next_symbol, False)
         # Try both extended models
-        true_count1, false_count1 = self._advanced_truth_table(query, symbols.clone(), copy_model1)
+        true_count1, false_count1 = self._truth_table_check_all(query, symbols.clone(), copy_model1, use_speedup=use_speedup)
         if true_count1 > 0 and false_count1 > 0:
             return 1, 1
-        true_count2, false_count2 = self._advanced_truth_table(query, symbols.clone(), copy_model2)
+        true_count2, false_count2 = self._truth_table_check_all(query, symbols.clone(), copy_model2, use_speedup=use_speedup)
         if true_count2 > 0 and false_count2 > 0:
             return 1, 1
         return true_count1 + true_count2, false_count1 + false_count2
@@ -637,26 +629,7 @@ class PLKnowledgeBase:
         # Try both extended models
         return self._dpll(symbols.clone(), copy_model1) or self._dpll(symbols.clone(), copy_model2)
 
-    def dpll_entails(self, query: Union[Sentence, str]) -> LogicValue:
-        query_sentence: Sentence = sentence_or_str(query)
-        # Make a list of symbols all reset to undefined
-        symbols: SymbolList = self.get_symbol_list()
-        symbols.add(query_sentence.get_symbol_list())
-        model: SymbolList = symbols.clone()
-        # Get true and false counts
-        true_count, false_count = self._advanced_truth_table(query_sentence, symbols, model)
-        # Do final evaluation
-        if true_count > 0 and false_count == 0:
-            # All True Knowledge Bases evaluate this query as True
-            return LogicValue.TRUE
-        elif true_count == 0 and false_count > 0:
-            # All True Knowledge Bases evaluate this query as False
-            return LogicValue.FALSE
-        else:
-            # It is a weird mix, so we don't know
-            return LogicValue.UNDEFINED
-
-
+    def dpll_entails(self, query: Union[Sentence, str]) -> bool:
         #  satisfiability is the same as entails via this formula
         #  a entails b if a AND ~b are unsatisfiable
         #  so we change the query to be it's negation
