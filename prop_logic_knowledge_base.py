@@ -405,35 +405,6 @@ class PLKnowledgeBase:
                 result = LogicValue.UNDEFINED
         return result
 
-    def _truth_table_check_all_old(self, query: Sentence, symbols: SymbolList, model: SymbolList) -> (int, int):
-        # This function does the work of creating a truth table and thus evaluating the query against the knowledge base
-        # It counts up True and False results returning (True count, False count)
-        if symbols is None or symbols.length == 0:
-            if self.evaluate(model) == LogicValue.TRUE:
-                eval_query: LogicValue = query.evaluate(model)
-                if eval_query == LogicValue.TRUE:
-                    return 1, 0
-                elif eval_query == LogicValue.FALSE:
-                    return 0, 1
-                return 0, 0
-            else:
-                # If the model is not specifically True, then throw it away
-                return 0, 0
-        else:
-            # You don't yet have a full model - so get next symbol to try out
-            next_symbol: str = symbols.get_next_symbol().name
-            # Extend model as both True and False
-            copy_model1: SymbolList = model.extend_model(next_symbol, True)
-            copy_model2: SymbolList = model.extend_model(next_symbol, False)
-            # Try both extended models
-            true_count1, false_count1 = self._truth_table_check_all(query, symbols.clone(), copy_model1)
-            if true_count1 > 0 and false_count1 > 0:
-                return 1, 1
-            true_count2, false_count2 = self._truth_table_check_all(query, symbols.clone(), copy_model2)
-            if true_count2 > 0 and false_count2 > 0:
-                return 1, 1
-            return true_count1 + true_count2, false_count1 + false_count2
-
     def truth_table_entails(self, query: Union[Sentence, str]) -> LogicValue:
         query_sentence: Sentence = sentence_or_str(query)
         # Make a list of symbols all reset to undefined
@@ -441,7 +412,7 @@ class PLKnowledgeBase:
         symbols.add(query_sentence.get_symbol_list())
         model: SymbolList = symbols.clone()
         # Get true and false counts
-        true_count, false_count = self._truth_table_check_all(query_sentence, symbols, model)
+        true_count, false_count = self._truth_table(query_sentence, symbols, model)
         # Do final evaluation
         if true_count > 0 and false_count == 0:
             # All True Knowledge Bases evaluate this query as True
@@ -523,7 +494,7 @@ class PLKnowledgeBase:
             sentence._is_cnf = True
         return new_kb
 
-    def _truth_table_check_all(self, query: Sentence, symbols: SymbolList, model: SymbolList, use_speedup=False) \
+    def _truth_table(self, query: Sentence, symbols: SymbolList, model: SymbolList, use_speedup=False) \
             -> (int, int):
         # Verify we're in cnf format if using the unit clause speedup, otherwise disable the speedup
         if use_speedup and not self.is_cnf:
@@ -569,7 +540,7 @@ class PLKnowledgeBase:
             if unit_symbol is not None:
                 # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
                 symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
-                return self._truth_table_check_all(query, symbols, model, use_speedup=use_speedup)
+                return self._truth_table(query, symbols, model, use_speedup=use_speedup)
 
         # Done with pure symbol and unit clause short cuts for now
         # Now extend the model with both True and False (similar to truth table entails)
@@ -579,10 +550,10 @@ class PLKnowledgeBase:
         copy_model1: SymbolList = model.extend_model(next_symbol, True)
         copy_model2: SymbolList = model.extend_model(next_symbol, False)
         # Try both extended models
-        true_count1, false_count1 = self._truth_table_check_all(query, symbols.clone(), copy_model1, use_speedup=use_speedup)
+        true_count1, false_count1 = self._truth_table(query, symbols.clone(), copy_model1, use_speedup=use_speedup)
         if true_count1 > 0 and false_count1 > 0:
             return 1, 1
-        true_count2, false_count2 = self._truth_table_check_all(query, symbols.clone(), copy_model2, use_speedup=use_speedup)
+        true_count2, false_count2 = self._truth_table(query, symbols.clone(), copy_model2, use_speedup=use_speedup)
         if true_count2 > 0 and false_count2 > 0:
             return 1, 1
         return true_count1 + true_count2, false_count1 + false_count2
@@ -676,9 +647,6 @@ class PLKnowledgeBase:
             # Return values consist of a potential unit symbol and a count so far
             if clause is None:
                 return None, 0
-            # TODO: Fix this
-            # elif not clause.is_cnf:
-            #     raise KnowledgeBaseError("Attempt to call search_for_unit_symbol without first being in CNF format.")
 
             total_count: int = 0
             possible_unit: Optional[LogicSymbol]
