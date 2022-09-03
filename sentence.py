@@ -72,11 +72,17 @@ def _split_and_lines(sentence: Sentence) -> List[Sentence]:
     # that are added to the knowledge base passed in.
     # Strategy: recurse through the whole sentence tree and find each AND clause and then grab the clauses
     # in between (which are either OR clauses or symbols) and stuff them separately into the list
+    if not sentence.is_cnf:
+        raise SentenceError("Function _split_and_lines was called with a 'sentence' not in CNF form.")
     sentences: List[Sentence] = []
     if sentence.logic_operator == LogicOperatorTypes.OR or sentence.is_atomic:
-        # This is the top of an OR clause or it's atomic, so add it
+        # This is the top of an OR clause or it's atomic, so add it as is
         sentences.append(sentence)
     elif sentence.logic_operator == LogicOperatorTypes.AND:
+        if sentence.is_cnf:
+            # Set sub sentences to is_cnf = True if this sentence is in CNF format already
+            sentence.first_sentence._is_cnf = True
+            sentence.second_sentence._is_cnf = True
         sentences.extend(_split_and_lines(sentence.first_sentence))
         sentences.extend(_split_and_lines(sentence.second_sentence))
     else:
