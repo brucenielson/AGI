@@ -76,6 +76,17 @@ def parse_sentence(input_str: str) -> Sentence:
 
 
 class Sentence:
+    """
+    Sentence is the class that contains the logic in the format of a binary tree. Each node contains an operator,
+    a possible negation, and two sub Sentences. A sentence knows how to parse a string into logic because it contains
+    a reference to LogicParser.
+
+    Usage
+    _____
+    complex_sentence1 = Sentence('Q1', LogicOperatorTypes.AND, 'Q2')
+
+    sentence1 = Sentence("a => b")
+    """
     def __init__(self, sentence1: Union[Sentence, str] = None, logical_operator: LogicOperatorTypes = None,
                  sentence2: Union[Sentence, str] = None, negated: bool = False):
         # Set default values
@@ -167,6 +178,10 @@ class Sentence:
 
     @ property
     def is_cnf(self) -> bool:
+        """
+        If this Sentence was converted to CNF, a boolean flag is sent. This property returns that flag.
+        :return: A boolean that is set to True if this Sentence was converted (or found to be) in CNF format
+        """
         return self._is_cnf
 
     @property
@@ -213,6 +228,10 @@ class Sentence:
 
     @property
     def is_atomic(self):
+        """
+        Returns True if this Sentence has no operator an contains just a single symbol (with or without a negation)
+        :return: A boolean value set to True if this is an atomic Sentence otherwise False
+        """
         # Returns True if this is a simple atomic sentence and False if it is a complex sentence
         if self.logic_operator == LogicOperatorTypes.NO_OPERATOR \
                 and self.first_sentence is None and self.second_sentence is None:
@@ -227,7 +246,13 @@ class Sentence:
         else:
             raise SentenceError("This sentence is in an illegal state because it is neither atomic or complex.")
 
-    def copy(self, sentence: Sentence, negated: bool = False):
+    def copy(self, sentence: Sentence, negated: bool = False) -> None:
+        """
+        Does a shallow copy of a Sentence but allows you to negate the entire sentence.
+        :param sentence: The Sentence to be copied
+        :param negated: Set to True if you want to negate this Sentence when making a shallow copy
+        :return: None
+        """
         if sentence._negation and negated:
             # If we are negating this copy, and it is already negated, then make it a first sentence instead
             new_sentence: Sentence = Sentence(sentence)
@@ -245,14 +270,14 @@ class Sentence:
             self._second_sentence = sentence._second_sentence
             self._logic_operator = sentence._logic_operator
 
-    def sentence_from_tokens(self, token1: str, operator: LogicOperatorTypes, token2: str) -> None:
+    def _sentence_from_tokens(self, token1: str, operator: LogicOperatorTypes, token2: str) -> None:
         if not (operator == LogicOperatorTypes.NO_OPERATOR or token1 == "" or token2 == ""
                 or token1 is None or token2 is None):
-            self.sentence_from_sentences(Sentence(token1), operator, Sentence(token2))
+            self._sentence_from_sentences(Sentence(token1), operator, Sentence(token2))
         else:
             raise SentenceError("Illegal parameters. Operator cannot be 'None' and Tokens cannot be blank.")
 
-    def sentence_from_sentences(self, sentence1: Sentence, operator: LogicOperatorTypes, sentence2: Sentence) -> None:
+    def _sentence_from_sentences(self, sentence1: Sentence, operator: LogicOperatorTypes, sentence2: Sentence) -> None:
         if not (operator == LogicOperatorTypes.NO_OPERATOR or sentence1 is None or sentence2 is None):
             self._logic_operator = operator
             self._negation = False
@@ -263,6 +288,10 @@ class Sentence:
             raise SentenceError("Illegal parameters. Operator cannot be 'None' and Tokens cannot be blank.")
 
     def negate_sentence(self) -> None:
+        """
+        Negates the current Sentence (in self) no matter how complex.
+        :return:
+        """
         sentence = self.clone()
         self._negation = True
         self._logic_operator = LogicOperatorTypes.NO_OPERATOR
@@ -288,6 +317,11 @@ class Sentence:
         return parse_sentence(input_str)
 
     def to_string(self, full_parentheses: bool = False) -> str:
+        """
+        Creates a string representation of the current (self) Sentence.
+        :param full_parentheses: Set this to True if you want to see all the parentheses.
+        :return: A string representation of this Sentence
+        """
         def to_string_sub_sentence(sub_sentence: Sentence):
             if self.logic_operator != sub_sentence.logic_operator \
                     and self.logic_operator < sub_sentence.logic_operator \
