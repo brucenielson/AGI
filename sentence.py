@@ -541,11 +541,6 @@ class Sentence:
         if or_clauses_only:
             sentences: List[Sentence] = sentence._split_and_lines()
             return sentences
-            temp_kb: kb.PLKnowledgeBase = kb.PLKnowledgeBase()
-            temp_kb.add(sentence)
-            temp_kb = temp_kb.convert_to_cnf()
-            # Set each sentence in the list to is_cnf = True
-            return temp_kb.sentences
         else:
             return sentence
 

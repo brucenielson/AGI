@@ -281,24 +281,6 @@ class PLKnowledgeBase:
             sentence._is_cnf = True
         return new_kb
 
-        cnf_kb: str = ""
-        for sentence in self._sentences:
-            # TODO is there a more efficient way to do this then to make into a string then convert back to Sentence?
-            if len(cnf_kb) > 0:
-                cnf_kb += " AND "
-            cnf_kb += sentence.to_string(True)
-        sentence = Sentence(cnf_kb)
-        sentence = sentence.convert_to_cnf()
-        # "sentence" now contains the entire knowledge base in a single logical sentence
-        # Now loop through and find each OR clause and build a new knowledge base out of it
-        new_kb: PLKnowledgeBase = PLKnowledgeBase()
-        new_kb._build_cnf_knowledge_base(sentence)
-        new_kb._is_cnf = True
-        # Set each sentence in the knowledge base to is_cnf = True also
-        for sentence in new_kb.sentences:
-            sentence._is_cnf = True
-        return new_kb
-
     def _dpll(self, symbols: SymbolList, model: SymbolList) -> bool:
         # This function evaluates the query against the knowledge base, but does so with the DPLL algorithm
         # instead of a full brute truth table - thus it's faster
