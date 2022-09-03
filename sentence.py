@@ -539,6 +539,8 @@ class Sentence:
         sentence._is_cnf = True
         # Is this to be converted into a list of CNF clauses with only or clauses?
         if or_clauses_only:
+            sentences: List[Sentence] = sentence._split_and_lines()
+            return sentences
             temp_kb: kb.PLKnowledgeBase = kb.PLKnowledgeBase()
             temp_kb.add(sentence)
             temp_kb = temp_kb.convert_to_cnf()
@@ -546,6 +548,42 @@ class Sentence:
             return temp_kb.sentences
         else:
             return sentence
+
+    def _split_and_lines(self) -> List[Sentence]:
+        # Remove all And clauses by splitting them into lines
+        # This function takes a CNF Sentence and builds a knowledge base out of it where each OR clause
+        # becomes becomes a single sentence in the knowledge base.
+        # Assumption: this sentence is already in CNF form -- if it isn't, the results are unpredictable
+        # every time it's called, the top node must be an AND operator or symbol
+        #
+        # This function will traverse a sentence finding disjunctions and splicing it all up into sentences
+        # that are added to the knowledge base passed in.
+        #
+        # Strategy: recurse through the whole sentence tree and find each AND clause and then grab the clauses
+        # in between (which are either OR clauses or symbols) and stuff them separately into the knowledge base
+        def recurse_sentence(a_sentence: Sentence, sentence_list: List[Sentence]):
+            if a_sentence.logic_operator == LogicOperatorTypes.OR or a_sentence.is_atomic:
+                # This is the top of an OR clause or it's atomic, so add it
+                sentence_list.append(a_sentence)
+            elif a_sentence.logic_operator == LogicOperatorTypes.AND:
+                # It is an and clause, so recurse
+                a_sentence._split_and_lines()
+            else:
+                # It is neither an and nor an or, so we must not be in CNF form. Raise error.
+                raise SentenceError("_split_and_lines was called with a 'sentence' not in CNF form.")
+
+        sentences: List[Sentence] = []
+        if self.logic_operator == LogicOperatorTypes.AND:
+            recurse_sentence(self.first_sentence, sentences)
+            recurse_sentence(self.second_sentence, sentences)
+        elif self.logic_operator == LogicOperatorTypes.OR:
+            recurse_sentence(self, sentences)
+        elif self.is_atomic:
+            # It's a symbol, so just put it into the database
+            sentences.append(deepcopy(self))
+        else:
+            raise SentenceError("_split_and_lines was called with a 'sentence' not in CNF form.")
+        return sentences
 
     def _transform_conditionals(self) -> Sentence:
         # Start with a clone to avoid any side effect

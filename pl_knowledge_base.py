@@ -233,7 +233,7 @@ class PLKnowledgeBase:
         else:
             return self.truth_table_entails(query) == LogicValue.UNDEFINED
 
-    def _build_cnf_knowledge_base(self, sentence: Sentence):
+    def _build_cnf_knowledge_base(self, sentence: Sentence) -> None:
         # This function takes a CNF Sentence and builds a knowledge base out of it where each OR clause
         # becomes becomes a single sentence in the knowledge base.
         # Assumption: this sentence is already in CNF form -- if it isn't, the results are unpredictable
@@ -269,6 +269,18 @@ class PLKnowledgeBase:
     def convert_to_cnf(self) -> PLKnowledgeBase:
         # This function takes the whole knowledge base and converts it to a single knowledge base in CNF form
         # with each sentence in the knowledge base being one OR clause
+        sentence_list: List[Sentence] = deepcopy(self._sentences)
+        converted_list: List[Sentence] = []
+        for sentence in sentence_list:
+            converted_list.append(sentence.convert_to_cnf(or_clauses_only=True))
+        new_kb: PLKnowledgeBase = PLKnowledgeBase()
+        new_kb.add(converted_list)
+        new_kb._is_cnf = True
+        # Set each sentence in the knowledge base to is_cnf = True also
+        for sentence in new_kb.sentences:
+            sentence._is_cnf = True
+        return new_kb
+
         cnf_kb: str = ""
         for sentence in self._sentences:
             # TODO is there a more efficient way to do this then to make into a string then convert back to Sentence?
