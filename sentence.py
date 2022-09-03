@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Optional, List, Union
 from functools import total_ordering
-import prop_logic_knowledge_base as kb
+import pl_knowledge_base as kb
 from copy import deepcopy
 from enum import Enum
 import pl_parser
