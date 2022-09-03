@@ -573,22 +573,21 @@ class PLKnowledgeBase:
         if self.is_false(model):
             return False
         # Otherwise, we are still "Undefined" and so we need to keep recursively building the model
-        # Strategy 2: Handle pure symbols
-        # TODO: Does this need to be optimized? Seems to slow things down right now.
-        pure_symbol: LogicSymbol = self.find_pure_symbol(symbols, model)
-        if pure_symbol is not None:
-            # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-            symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
-            return self._dpll(symbols, model)
-        # Strategy 3: Handle unit clauses
+        # Strategy 3: Handle unit clauses - This is equivalent to forward chaining
         unit_symbol: LogicSymbol = self.find_unit_clause(model)
         if unit_symbol is not None:
             # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
             symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
             return self._dpll(symbols, model)
+        # Strategy 2: Handle pure symbols
+        pure_symbol: LogicSymbol = self.find_pure_symbol(symbols, model)
+        if pure_symbol is not None:
+            # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
+            symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
+            return self._dpll(symbols, model)
 
         # Done with pure symbol and unit clause short cuts for now
-        # Now extend the model with both True and False (simlar to truth table entails)
+        # Now extend the model with both True and False (similar to truth table entails)
         # You don't yet have a full model - so get next symbol to try out
         next_symbol: str = symbols.get_next_symbol().name
         # Extend model as both True and False
@@ -709,34 +708,60 @@ class PLKnowledgeBase:
         # We didn't find a unit symbol so return None
         return None
 
-    def is_pure_symbol(self, model: SymbolList, search_symbol: str, negation: bool) -> bool:
-        def assess_symbol(a_sentence: Sentence) -> bool:
+    def is_pure_symbol(self, model: SymbolList, search_symbol: str) -> LogicValue:
+        def assess_symbol(a_sentence: Sentence, a_search_symbol: str) -> (int, int):
             # Recursively look through this sentence for symbol_name and return True if there
             # are no negated versions of the symbol in this sentence.
+            positive_count: int = 0
+            negative_count: int = 0
             if a_sentence.logic_operator == LogicOperatorTypes.Or:
-                return assess_symbol(a_sentence.first_sentence) and assess_symbol(a_sentence.second_sentence)
+                # Search first sentence
+                positives, negatives = assess_symbol(a_sentence.first_sentence, a_search_symbol)
+                positive_count += positives
+                negative_count += negatives
+                if positive_count > 0 and negative_count > 0:
+                    return 1, 1
+                # Search second sentence
+                positives, negatives = assess_symbol(a_sentence.second_sentence, a_search_symbol)
+                positive_count += positives
+                negative_count += negatives
+                if positive_count > 0 and negative_count > 0:
+                    return 1, 1
+                return positive_count, negative_count
             elif a_sentence.is_atomic:
-                if a_sentence.symbol == search_symbol and a_sentence.negation == negation:
-                    # We found the symbol with its correct sign
-                    return True
-                elif a_sentence.symbol == search_symbol and a_sentence.negation != negation:
-                    # We found an opposite sign, so now the whole of it is False
-                    return False
+                if a_sentence.symbol == a_search_symbol and not a_sentence.negation:
+                    # We found the symbol with out a negation
+                    return 1, 0
+                elif a_sentence.symbol == a_search_symbol and a_sentence.negation:
+                    # We found the symbol with a negation
+                    return 0, 1
                 else:
                     # Not finding our symbol counts as pure
-                    return True
+                    return 0, 0
             else:
                 # There should be only OR clauses and unit clauses in each clause if in CNF format
                 raise KnowledgeBaseError("is_pure_symbol was called for a sentence not in CNF format")
-        is_pure: bool = True
+
+        total_pos: int = 0
+        total_neg: int = 0
         for sentence in self._sentences:
-            # if not sentence.is_cnf:
-            #     raise KnowledgeBaseError("Called is_pure_symbol without being in CNF format.")
-            if sentence.evaluate(model) == LogicValue.UNDEFINED:  # TODO: This seems inefficient
-                if not assess_symbol(sentence):
-                    is_pure = False
-                    break
-        return is_pure
+            if not sentence.is_cnf:
+                raise KnowledgeBaseError("Called is_pure_symbol without being in CNF format.")
+            if sentence.evaluate(model) == LogicValue.UNDEFINED:
+                pos: int
+                neg: int
+                pos, neg = assess_symbol(sentence, search_symbol)
+                total_pos += pos
+                total_neg += neg
+                if total_pos > 0 and total_neg > 0:
+                    return LogicValue.UNDEFINED
+
+        if total_pos > 0 and total_neg == 0:
+            return LogicValue.TRUE
+        elif total_pos == 0 and total_neg > 0:
+            return LogicValue.FALSE
+        else:
+            return LogicValue.UNDEFINED
 
     def find_pure_symbol(self, symbols: SymbolList, model: SymbolList) -> Optional[LogicSymbol]:
         # Traverse the entire 'clauses' knowledge base looking for a 'pure symbol' which is a symbol that
@@ -745,11 +770,6 @@ class PLKnowledgeBase:
         keys: List[str] = symbols.get_keys()
         for key in keys:
             symbol: LogicSymbol = LogicSymbol(key)
-            # TODO: Seems like I could somehow combine the two calls to is_pure_symbol into one call and optimize it
-            if self.is_pure_symbol(model, symbol.name, False):
-                symbol.value = LogicValue.TRUE  # TODO: Does this create a side effect?
+            symbol.value = self.is_pure_symbol(model, symbol.name)
+            if symbol.value != LogicValue.UNDEFINED:
                 return symbol
-            if self.is_pure_symbol(model, symbol.name, True):
-                symbol.value = LogicValue.FALSE  # TODO: Does this create a side effect?
-                return symbol
-        return None

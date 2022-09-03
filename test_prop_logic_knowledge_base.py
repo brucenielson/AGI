@@ -1,9 +1,10 @@
 from unittest import TestCase
 from prop_logic_knowledge_base import LogicSymbol, LogicValue, PLKnowledgeBase, Sentence, \
-    KnowledgeBaseError, SymbolList, SymbolListError
+    KnowledgeBaseError, SymbolList, SymbolListError, set_symbol_in_model
 
 # How to add regions
 # https://www.jetbrains.com/help/rider/Coding_Assistance__Surrounding_with_Region.html#managing-regions-in-the-editor
+
 
 class TestLogicSymbol(TestCase):
     def test_logic_symbol_class(self):
@@ -588,7 +589,110 @@ class TestPLKnowledgeBase(TestCase):
         self.assertTrue(kb.get_sentence(0).is_atomic)
         self.assertEqual("A", kb.get_sentence(0).to_string(True))
 
-    # noinspection SpellCheckingInspection
+    def test_find_pure_symbol(self):
+        kb = PLKnowledgeBase()
+        input_str: str
+        input_str = "A"
+        input_str += "\n"
+        input_str = input_str + "B"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND B => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND P => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "B AND L => M"
+        input_str = input_str + "\n"
+        input_str = input_str + "L AND M => P"
+        input_str = input_str + "\n"
+        input_str = input_str + "P => Q"
+        input_str = input_str + "\n"
+        input_str = input_str + "~A => Z"
+        input_str = input_str + "\n"
+        input_str = input_str + "A and Z => W"
+        input_str = input_str + "\n"
+        input_str = input_str + "A or Z => ~X"
+
+        kb.add(input_str)
+        kb = kb.convert_to_cnf()
+        symbols: SymbolList = kb.get_symbol_list()
+        model: SymbolList = symbols.clone()
+        pure_symbol = kb.find_pure_symbol(symbols, model)
+        self.assertEqual('Q', pure_symbol.name)
+        self.assertEqual(LogicValue.TRUE, pure_symbol.value)
+        symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
+        pure_symbol = kb.find_pure_symbol(symbols, model)
+        self.assertEqual('W', pure_symbol.name)
+        self.assertEqual(LogicValue.TRUE, pure_symbol.value)
+        symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
+        pure_symbol = kb.find_pure_symbol(symbols, model)
+        self.assertEqual('X', pure_symbol.name)
+        self.assertEqual(LogicValue.FALSE, pure_symbol.value)
+        symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
+        pure_symbol = kb.find_pure_symbol(symbols, model)
+        self.assertEqual('Z', pure_symbol.name)
+        self.assertEqual(LogicValue.TRUE, pure_symbol.value)
+        symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
+        pure_symbol = kb.find_pure_symbol(symbols, model)
+        self.assertEqual(None, pure_symbol)
+
+    def test_find_unit_symbol(self):
+        kb = PLKnowledgeBase()
+        input_str: str
+        input_str = "A"
+        input_str += "\n"
+        input_str = input_str + "B"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND B => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND P => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "B AND L => M"
+        input_str = input_str + "\n"
+        input_str = input_str + "L AND M => P"
+        input_str = input_str + "\n"
+        input_str = input_str + "P => Q"
+        input_str = input_str + "\n"
+        input_str = input_str + "~A => Z"
+        input_str = input_str + "\n"
+        input_str = input_str + "A and Z => W"
+        input_str = input_str + "\n"
+        input_str = input_str + "A or Z => ~X"
+
+        kb.add(input_str)
+        kb = kb.convert_to_cnf()
+        symbols: SymbolList = kb.get_symbol_list()
+        model: SymbolList = symbols.clone()
+        unit_symbol = kb.find_unit_clause(model)
+        self.assertEqual('A', unit_symbol.name)
+        self.assertEqual(LogicValue.TRUE, unit_symbol.value)
+        symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+        unit_symbol = kb.find_unit_clause(model)
+        self.assertEqual('B', unit_symbol.name)
+        self.assertEqual(LogicValue.TRUE, unit_symbol.value)
+        symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+        unit_symbol = kb.find_unit_clause(model)
+        self.assertEqual('L', unit_symbol.name)
+        self.assertEqual(LogicValue.TRUE, unit_symbol.value)
+        symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+        unit_symbol = kb.find_unit_clause(model)
+        self.assertEqual('M', unit_symbol.name)
+        self.assertEqual(LogicValue.TRUE, unit_symbol.value)
+        symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+        unit_symbol = kb.find_unit_clause(model)
+        self.assertEqual('P', unit_symbol.name)
+        self.assertEqual(LogicValue.TRUE, unit_symbol.value)
+        symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+        unit_symbol = kb.find_unit_clause(model)
+        self.assertEqual('Q', unit_symbol.name)
+        self.assertEqual(LogicValue.TRUE, unit_symbol.value)
+        symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+        unit_symbol = kb.find_unit_clause(model)
+        self.assertEqual('X', unit_symbol.name)
+        self.assertEqual(LogicValue.FALSE, unit_symbol.value)
+        symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+        unit_symbol = kb.find_unit_clause(model)
+        self.assertEqual(None, unit_symbol)
+
     def test_dpll_entails(self):
         kb = PLKnowledgeBase()
         input_str: str
