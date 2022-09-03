@@ -79,11 +79,6 @@ def _split_and_lines(sentence: Sentence) -> List[Sentence]:
     elif sentence.logic_operator == LogicOperatorTypes.AND:
         sentences.extend(_split_and_lines(sentence.first_sentence))
         sentences.extend(_split_and_lines(sentence.second_sentence))
-    elif sentence.logic_operator == LogicOperatorTypes.OR:
-        sentences.extend(_split_and_lines(sentence))
-    elif sentence.is_atomic:
-        # It's a symbol, so just put it into the database
-        sentences.append(deepcopy(sentence))
     else:
         raise SentenceError("Function _split_and_lines was called with a 'sentence' not in CNF form.")
     return sentences
