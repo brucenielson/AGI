@@ -4,7 +4,7 @@ from copy import deepcopy
 from enum import Enum
 
 
-def slice_to_ints(a_slice: slice, max_index: int):
+def _slice_to_ints(a_slice: slice, max_index: int):
     start: int = 0
     stop: int = max_index
     step: int = 1
@@ -19,23 +19,29 @@ def slice_to_ints(a_slice: slice, max_index: int):
     return index_list
 
 
-def create_index(indexes: list, max_index: int) -> List[int]:
+def _create_index(indexes: list, max_index: int) -> List[int]:
     index_list: List[int] = []
     if isinstance(indexes, int):
         index_list.append(indexes)
     elif isinstance(indexes, slice):
-        index_list: List[int] = slice_to_ints(indexes, max_index)
+        index_list: List[int] = _slice_to_ints(indexes, max_index)
     else:
         # Mixture of both integers and slices
         for i in indexes:
             if isinstance(i, int):
                 index_list.append(i)
             elif isinstance(i, slice):
-                index_list.extend(slice_to_ints(i, max_index))
+                index_list.extend(_slice_to_ints(i, max_index))
     return index_list
 
 
 class LogicValue(Enum):
+    """
+    An enumerated type of logic values including TRUE, FALSE, and UNDEFINED.
+
+    This enumerated types includes a few methods to allow AND and OR operations and to allow LogicValues to
+    have a string representation.
+    """
     FALSE = 0
     TRUE = 1
     UNDEFINED = -1
@@ -48,7 +54,12 @@ class LogicValue(Enum):
         elif self == LogicValue.FALSE:
             return "False"
 
-    def and_op(self, other_value: LogicValue):
+    def and_op(self, other_value: LogicValue) -> LogicValue:
+        """
+        Usage: <LogicValue>.and_op(<LogicValue) returns an AND operation between those two values.
+        :param other_value:
+        :return: A LogicValue
+        """
         if self == LogicValue.TRUE and other_value == LogicValue.TRUE:
             return LogicValue.TRUE
         elif self == LogicValue.FALSE or other_value == LogicValue.FALSE:
@@ -56,7 +67,12 @@ class LogicValue(Enum):
         else:
             return LogicValue.UNDEFINED
 
-    def or_op(self, other_value: LogicValue):
+    def or_op(self, other_value: LogicValue) -> LogicValue:
+        """
+        Usage: <LogicValue>.or_op(<LogicValue) returns an OR operation between those two values.
+        :param other_value:
+        :return: A LogicValue
+        """
         if self == LogicValue.TRUE or other_value == LogicValue.TRUE:
             return LogicValue.TRUE
         elif self == LogicValue.FALSE and other_value == LogicValue.FALSE:
@@ -65,7 +81,7 @@ class LogicValue(Enum):
             return LogicValue.UNDEFINED
 
 
-def bool_to_logic_value(value: Union[bool, LogicValue]) -> LogicValue:
+def _bool_to_logic_value(value: Union[bool, LogicValue]) -> LogicValue:
     if isinstance(value, bool):
         if value:
             return LogicValue.TRUE
@@ -76,6 +92,10 @@ def bool_to_logic_value(value: Union[bool, LogicValue]) -> LogicValue:
 
 
 class LogicSymbol:
+    """
+    A LogicSymbol is a class with a name (string) and value (LogicValue) for each Symbol.
+    Also contains and_op and or_op functions to perform AND and OR operations on LogicSymbol(s)
+    """
     def __init__(self, name: str, value: LogicValue = LogicValue.UNDEFINED):
         self._name = name
         self.value = value
@@ -111,10 +131,20 @@ class LogicSymbol:
             final_value = value
         self._value = final_value
 
-    def and_op(self, other_value: LogicValue):
+    def and_op(self, other_value: LogicValue) -> LogicValue:
+        """
+        Usage: <LogicValue>.and_op(<LogicValue) returns an AND operation between those two values.
+        :param other_value:
+        :return: A LogicValue
+        """
         return self.value.and_op(other_value)
 
-    def or_op(self, other_value: LogicValue):
+    def or_op(self, other_value: LogicValue) -> LogicValue:
+        """
+        Usage: <LogicValue>.or_op(<LogicValue) returns an OR operation between those two values.
+        :param other_value:
+        :return: A LogicValue
+        """
         return self.value.or_op(other_value)
 
 
@@ -123,7 +153,7 @@ class SymbolListError(Exception):
         super().__init__(message)
 
 
-class SymbolListIterator:
+class _SymbolListIterator:
     def __init__(self, symbol_list: SymbolList):
         self._symbol_list: List[str] = symbol_list.get_keys()
         self._index: int = 0
@@ -139,13 +169,17 @@ class SymbolListIterator:
 
 
 class SymbolList:
+    """
+    A SymbolList is a list of LogicSymbol(s) with related methods.
+    """
+
     # See https://riptutorial.com/python/example/1571/indexing-custom-classes----getitem------setitem---and---delitem--
     # for now to implement getitem setitem related stuff
     def __init__(self) -> None:
         self._symbols: dict[str, LogicValue] = {}
 
-    def __iter__(self) -> SymbolListIterator:
-        return SymbolListIterator(self)
+    def __iter__(self) -> _SymbolListIterator:
+        return _SymbolListIterator(self)
 
     def __repr__(self) -> str:
         repr_str: str = ""
@@ -159,7 +193,7 @@ class SymbolList:
         if isinstance(indexes, str):
             return self.get_symbol(indexes).value
         else:
-            index_list: List[int] = create_index(indexes, self.length)
+            index_list: List[int] = _create_index(indexes, self.length)
             # If there is only one element in the index_list, then return a single LogicSymbol
             if len(index_list) == 1:
                 return self.get_symbol(index_list[0])
@@ -232,7 +266,7 @@ class SymbolList:
     def add(self, symbol_or_list: Union[LogicSymbol, str, SymbolList, List[LogicSymbol], List[str, int]],
             value: Union[LogicValue, bool] = LogicValue.UNDEFINED) -> None:
 
-        logic_value: LogicValue = bool_to_logic_value(value)
+        logic_value: LogicValue = _bool_to_logic_value(value)
         if isinstance(symbol_or_list, LogicSymbol):
             self._symbols[symbol_or_list.name] = symbol_or_list.value
         elif isinstance(symbol_or_list, list):
@@ -252,7 +286,7 @@ class SymbolList:
 
     def set_value(self, symbol_name: str, value: Optional[Union[LogicValue, bool]]) -> None:
         symbol_name = symbol_name.upper()
-        logic_value: LogicValue = bool_to_logic_value(value)
+        logic_value: LogicValue = _bool_to_logic_value(value)
         self._symbols[symbol_name] = logic_value
 
     def get_value(self, symbol_name: str) -> LogicValue:
