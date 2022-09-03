@@ -1,5 +1,5 @@
 from __future__ import annotations
-from pl_parser import PropLogicParser
+from pl_parser import LogicParser
 from sentence import Sentence, LogicOperatorTypes
 from typing import Optional, List, Union
 from copy import deepcopy
@@ -37,7 +37,7 @@ class KnowledgeBaseError(Exception):
 
 class PLKnowledgeBase:
     # Static parser -- so that Sentence can parse propositional logic text
-    _parser: PropLogicParser = PropLogicParser()
+    _parser: LogicParser = LogicParser()
 
     def __init__(self) -> None:
         # A propositional logic knowledge base is really just an array of propositional logic sentences

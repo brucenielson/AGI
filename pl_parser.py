@@ -21,7 +21,7 @@ class ParseError(Exception):
         super().__init__(message)
 
 
-class PLTokenType(Enum):
+class TokenType(Enum):
     SYMBOL = 1
     # noinspection SpellCheckingInspection
     LPAREN = 2
@@ -38,7 +38,21 @@ class PLTokenType(Enum):
     ENDLINE = 10
 
 
-class PropLogicParser:
+class LogicParser:
+    """
+    The LogicParser class is used to convert input strings in the for of propositional logic into a list of
+    logical Sentence(s)
+
+    Usage
+    _____
+    parser: pl_parser.LogicParser = pl_parser.LogicParser(input_str)
+
+    result: Sentence = parser.parse_line()
+
+    or
+
+    result_list: List[Sentence] = parser.parse_input()
+    """
     def __init__(self, input_str: str = None) -> None:
         self._tokens = None
         self._token_list: List = []
@@ -61,7 +75,17 @@ class PropLogicParser:
         if input_str is not None:
             self.set_input(input_str)
 
-    def set_input(self, input_str: str):
+    def set_input(self, input_str: str) -> None:
+        """
+        This method allows you to pass in a string that the parser can then parse.
+
+        Parameters
+        __________
+        set_input : str
+            The input string to be converted into a list of Sentence(s)
+
+        :returns None
+        """
         input_str = input_str.upper()
         self._tokens = None
         try:
@@ -74,58 +98,70 @@ class PropLogicParser:
         self._sentences: List[Sentence] = []
 
     @staticmethod
-    def _str_to_token_type(str_token: str) -> PLTokenType:
+    def _str_to_token_type(str_token: str) -> TokenType:
         str_token = str_token.upper()
         if str_token == "(":
-            return PLTokenType.LPAREN
+            return TokenType.LPAREN
         elif str_token == ")":
-            return PLTokenType.RPAREN
+            return TokenType.RPAREN
         elif str_token == "AND":
-            return PLTokenType.AND
+            return TokenType.AND
         elif str_token == "OR":
-            return PLTokenType.OR
+            return TokenType.OR
         elif str_token == "~":
-            return PLTokenType.NOT
+            return TokenType.NOT
         elif str_token == "=>":
-            return PLTokenType.IMPLIES
+            return TokenType.IMPLIES
         elif str_token == "<=>":
-            return PLTokenType.BICONDITIONAL
+            return TokenType.BICONDITIONAL
         elif str_token == "EOF":
-            return PLTokenType.EOF
+            return TokenType.EOF
         elif str_token == "END LINE":
-            return PLTokenType.ENDLINE
+            return TokenType.ENDLINE
         else:
-            return PLTokenType.SYMBOL
+            return TokenType.SYMBOL
 
     @staticmethod
-    def _token_type_to_str(token_type: PLTokenType) -> str:
-        if token_type == PLTokenType.LPAREN:
+    def _token_type_to_str(token_type: TokenType) -> str:
+        if token_type == TokenType.LPAREN:
             return "("
-        elif token_type == PLTokenType.RPAREN:
+        elif token_type == TokenType.RPAREN:
             return ")"
-        elif token_type == PLTokenType.AND:
+        elif token_type == TokenType.AND:
             return "AND"
-        elif token_type == PLTokenType.OR:
+        elif token_type == TokenType.OR:
             return "OR"
-        elif token_type == PLTokenType.NOT:
+        elif token_type == TokenType.NOT:
             return "~"
-        elif token_type == PLTokenType.IMPLIES:
+        elif token_type == TokenType.IMPLIES:
             return "=>"
-        elif token_type == PLTokenType.BICONDITIONAL:
+        elif token_type == TokenType.BICONDITIONAL:
             return "<=>"
-        elif token_type == PLTokenType.EOF:
+        elif token_type == TokenType.EOF:
             return "EOF"
-        elif token_type == PLTokenType.ENDLINE:
+        elif token_type == TokenType.ENDLINE:
             return "END LINE"
-        elif token_type == PLTokenType.SYMBOL:
+        elif token_type == TokenType.SYMBOL:
             return "a symbol"
 
     @property
-    def current_token_type(self) -> PLTokenType:
+    def current_token_type(self) -> TokenType:
+        """
+        This method allows you to pass in a string that the parser can then parse.
+
+        set_input : str
+            The input string to be converted into a list of Sentence(s)
+
+        :returns None
+        """
         return self._str_to_token_type(self.current_token)
 
     @property
     def current_token(self) -> str:
+        """
+        Gets the current token that will be parsed next.
+        :return: A string that contains the next token.
+        """
         if len(self._token_list) > 0 or len(self._current_line) > 0:
             self._current_line = self._token_list[0]
             if len(self._current_line) > 0:
@@ -139,111 +175,149 @@ class PropLogicParser:
 
     @property
     def line_count(self) -> int:
+        """
+        Gets the count of lines of text to be parsed
+        :return: An integer that is a count of lines.
+        """
         return len(self._token_list)
 
-    def token_look_head(self, look_ahead: int) -> Optional[PLTokenType]:
+    def token_look_head(self, look_ahead: int) -> Optional[TokenType]:
+        """
+        Returns the token look_ahead number of tokens out.
+        :return: A TokenType of the token found
+        """
         if len(self._token_list[0]) <= look_ahead:
             return None
         return self._str_to_token_type(self._current_line[look_ahead])
 
-    def consume_token(self, check: PLTokenType = None) -> str:
-        # Note: passing in a 'check' value will verify that the token you are about to consume was of the expected type
-        # If not passed or set to None, then it is ignored and you just consume the next token
+    def consume_token(self, check: TokenType = None) -> str:
+        """
+        Returns the next token (in the form of a string) to be parsed.
+
+        Parameters
+        __________
+        check: TokenType
+            Passing in the optional 'check' value will verify that the token you are about to consume
+            was of the expected type. If not passed or set to None, then it is ignored and
+            you just consume the next token. If the expected type if not matched, an ParseError is raised.
+        :return: A string containing the next token
+        """
+        # Note:
         if len(self._token_list) == 0:
-            if check is not None and check != PLTokenType.EOF:
+            if check is not None and check != TokenType.EOF:
                 raise ParseError("Expected EOF")
             return "EOF"
         self._current_line = self._token_list[0]
         if len(self._current_line) == 0 and len(self._token_list) == 0:
-            if check is not None and check != PLTokenType.EOF:
+            if check is not None and check != TokenType.EOF:
                 raise ParseError("Expected EOF")
             return "EOF"
         elif len(self._current_line) == 0:
-            if check is not None and check != PLTokenType.ENDLINE:
+            if check is not None and check != TokenType.ENDLINE:
                 raise ParseError("Expected END LINE")
             self._token_list.pop(0)
             return "END LINE"
         else:
             current_token: str = self._current_line.pop(0)
-            if check is not None and PropLogicParser._str_to_token_type(current_token) != check:
-                raise ParseError("Expected " + PropLogicParser._token_type_to_str(check))
+            if check is not None and LogicParser._str_to_token_type(current_token) != check:
+                raise ParseError("Expected " + LogicParser._token_type_to_str(check))
             return current_token
 
     @property
     def token_list(self) -> list:
+        """
+        A property that returns the current list of tokens.
+        :return: A list containing the unprocessed tokens.
+        """
         return self._token_list
 
     def get_original_token_list(self) -> list:
+        """
+        Same as token_list property except it gives what the original list looked like.
+        :return: A list containing the unprocessed tokens.
+        """
         return self._tokens.asList()
 
-    def is_end_of_file(self):
-        return PropLogicParser._str_to_token_type(self.current_token) == PLTokenType.EOF
+    def is_end_of_file(self) -> bool:
+        """
+        Returns True if you have reached the end of the file
+        :return: a boolean value
+        """
+        return LogicParser._str_to_token_type(self.current_token) == TokenType.EOF
 
     def parse_input(self) -> List[Sentence]:
+        """
+        Parses the input (set by set_input or by the constructor) and return a list of Sentence(s)
+        :return: A list of parsed Sentence(s)
+        """
         while not self.is_end_of_file():
             self._sentences.append(self.parse_line())
         return self._sentences
 
     def parse_line(self) -> Sentence:
+        """
+        Parses the input (set by set_input or by the constructor) and return a single Sentence that is parsed
+        :return: A parsed Sentence
+        """
         if self.is_end_of_file():
             raise ParseError("No Line Found.")
-        return self.line()
+        return self._line()
 
-    def line(self) -> Sentence:
-        line: Sentence = self.logical_sentence()
-        if self.current_token_type == PLTokenType.ENDLINE:
-            self.consume_token(PLTokenType.ENDLINE)
-        elif self.current_token_type == PLTokenType.EOF:
-            self.consume_token(PLTokenType.EOF)
+    def _line(self) -> Sentence:
+        line: Sentence = self._logical_sentence()
+        if self.current_token_type == TokenType.ENDLINE:
+            self.consume_token(TokenType.ENDLINE)
+        elif self.current_token_type == TokenType.EOF:
+            self.consume_token(TokenType.EOF)
         else:
             raise ParseError("Expected EOF or End Line")
         return line
 
-    def logical_sentence(self) -> Sentence:
-        or_and_phrase: Sentence = self.or_and_phrase()
-        if self.current_token_type == PLTokenType.IMPLIES:
-            self.consume_token(PLTokenType.IMPLIES)
-            sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.Implies, self.or_and_phrase())
+    def _logical_sentence(self) -> Sentence:
+        or_and_phrase: Sentence = self._or_and_phrase()
+        if self.current_token_type == TokenType.IMPLIES:
+            self.consume_token(TokenType.IMPLIES)
+            sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.Implies, self._or_and_phrase())
             return sentence
-        elif self.current_token_type == PLTokenType.BICONDITIONAL:
-            self.consume_token(PLTokenType.BICONDITIONAL)
-            sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.Biconditional, self.or_and_phrase())
+        elif self.current_token_type == TokenType.BICONDITIONAL:
+            self.consume_token(TokenType.BICONDITIONAL)
+            sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.Biconditional, self._or_and_phrase())
             return sentence
         else:
             return or_and_phrase
 
-    def or_and_phrase(self) -> Optional[Sentence]:
+    def _or_and_phrase(self) -> Optional[Sentence]:
         sentence1: Optional[Sentence] = None
         # First try to process an and phrase
-        if self.current_token_type != PLTokenType.OR:
-            sentence1: Sentence = self.and_phrase()
+        if self.current_token_type != TokenType.OR:
+            sentence1: Sentence = self._and_phrase()
 
         # After processing an "and phrase", try to process an "or phrase"
-        if sentence1 is not None and self.current_token_type == PLTokenType.OR:
-            self.consume_token(PLTokenType.OR)
-            sentence: Sentence = Sentence(sentence1, LogicOperatorTypes.Or, self.or_and_phrase())
+        if sentence1 is not None and self.current_token_type == TokenType.OR:
+            self.consume_token(TokenType.OR)
+            sentence: Sentence = Sentence(sentence1, LogicOperatorTypes.Or, self._or_and_phrase())
             return sentence
         else:
             return sentence1
 
-    def and_phrase(self) -> Sentence:
-        term1: Sentence = self.term()
-        if self.current_token_type == PLTokenType.AND:
-            self.consume_token(PLTokenType.AND)
-            sentence: Sentence = Sentence(term1, LogicOperatorTypes.And, self.and_phrase())
+    def _and_phrase(self) -> Sentence:
+        term1: Sentence = self._term()
+        if self.current_token_type == TokenType.AND:
+            self.consume_token(TokenType.AND)
+            sentence: Sentence = Sentence(term1, LogicOperatorTypes.And, self._and_phrase())
             return sentence
         else:
             return term1
 
-    def term(self) -> Sentence:
+    def _term(self) -> Sentence:
         sentence: Sentence
         negate_sentence: bool = False
 
         # Deal with a not symbol
-        if self.current_token_type == PLTokenType.NOT:
-            self.consume_token(PLTokenType.NOT)
+        if self.current_token_type == TokenType.NOT:
+            self.consume_token(TokenType.NOT)
             negate_sentence = True
-            logical_sentence = self.term()
+            logical_sentence = self._term()
             if negate_sentence and logical_sentence.negation:
                 # Double negation, so make this sentence a level above
                 sentence = Sentence()
@@ -251,14 +325,14 @@ class PropLogicParser:
             else:
                 sentence = logical_sentence
         # Is this a parenthetical sentence?
-        elif self.current_token_type == PLTokenType.LPAREN:
+        elif self.current_token_type == TokenType.LPAREN:
             # This is a parenthetical sentence
-            self.consume_token(PLTokenType.LPAREN)
-            sentence = self.logical_sentence()
-            self.consume_token(PLTokenType.RPAREN)
+            self.consume_token(TokenType.LPAREN)
+            sentence = self._logical_sentence()
+            self.consume_token(TokenType.RPAREN)
         else:
             # This must be a symbol
-            symbol: str = self.consume_token(PLTokenType.SYMBOL)
+            symbol: str = self.consume_token(TokenType.SYMBOL)
             sentence = Sentence(symbol)
 
         # Deal with the negation if there was one

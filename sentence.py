@@ -62,7 +62,7 @@ class SentenceError(Exception):
 
 # Use this function to do a quick and dirty parse of a single sentence
 def parse_sentence(input_str: str) -> Sentence:
-    parser: pl_parser.PropLogicParser = pl_parser.PropLogicParser(input_str)
+    parser: pl_parser.LogicParser = pl_parser.LogicParser(input_str)
     result: Sentence = parser.parse_line()
     if parser.line_count > 0:
         raise SentenceError("Call to 'parse_sentence' takes only a single line of input.")
