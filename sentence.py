@@ -9,12 +9,14 @@ import pl_parser
 
 @total_ordering
 class LogicOperatorTypes(Enum):
-    NoOperator = 1
-    And = 2
-    Or = 3
-    # noinspection SpellCheckingInspection
-    Biconditional = 4
-    Implies = 5
+    """
+    Enumerated values for each possible type of Logical Operator.
+    """
+    NO_OPERATOR = 1
+    AND = 2
+    OR = 3
+    BI_CONDITIONAL = 4
+    IMPLIES = 5
 
     def __lt__(self, other):
         # Only work if both classes are the same
@@ -24,32 +26,32 @@ class LogicOperatorTypes(Enum):
         return NotImplemented
 
 
-def apply_operator(value1: kb.LogicValue, value2: kb.LogicValue, operator: LogicOperatorTypes) -> kb.LogicValue:
+def _apply_operator(value1: kb.LogicValue, value2: kb.LogicValue, operator: LogicOperatorTypes) -> kb.LogicValue:
     final_value: kb.LogicValue
-    if operator == LogicOperatorTypes.NoOperator:
+    if operator == LogicOperatorTypes.NO_OPERATOR:
         return value1
-    elif operator == LogicOperatorTypes.And:
+    elif operator == LogicOperatorTypes.AND:
         if value1 == kb.LogicValue.TRUE and value2 == kb.LogicValue.TRUE:
             return kb.LogicValue.TRUE
         elif value1 == kb.LogicValue.FALSE or value2 == kb.LogicValue.FALSE:
             return kb.LogicValue.FALSE
-    elif operator == LogicOperatorTypes.Or:
+    elif operator == LogicOperatorTypes.OR:
         if value1 == kb.LogicValue.TRUE or value2 == kb.LogicValue.TRUE:
             return kb.LogicValue.TRUE
         elif value1 == kb.LogicValue.FALSE and value2 == kb.LogicValue.FALSE:
             return kb.LogicValue.FALSE
-    elif operator == LogicOperatorTypes.Implies:
+    elif operator == LogicOperatorTypes.IMPLIES:
         # a => b means ~a or b
         if value1 == kb.LogicValue.FALSE or value2 == kb.LogicValue.TRUE:
             return kb.LogicValue.TRUE
         # ~(~a or b) = a and ~b
         elif value1 == kb.LogicValue.TRUE and value2 == kb.LogicValue.FALSE:
             return kb.LogicValue.FALSE
-    elif operator == LogicOperatorTypes.Biconditional:
+    elif operator == LogicOperatorTypes.BI_CONDITIONAL:
         # Bi-conditional is just implies going both ways connected by an And operator
-        value3: kb.LogicValue = apply_operator(value1, value2, LogicOperatorTypes.Implies)
-        value4: kb.LogicValue = apply_operator(value2, value1, LogicOperatorTypes.Implies)
-        return apply_operator(value3, value4, LogicOperatorTypes.And)
+        value3: kb.LogicValue = _apply_operator(value1, value2, LogicOperatorTypes.IMPLIES)
+        value4: kb.LogicValue = _apply_operator(value2, value1, LogicOperatorTypes.IMPLIES)
+        return _apply_operator(value3, value4, LogicOperatorTypes.AND)
     # No evaluation, so must be UNDEFINED
     return kb.LogicValue.UNDEFINED
 
@@ -60,8 +62,12 @@ class SentenceError(Exception):
         super().__init__(self.message)
 
 
-# Use this function to do a quick and dirty parse of a single sentence
 def parse_sentence(input_str: str) -> Sentence:
+    """
+    Use this function to do a quick and dirty parse of a single sentence
+    :param input_str: The text (in the form of propositional logic) you wish to parse.
+    :return: A Sentence containing the parsed logic
+    """
     parser: pl_parser.LogicParser = pl_parser.LogicParser(input_str)
     result: Sentence = parser.parse_line()
     if parser.line_count > 0:
@@ -77,7 +83,7 @@ class Sentence:
         self._first_sentence: Optional[Sentence] = None
         self._second_sentence: Optional[Sentence] = None
         self._parent_sentence: Optional[Sentence] = None
-        self._logic_operator: LogicOperatorTypes = LogicOperatorTypes.NoOperator
+        self._logic_operator: LogicOperatorTypes = LogicOperatorTypes.NO_OPERATOR
         self._is_cnf: bool = False
         # Set negation
         self._negation: bool = negated
@@ -90,7 +96,7 @@ class Sentence:
         if logical_operator is not None and sentence2 is None:
             # We have a logical operator but no sentence2, which is illegal
             raise SentenceError("You must have a second sentence if you have a logical operator.")
-        if sentence2 is not None and (logical_operator is None or logical_operator == LogicOperatorTypes.NoOperator):
+        if sentence2 is not None and (logical_operator is None or logical_operator == LogicOperatorTypes.NO_OPERATOR):
             # We have a sentence2 but no logical operator, which is illegal
             raise SentenceError("You must have a logical operator if you have a second sentence in the constructor.")
         elif logical_operator is not None:
@@ -117,7 +123,7 @@ class Sentence:
         elif isinstance(sentence1, Sentence):
             # This is a Sentence. Cases:
             # One sentence only...
-            if self._second_sentence is None and self._logic_operator == LogicOperatorTypes.NoOperator:
+            if self._second_sentence is None and self._logic_operator == LogicOperatorTypes.NO_OPERATOR:
                 # No other parameters, so do a shallow copy instead
                 self.copy(sentence1, negated=negated)
             else:
@@ -208,14 +214,14 @@ class Sentence:
     @property
     def is_atomic(self):
         # Returns True if this is a simple atomic sentence and False if it is a complex sentence
-        if self.logic_operator == LogicOperatorTypes.NoOperator \
+        if self.logic_operator == LogicOperatorTypes.NO_OPERATOR \
                 and self.first_sentence is None and self.second_sentence is None:
             # Simple atomic sentence with one symbol or no parameters at all
             return True
         elif self.first_sentence is not None and self.second_sentence is None and self.negation:
             # Lone negation with a sentence under it
             return False
-        elif self.logic_operator != LogicOperatorTypes.NoOperator and self.first_sentence is not None:
+        elif self.logic_operator != LogicOperatorTypes.NO_OPERATOR and self.first_sentence is not None:
             # Atomic sentence
             return False
         else:
@@ -240,14 +246,14 @@ class Sentence:
             self._logic_operator = sentence._logic_operator
 
     def sentence_from_tokens(self, token1: str, operator: LogicOperatorTypes, token2: str) -> None:
-        if not (operator == LogicOperatorTypes.NoOperator or token1 == "" or token2 == ""
+        if not (operator == LogicOperatorTypes.NO_OPERATOR or token1 == "" or token2 == ""
                 or token1 is None or token2 is None):
             self.sentence_from_sentences(Sentence(token1), operator, Sentence(token2))
         else:
             raise SentenceError("Illegal parameters. Operator cannot be 'None' and Tokens cannot be blank.")
 
     def sentence_from_sentences(self, sentence1: Sentence, operator: LogicOperatorTypes, sentence2: Sentence) -> None:
-        if not (operator == LogicOperatorTypes.NoOperator or sentence1 is None or sentence2 is None):
+        if not (operator == LogicOperatorTypes.NO_OPERATOR or sentence1 is None or sentence2 is None):
             self._logic_operator = operator
             self._negation = False
             self._symbol = None
@@ -259,20 +265,20 @@ class Sentence:
     def negate_sentence(self) -> None:
         sentence = self.clone()
         self._negation = True
-        self._logic_operator = LogicOperatorTypes.NoOperator
+        self._logic_operator = LogicOperatorTypes.NO_OPERATOR
         self._symbol = None
         self._first_sentence = sentence
         self._second_sentence = None
 
     @classmethod
     def logic_operator_to_string(cls, logic_operator: LogicOperatorTypes):
-        if logic_operator == LogicOperatorTypes.And:
+        if logic_operator == LogicOperatorTypes.AND:
             return "AND"
-        elif logic_operator == LogicOperatorTypes.Or:
+        elif logic_operator == LogicOperatorTypes.OR:
             return "OR"
-        elif logic_operator == LogicOperatorTypes.Implies:
+        elif logic_operator == LogicOperatorTypes.IMPLIES:
             return "=>"
-        elif logic_operator == LogicOperatorTypes.Biconditional:
+        elif logic_operator == LogicOperatorTypes.BI_CONDITIONAL:
             return "<=>"
         else:
             raise SentenceError("Error converting Sentence to a string. Illegal Operator type.")
@@ -292,10 +298,10 @@ class Sentence:
                 # 2. The next level down is a complex sentence
                 # 3. The next level down has no negation
                 return "(" + sub_sentence.to_string() + ")"
-            elif (self.logic_operator == LogicOperatorTypes.Implies or
-                  self.logic_operator == LogicOperatorTypes.Biconditional) \
-                    and (sub_sentence.logic_operator == LogicOperatorTypes.Implies or
-                         sub_sentence.logic_operator == LogicOperatorTypes.Biconditional):
+            elif (self.logic_operator == LogicOperatorTypes.IMPLIES or
+                  self.logic_operator == LogicOperatorTypes.BI_CONDITIONAL) \
+                    and (sub_sentence.logic_operator == LogicOperatorTypes.IMPLIES or
+                         sub_sentence.logic_operator == LogicOperatorTypes.BI_CONDITIONAL):
                 # Use parentheses with implies or bi-conditionals next to each other to be more clear
                 return "(" + sub_sentence.to_string() + ")"
             else:
@@ -312,7 +318,7 @@ class Sentence:
                     ret_val += self.symbol
                 else:
                     ret_val += ""
-            elif self.logic_operator == LogicOperatorTypes.NoOperator and self.negation \
+            elif self.logic_operator == LogicOperatorTypes.NO_OPERATOR and self.negation \
                     and self.first_sentence is not None:
                 # We have a lone negation of another sentence
                 ret_val += "(" + self.first_sentence.to_string(True) + ")"
@@ -330,7 +336,7 @@ class Sentence:
                     ret_val += self.to_string(True)
                 else:
                     ret_val += ""
-            elif self.logic_operator == LogicOperatorTypes.NoOperator and self.negation \
+            elif self.logic_operator == LogicOperatorTypes.NO_OPERATOR and self.negation \
                     and self.first_sentence is not None and self.second_sentence is None:
                 # Handle lone negation
                 if self._negation:
@@ -389,7 +395,7 @@ class Sentence:
             # If there is a second sentence evaluate it next
             if self.second_sentence is not None:
                 sub_evaluate2 = self.second_sentence._traverse_and_evaluate(model)
-                evaluate = apply_operator(sub_evaluate1, sub_evaluate2, self.logic_operator)
+                evaluate = _apply_operator(sub_evaluate1, sub_evaluate2, self.logic_operator)
             else:
                 evaluate = sub_evaluate1
         # Handle negations
@@ -473,7 +479,7 @@ class Sentence:
         # Start with a clone to avoid any side effect
         sentence: Sentence = self.clone()
         # Transform top level bi-conditional
-        if sentence.logic_operator == LogicOperatorTypes.Biconditional:
+        if sentence.logic_operator == LogicOperatorTypes.BI_CONDITIONAL:
             # Replace bi-conditional (a <=> b) with a => b AND b => a
             clone_ab: Sentence
             clone_ba: Sentence
@@ -481,23 +487,23 @@ class Sentence:
             # a => b
             clone_ab = sentence.clone()
             clone_ab.negation = False
-            clone_ab.logic_operator = LogicOperatorTypes.Implies
+            clone_ab.logic_operator = LogicOperatorTypes.IMPLIES
             # b => a
             clone_ba = sentence.clone()
             clone_ba.negation = False
             temp = clone_ba.first_sentence
             clone_ba.first_sentence = clone_ba.second_sentence
             clone_ba.second_sentence = temp
-            clone_ba.logic_operator = LogicOperatorTypes.Implies
+            clone_ba.logic_operator = LogicOperatorTypes.IMPLIES
             # And
-            sentence = Sentence(clone_ab, LogicOperatorTypes.And, clone_ba, negated=sentence.negation)
+            sentence = Sentence(clone_ab, LogicOperatorTypes.AND, clone_ba, negated=sentence.negation)
         # Transform top level Implies
-        if sentence.logic_operator == LogicOperatorTypes.Implies:
+        if sentence.logic_operator == LogicOperatorTypes.IMPLIES:
             # Replace implies (a => b) with ~a OR b
             neg_first_sentence: Sentence
             neg_first_sentence = Sentence(sentence.first_sentence, negated=True)
             # neg_first_sentence = neg_first_sentence.transform_conditionals()
-            sentence.logic_operator = LogicOperatorTypes.Or
+            sentence.logic_operator = LogicOperatorTypes.OR
             sentence.first_sentence = neg_first_sentence
         # Top level should now be transformed -- if sentence is not atomic, recurse down the chain
         if not sentence.is_atomic:
@@ -513,7 +519,7 @@ class Sentence:
         # Flip the negation on this sentence
         sentence.negation = not sentence.negation
         # If we now have a non-negated sentence without an operator, then we need to pull it all up one level
-        if sentence.logic_operator == LogicOperatorTypes.NoOperator and not sentence.negation \
+        if sentence.logic_operator == LogicOperatorTypes.NO_OPERATOR and not sentence.negation \
                 and sentence.first_sentence is not None and sentence.second_sentence is None:
             sentence = sentence.first_sentence
         return sentence
@@ -539,10 +545,10 @@ class Sentence:
                     # This ia a regular two sentence logical operation
                     sentence.first_sentence = sentence.first_sentence._move_not_inward()
                     # Flip ands and ors because this is a regular complex sentence that was negated
-                    if sentence.logic_operator == LogicOperatorTypes.And:
-                        sentence.logic_operator = LogicOperatorTypes.Or
-                    elif sentence.logic_operator == LogicOperatorTypes.Or:
-                        sentence.logic_operator = LogicOperatorTypes.And
+                    if sentence.logic_operator == LogicOperatorTypes.AND:
+                        sentence.logic_operator = LogicOperatorTypes.OR
+                    elif sentence.logic_operator == LogicOperatorTypes.OR:
+                        sentence.logic_operator = LogicOperatorTypes.AND
                     else:
                         # Throw an error if we don't yet have all other types of operators removed by now
                         raise SentenceError("Do not call transform_not without first calling transform_conditionals.")
@@ -559,12 +565,12 @@ class Sentence:
     def _redistribute_or(self, sub_sentence: Sentence) -> Sentence:
         sentence: Sentence = self.clone()
         # This function should only be called if a) self is guaranteed to be an AND clause,
-        if self.logic_operator != LogicOperatorTypes.And:
+        if self.logic_operator != LogicOperatorTypes.AND:
             raise SentenceError("redistribute_or can only be called on a sentence whose top node is an AND clause.")
         else:
             # Do the redistribution
-            sentence.first_sentence = Sentence(sentence.first_sentence, LogicOperatorTypes.Or, sub_sentence)
-            sentence.second_sentence = Sentence(sentence.second_sentence, LogicOperatorTypes.Or, sub_sentence)
+            sentence.first_sentence = Sentence(sentence.first_sentence, LogicOperatorTypes.OR, sub_sentence)
+            sentence.second_sentence = Sentence(sentence.second_sentence, LogicOperatorTypes.OR, sub_sentence)
             return sentence
 
     def _transform_distribute_ors(self) -> Sentence:
@@ -575,9 +581,9 @@ class Sentence:
         if sentence.is_atomic:
             # Atomic sentences don't need to change, so just return them
             return sentence
-        elif sentence.logic_operator == LogicOperatorTypes.Or:
+        elif sentence.logic_operator == LogicOperatorTypes.OR:
             # Top level is an Or operator
-            if sentence.first_sentence.logic_operator == LogicOperatorTypes.And:
+            if sentence.first_sentence.logic_operator == LogicOperatorTypes.AND:
                 # We have an OR above an AND on right side
                 # Grab the left side to redistribute over the right side
                 sub_sentence = sentence.second_sentence.clone()
@@ -585,7 +591,7 @@ class Sentence:
                 sentence = sentence.first_sentence.clone()
                 # Now traverse the AND plus any more beneath it and put the left under each AND clause
                 sentence = sentence._redistribute_or(sub_sentence)
-            elif sentence.second_sentence.logic_operator == LogicOperatorTypes.And:
+            elif sentence.second_sentence.logic_operator == LogicOperatorTypes.AND:
                 # We have an OR above an AND on right side
                 # Grab the left side to redistribute over the right side
                 sub_sentence = sentence.first_sentence.clone()
@@ -593,9 +599,9 @@ class Sentence:
                 sentence = sentence.second_sentence.clone()
                 # Now traverse the AND plus any more beneath it and put the left under each AND clause
                 sentence = sentence._redistribute_or(sub_sentence)
-        elif sentence.logic_operator == LogicOperatorTypes.And:
+        elif sentence.logic_operator == LogicOperatorTypes.AND:
             pass
-        elif sentence.logic_operator == LogicOperatorTypes.NoOperator:
+        elif sentence.logic_operator == LogicOperatorTypes.NO_OPERATOR:
             pass
         else:
             raise SentenceError("Encountered an illegal operator type in _transform_distribute_ors.")
@@ -621,7 +627,7 @@ class Sentence:
             elif not sentence.is_atomic and sentence.negation:
                 # CNF should never have negated sentences unless they are literals (i.e. atomic)
                 return False
-            elif sentence.logic_operator == LogicOperatorTypes.Or:
+            elif sentence.logic_operator == LogicOperatorTypes.OR:
                 # Full CNF format never has OR clauses only
                 return True
             else:
@@ -651,14 +657,14 @@ class Sentence:
             elif not sentence.is_atomic and sentence.negation:
                 # CNF should never have negated sentences unless they are literals (i.e. atomic)
                 return False
-            elif sentence.logic_operator == LogicOperatorTypes.Or:
+            elif sentence.logic_operator == LogicOperatorTypes.OR:
                 # CNF never has OR clauses with And clauses under them
-                if sentence.first_sentence.logic_operator == LogicOperatorTypes.And:
+                if sentence.first_sentence.logic_operator == LogicOperatorTypes.AND:
                     return False
-                elif sentence.second_sentence.second_sentence == LogicOperatorTypes.And:
+                elif sentence.second_sentence.second_sentence == LogicOperatorTypes.AND:
                     return False
                 return True
-            elif sentence.logic_operator == LogicOperatorTypes.And:
+            elif sentence.logic_operator == LogicOperatorTypes.AND:
                 if current_previous_or:
                     return False
                 else:
@@ -666,7 +672,7 @@ class Sentence:
             else:
                 return False
         # Recursively validate entire sentence is CNF format
-        if self.logic_operator == LogicOperatorTypes.Or:
+        if self.logic_operator == LogicOperatorTypes.OR:
             previous_or = True
         if self.is_atomic:
             return is_valid_node(self, previous_or)

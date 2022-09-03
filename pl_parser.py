@@ -79,12 +79,8 @@ class LogicParser:
         """
         This method allows you to pass in a string that the parser can then parse.
 
-        Parameters
-        __________
-        set_input : str
-            The input string to be converted into a list of Sentence(s)
-
-        :returns None
+        :param input_str: The input string to be converted into a list of Sentence(s)
+        :return: None
         """
         input_str = input_str.upper()
         self._tokens = None
@@ -148,11 +144,7 @@ class LogicParser:
     def current_token_type(self) -> TokenType:
         """
         This method allows you to pass in a string that the parser can then parse.
-
-        set_input : str
-            The input string to be converted into a list of Sentence(s)
-
-        :returns None
+        :return: A TokenType of the current token
         """
         return self._str_to_token_type(self.current_token)
 
@@ -194,12 +186,9 @@ class LogicParser:
         """
         Returns the next token (in the form of a string) to be parsed.
 
-        Parameters
-        __________
-        check: TokenType
-            Passing in the optional 'check' value will verify that the token you are about to consume
-            was of the expected type. If not passed or set to None, then it is ignored and
-            you just consume the next token. If the expected type if not matched, an ParseError is raised.
+        :param check: Passing in the optional 'check' value will verify that the token you are about to consume
+        was of the expected type. If not passed or set to None, then it is ignored and
+        you just consume the next token. If the expected type if not matched, an ParseError is raised.
         :return: A string containing the next token
         """
         # Note:
@@ -277,11 +266,11 @@ class LogicParser:
         or_and_phrase: Sentence = self._or_and_phrase()
         if self.current_token_type == TokenType.IMPLIES:
             self.consume_token(TokenType.IMPLIES)
-            sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.Implies, self._or_and_phrase())
+            sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.IMPLIES, self._or_and_phrase())
             return sentence
         elif self.current_token_type == TokenType.BICONDITIONAL:
             self.consume_token(TokenType.BICONDITIONAL)
-            sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.Biconditional, self._or_and_phrase())
+            sentence: Sentence = Sentence(or_and_phrase, LogicOperatorTypes.BI_CONDITIONAL, self._or_and_phrase())
             return sentence
         else:
             return or_and_phrase
@@ -295,7 +284,7 @@ class LogicParser:
         # After processing an "and phrase", try to process an "or phrase"
         if sentence1 is not None and self.current_token_type == TokenType.OR:
             self.consume_token(TokenType.OR)
-            sentence: Sentence = Sentence(sentence1, LogicOperatorTypes.Or, self._or_and_phrase())
+            sentence: Sentence = Sentence(sentence1, LogicOperatorTypes.OR, self._or_and_phrase())
             return sentence
         else:
             return sentence1
@@ -304,7 +293,7 @@ class LogicParser:
         term1: Sentence = self._term()
         if self.current_token_type == TokenType.AND:
             self.consume_token(TokenType.AND)
-            sentence: Sentence = Sentence(term1, LogicOperatorTypes.And, self._and_phrase())
+            sentence: Sentence = Sentence(term1, LogicOperatorTypes.AND, self._and_phrase())
             return sentence
         else:
             return term1

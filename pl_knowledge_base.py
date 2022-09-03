@@ -245,20 +245,20 @@ class PLKnowledgeBase:
         # Strategy: recurse through the whole sentence tree and find each AND clause and then grab the clauses
         # in between (which are either OR clauses or symbols) and stuff them separately into the knowledge base
         def recurse_sentence(a_sentence: Sentence):
-            if a_sentence.logic_operator == LogicOperatorTypes.Or or a_sentence.is_atomic:
+            if a_sentence.logic_operator == LogicOperatorTypes.OR or a_sentence.is_atomic:
                 # This is the top of an OR clause or it's atomic, so add it
                 self.add(a_sentence)
-            elif a_sentence.logic_operator == LogicOperatorTypes.And:
+            elif a_sentence.logic_operator == LogicOperatorTypes.AND:
                 # It is an and clause, so recurse
                 self._build_cnf_knowledge_base(a_sentence)
             else:
                 # It is neither an and nor an or, so we must not be in CNF form. Raise error.
                 raise KnowledgeBaseError("_build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
 
-        if sentence.logic_operator == LogicOperatorTypes.And:
+        if sentence.logic_operator == LogicOperatorTypes.AND:
             recurse_sentence(sentence.first_sentence)
             recurse_sentence(sentence.second_sentence)
-        elif sentence.logic_operator == LogicOperatorTypes.Or:
+        elif sentence.logic_operator == LogicOperatorTypes.OR:
             recurse_sentence(sentence)
         elif sentence.is_atomic:
             # It's a symbol, so just put it into the database
@@ -399,7 +399,7 @@ class PLKnowledgeBase:
                     else:
                         # This literal value is false, so continue processing.
                         return None, 0
-            elif clause.logic_operator == LogicOperatorTypes.Or:
+            elif clause.logic_operator == LogicOperatorTypes.OR:
                 # This is not a lone symbol, so recurse
                 # Search first sentence
                 count: int
@@ -446,7 +446,7 @@ class PLKnowledgeBase:
             # are no negated versions of the symbol in this sentence.
             positive_count: int = 0
             negative_count: int = 0
-            if a_sentence.logic_operator == LogicOperatorTypes.Or:
+            if a_sentence.logic_operator == LogicOperatorTypes.OR:
                 # Search first sentence
                 positives, negatives = assess_symbol(a_sentence.first_sentence, a_search_symbol)
                 positive_count += positives
