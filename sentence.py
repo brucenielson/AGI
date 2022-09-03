@@ -384,11 +384,16 @@ class Sentence:
 
             return ret_val
 
-    def get_symbol_list(self, temp_symbol_list: kb.SymbolList = None, sub_sentence: Sentence = None) -> kb.SymbolList:
-        #  For each symbol, check if it's already in the list and, if not, add it
-        #  then return the full list. It will default to value undefined for everything.
-        #  then handle the rest, i.e. atomic vs. complex
-        # This returns a list of symbols all set to undefined rather than to values they currently hold
+    def get_symbol_list(self) -> kb.SymbolList:
+        """
+        For each symbol, check if it's already in the list and, if not, add it then return the full list.
+        It will default to value undefined for everything. then handle the rest, i.e. atomic vs. complex.
+
+        :return: This returns a list of symbols all set to undefined rather than to values they currently hold
+        """
+        return self._get_symbol_list()
+
+    def _get_symbol_list(self, temp_symbol_list: kb.SymbolList = None, sub_sentence: Sentence = None) -> kb.SymbolList:
         if temp_symbol_list is None:
             temp_symbol_list = kb.SymbolList()
         if sub_sentence is None:
@@ -398,20 +403,39 @@ class Sentence:
             temp_symbol_list.add(sub_sentence.symbol)
         else:
             # All complex sentences have at least one sentence
-            Sentence.get_symbol_list(sub_sentence.first_sentence, temp_symbol_list)
+            Sentence._get_symbol_list(sub_sentence.first_sentence, temp_symbol_list)
             # If we have a second sentence, then process that
             if sub_sentence.second_sentence is not None:
-                Sentence.get_symbol_list(sub_sentence.second_sentence, temp_symbol_list)
+                Sentence._get_symbol_list(sub_sentence.second_sentence, temp_symbol_list)
         return temp_symbol_list
 
     def evaluate(self, model: kb.SymbolList) -> kb.LogicValue:
+        """
+        Given a model (SymbolList) evaluates the Sentence and returns a LogicValue
+        Note: there is a limitation fo this evaluation. To save time it does not try every possible
+        value. So a sentence like Z OR ~Z with a model of Z: UNDEFINED will return UNDEFINED and not TRUE.
+        There is no way around this problem if we want to stay in linear computational time for the evaluation.
+
+        :param model: A SymbolList with symbols set to TRUE, FALSE, or UNDEFINED
+        :return: A LogicValue that this Sentence evaluates to given the model
+        """
         return self._traverse_and_evaluate(model)
 
     def is_true(self, model: kb.SymbolList) -> bool:
-        return self._traverse_and_evaluate(model) == kb.LogicValue.TRUE
+        """
+        Given a model, does this Sentence evaluate to LogicValue.TRUE?
+        :param model: A SymbolList with symbols set to TRUE, FALSE, or UNDEFINED
+        :return: A boolean value of True if evaluate returns TRUE otherwise returns False
+        """
+        return self.evaluate(model) == kb.LogicValue.TRUE
 
     def is_false(self, model: kb.SymbolList) -> bool:
-        return self._traverse_and_evaluate(model) == kb.LogicValue.FALSE
+        """
+        Given a model, does this Sentence evaluate to LogicValue.FALSE?
+        :param model: A SymbolList with symbols set to TRUE, FALSE, or UNDEFINED
+        :return: A boolean value of True if evaluate returns TRUE otherwise returns False
+        """
+        return self.evaluate(model) == kb.LogicValue.FALSE
 
     def _traverse_and_evaluate(self, model: kb.SymbolList) -> kb.LogicValue:
         evaluate: kb.LogicValue
@@ -459,6 +483,12 @@ class Sentence:
             return check1 and check2
 
     def is_equivalent(self, other_sentence: Union[Sentence, str]) -> bool:
+        """
+        Does an evaluation of this Sentence (self) and other_sentence. It does a truth table check on the
+        two sentences so see if under every possible model they evaluate the same. If so, returns True otherwise False
+        :param other_sentence: The Sentence you want to see if it's equivalent to the current Sentence (self)
+        :return: A boolean value set to True of the two Sentences are equivalent otherwise False.
+        """
         sentence: Sentence = kb.sentence_or_str(other_sentence)
         if isinstance(sentence, str):
             sentence = Sentence(sentence)
@@ -477,14 +507,26 @@ class Sentence:
         return self._truth_table_check_all(sentence, symbols1.clone(), symbols1.clone())
 
     def clone(self) -> Sentence:
+        """
+        Creates a deep copy clone of the current Sentence (self)
+        :return: A clone of the current Sentence (self)
+        """
         return deepcopy(self)
 
     def convert_to_cnf(self, or_clauses_only=False) -> Union[Sentence, List[Sentence]]:
-        # This function transforms the sentence into Conjunctive Normal Form
-        # CNF is a form made up of Ors connected by ANDs i.e. (A OR B OR C) AND (D OR E OR F)
-        # 3-CNF is the 3-SAT problem
-        # If you set or_clauses_only to True, you'll get back not a Sentence but a list of Sentences that can then
-        # be freely added to a knowledge base in CNF format without resetting it to no longer being in CNF format.
+        """
+        This function transforms the sentence into Conjunctive Normal Form
+        CNF is a form made up of Ors connected by ANDs i.e. (A OR B OR C) AND (D OR E OR F)
+        3-CNF is the 3-SAT problem
+        If you set or_clauses_only to True, you'll get back not a Sentence but a list of Sentences that can then
+        be freely added to a knowledge base in CNF format without resetting it to no longer being in CNF format.
+
+        :param or_clauses_only: Set this optional parameter to True if you want the conversion to never ues AND clauses.
+        It will instead put each clause between AND operators into separate lines and return a List of Sentences instead
+        of a single Sentence.
+        :return: Returns a Sentence in CNF format. If only using or clauses (or_clauses_only=True) then returns a list
+        of Sentences instead.
+        """
         sentence: Sentence = self.clone()
         sentence = sentence._transform_conditionals()
         sentence = sentence._transform_not()
@@ -712,6 +754,12 @@ class Sentence:
                    and self.second_sentence._is_valid_cnf_include_and(previous_or=previous_or)
 
     def is_valid_cnf(self, or_clauses_only=False) -> bool:
+        """
+        Evaluates if this Sentence (self) is in a valid CNF format or not and returns True if it is, otherwise False.
+        :param or_clauses_only: This optional parameter, if set to True, will use the strong criteria of only allowing
+        OR operators.
+        :return: A boolean value set to True if this is valid CNF format otherwise False
+        """
         if or_clauses_only:
             self._is_cnf = self._is_valid_cnf_or_only()
         else:
