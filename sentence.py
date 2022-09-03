@@ -56,39 +56,31 @@ def _apply_operator(value1: kb.LogicValue, value2: kb.LogicValue, operator: Logi
     return kb.LogicValue.UNDEFINED
 
 
-# TODO: This is a messy function. Fix it.
 def _split_and_lines(sentence: Sentence) -> List[Sentence]:
-    # Remove all And clauses by splitting them into lines
-    # This function takes a CNF Sentence and builds a knowledge base out of it where each OR clause
-    # becomes becomes a single sentence in the knowledge base.
-    # Assumption: this sentence is already in CNF form -- if it isn't, the results are unpredictable
-    # every time it's called, the top node must be an AND operator or symbol
-    #
+    """
+    Remove all And clauses by splitting them into lines
+    This function takes a CNF Sentence and builds a list of Sentence(s0 where each OR clause
+    becomes becomes a single sentence in the list.
+
+    Assumption: this sentence is already in CNF form -- if it isn't, the results are unpredictable
+    every time it's called, the top node must be an AND operator or symbol.
+
+    :param sentence: A Sentence in CNF format but may have AND clauses that need to be split up
+    :return: A list of Sentence(s) that contain only atomics or OR clauses
+    """
     # This function will traverse a sentence finding disjunctions and splicing it all up into sentences
     # that are added to the knowledge base passed in.
-    #
     # Strategy: recurse through the whole sentence tree and find each AND clause and then grab the clauses
-    # in between (which are either OR clauses or symbols) and stuff them separately into the knowledge base
-    def recurse_sentence(a_sentence: Sentence) -> List[Sentence]:
-        sentence_list: List[Sentence] = []
-        if a_sentence.logic_operator == LogicOperatorTypes.OR or a_sentence.is_atomic:
-            # This is the top of an OR clause or it's atomic, so add it
-            sentence_list.append(a_sentence)
-            return sentence_list
-        elif a_sentence.logic_operator == LogicOperatorTypes.AND:
-            # It is an and clause, so recurse
-            sentence_list.extend(_split_and_lines(a_sentence))
-            return sentence_list
-        else:
-            # It is neither an and nor an or, so we must not be in CNF form. Raise error.
-            raise SentenceError("Function _split_and_lines was called with a 'sentence' not in CNF form.")
-
+    # in between (which are either OR clauses or symbols) and stuff them separately into the list
     sentences: List[Sentence] = []
-    if sentence.logic_operator == LogicOperatorTypes.AND:
-        sentences.extend(recurse_sentence(sentence.first_sentence))
-        sentences.extend(recurse_sentence(sentence.second_sentence))
+    if sentence.logic_operator == LogicOperatorTypes.OR or sentence.is_atomic:
+        # This is the top of an OR clause or it's atomic, so add it
+        sentences.append(sentence)
+    elif sentence.logic_operator == LogicOperatorTypes.AND:
+        sentences.extend(_split_and_lines(sentence.first_sentence))
+        sentences.extend(_split_and_lines(sentence.second_sentence))
     elif sentence.logic_operator == LogicOperatorTypes.OR:
-        sentences.extend(recurse_sentence(sentence))
+        sentences.extend(_split_and_lines(sentence))
     elif sentence.is_atomic:
         # It's a symbol, so just put it into the database
         sentences.append(deepcopy(sentence))
