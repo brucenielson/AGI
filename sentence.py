@@ -544,6 +544,7 @@ class Sentence:
         else:
             return sentence
 
+    # TODO: This is a messy function. Fix it.
     def _split_and_lines(self) -> List[Sentence]:
         # Remove all And clauses by splitting them into lines
         # This function takes a CNF Sentence and builds a knowledge base out of it where each OR clause
