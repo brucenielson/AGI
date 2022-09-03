@@ -69,23 +69,26 @@ def _split_and_lines(sentence: Sentence) -> List[Sentence]:
     #
     # Strategy: recurse through the whole sentence tree and find each AND clause and then grab the clauses
     # in between (which are either OR clauses or symbols) and stuff them separately into the knowledge base
-    def recurse_sentence(a_sentence: Sentence, sentence_list: List[Sentence]):
+    def recurse_sentence(a_sentence: Sentence) -> List[Sentence]:
+        sentence_list: List[Sentence] = []
         if a_sentence.logic_operator == LogicOperatorTypes.OR or a_sentence.is_atomic:
             # This is the top of an OR clause or it's atomic, so add it
             sentence_list.append(a_sentence)
+            return sentence_list
         elif a_sentence.logic_operator == LogicOperatorTypes.AND:
             # It is an and clause, so recurse
             sentence_list.extend(_split_and_lines(a_sentence))
+            return sentence_list
         else:
             # It is neither an and nor an or, so we must not be in CNF form. Raise error.
             raise SentenceError("Function _split_and_lines was called with a 'sentence' not in CNF form.")
 
     sentences: List[Sentence] = []
     if sentence.logic_operator == LogicOperatorTypes.AND:
-        recurse_sentence(sentence.first_sentence, sentences)
-        recurse_sentence(sentence.second_sentence, sentences)
+        sentences.extend(recurse_sentence(sentence.first_sentence))
+        sentences.extend(recurse_sentence(sentence.second_sentence))
     elif sentence.logic_operator == LogicOperatorTypes.OR:
-        recurse_sentence(sentence, sentences)
+        sentences.extend(recurse_sentence(sentence))
     elif sentence.is_atomic:
         # It's a symbol, so just put it into the database
         sentences.append(deepcopy(sentence))
