@@ -565,7 +565,7 @@ class Sentence:
                 a_sentence._split_and_lines()
             else:
                 # It is neither an and nor an or, so we must not be in CNF form. Raise error.
-                raise SentenceError("_split_and_lines was called with a 'sentence' not in CNF form.")
+                raise SentenceError("Function _split_and_lines was called with a 'sentence' not in CNF form.")
 
         sentences: List[Sentence] = []
         if self.logic_operator == LogicOperatorTypes.AND:
@@ -577,7 +577,7 @@ class Sentence:
             # It's a symbol, so just put it into the database
             sentences.append(deepcopy(self))
         else:
-            raise SentenceError("_split_and_lines was called with a 'sentence' not in CNF form.")
+            raise SentenceError("Function _split_and_lines was called with a 'sentence' not in CNF form.")
         return sentences
 
     def _transform_conditionals(self) -> Sentence:

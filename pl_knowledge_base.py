@@ -233,39 +233,6 @@ class PLKnowledgeBase:
         else:
             return self.truth_table_entails(query) == LogicValue.UNDEFINED
 
-    def _build_cnf_knowledge_base(self, sentence: Sentence) -> None:
-        # This function takes a CNF Sentence and builds a knowledge base out of it where each OR clause
-        # becomes becomes a single sentence in the knowledge base.
-        # Assumption: this sentence is already in CNF form -- if it isn't, the results are unpredictable
-        # every time it's called, the top node must be an AND operator or symbol
-        #
-        # This function will traverse a sentence finding disjunctions and splicing it all up into sentences
-        # that are added to the knowledge base passed in.
-        #
-        # Strategy: recurse through the whole sentence tree and find each AND clause and then grab the clauses
-        # in between (which are either OR clauses or symbols) and stuff them separately into the knowledge base
-        def recurse_sentence(a_sentence: Sentence):
-            if a_sentence.logic_operator == LogicOperatorTypes.OR or a_sentence.is_atomic:
-                # This is the top of an OR clause or it's atomic, so add it
-                self.add(a_sentence)
-            elif a_sentence.logic_operator == LogicOperatorTypes.AND:
-                # It is an and clause, so recurse
-                self._build_cnf_knowledge_base(a_sentence)
-            else:
-                # It is neither an and nor an or, so we must not be in CNF form. Raise error.
-                raise KnowledgeBaseError("_build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
-
-        if sentence.logic_operator == LogicOperatorTypes.AND:
-            recurse_sentence(sentence.first_sentence)
-            recurse_sentence(sentence.second_sentence)
-        elif sentence.logic_operator == LogicOperatorTypes.OR:
-            recurse_sentence(sentence)
-        elif sentence.is_atomic:
-            # It's a symbol, so just put it into the database
-            self.add(sentence)
-        else:
-            raise KnowledgeBaseError("_build_cnf_Knowledge_base was called with a 'sentence' not in CNF form.")
-
     def convert_to_cnf(self) -> PLKnowledgeBase:
         # This function takes the whole knowledge base and converts it to a single knowledge base in CNF form
         # with each sentence in the knowledge base being one OR clause
