@@ -202,8 +202,8 @@ class TestSymbolList(TestCase):
         self.assertEqual(9, symbols.index('F'))
 
     def test_add_symbol_list_via_sentence(self):
-        sentence1: Sentence = Sentence.string_to_sentence("a and c and b => d")
-        sentence2: Sentence = Sentence.string_to_sentence("e and c and f => b and g")
+        sentence1: Sentence = Sentence("a and c and b => d")
+        sentence2: Sentence = Sentence("e and c and f => b and g")
         symbol_list1: SymbolList = sentence1.get_symbol_list()
         # Test first sentence
         self.assertEqual("A", symbol_list1.get_symbol(0).name)
@@ -221,7 +221,7 @@ class TestSymbolList(TestCase):
         self.assertEqual("G", symbol_list1.get_symbol(6).name)
 
     def test_repr_symbol_list(self):
-        sentence: Sentence = Sentence.string_to_sentence("a and c and b => d")
+        sentence: Sentence = Sentence("a and c and b => d")
         symbol_list: SymbolList = sentence.get_symbol_list()
         self.assertEqual("A: Undefined; B: Undefined; C: Undefined; D: Undefined; ", repr(symbol_list))
         symbol_list.set_value("A", True)
@@ -314,7 +314,7 @@ class TestPLKnowledgeBase(TestCase):
     def test_add_sentence_parentheses(self):
         kb: PLKnowledgeBase = PLKnowledgeBase()
         kb.add("a or b and c => d")
-        sentence = Sentence.string_to_sentence("c and a or d => b")
+        sentence = Sentence("c and a or d => b")
         kb.add(sentence)
 
         self.assertEqual("((A OR (B AND C)) => D)", kb.get_sentence(0).to_string(True))
@@ -323,7 +323,7 @@ class TestPLKnowledgeBase(TestCase):
     def test_add_and_get_sentence(self):
         kb: PLKnowledgeBase = PLKnowledgeBase()
         kb.add("a or b and c => d")
-        sentence = Sentence.string_to_sentence("c and a or d => b")
+        sentence = Sentence("c and a or d => b")
         kb.add(sentence)
 
         self.assertEqual("A OR B AND C => D", kb.get_sentence(0).to_string())
@@ -340,7 +340,7 @@ class TestPLKnowledgeBase(TestCase):
     def test_kb_clone(self):
         kb1: PLKnowledgeBase = PLKnowledgeBase()
         kb1.add("a or b and c => d")
-        sentence = Sentence.string_to_sentence("c and a or d => b")
+        sentence = Sentence("c and a or d => b")
         kb1.add(sentence)
         kb2: PLKnowledgeBase = kb1.clone()
 
@@ -359,7 +359,7 @@ class TestPLKnowledgeBase(TestCase):
     def test_kb_exists(self):
         kb: PLKnowledgeBase = PLKnowledgeBase()
         kb.add("a or b and c => d")
-        sentence = Sentence.string_to_sentence("c and a or d => b")
+        sentence = Sentence("c and a or d => b")
         kb.add(sentence)
         # Test count
         self.assertEqual(2, kb.line_count)

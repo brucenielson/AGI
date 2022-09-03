@@ -75,6 +75,19 @@ def parse_sentence(input_str: str) -> Sentence:
     return result
 
 
+def logic_operator_to_string(logic_operator: LogicOperatorTypes):
+    if logic_operator == LogicOperatorTypes.AND:
+        return "AND"
+    elif logic_operator == LogicOperatorTypes.OR:
+        return "OR"
+    elif logic_operator == LogicOperatorTypes.IMPLIES:
+        return "=>"
+    elif logic_operator == LogicOperatorTypes.BI_CONDITIONAL:
+        return "<=>"
+    else:
+        raise SentenceError("Error converting Sentence to a string. Illegal Operator type.")
+
+
 class Sentence:
     """
     Sentence is the class that contains the logic in the format of a binary tree. Each node contains an operator,
@@ -299,23 +312,6 @@ class Sentence:
         self._first_sentence = sentence
         self._second_sentence = None
 
-    @classmethod
-    def logic_operator_to_string(cls, logic_operator: LogicOperatorTypes):
-        if logic_operator == LogicOperatorTypes.AND:
-            return "AND"
-        elif logic_operator == LogicOperatorTypes.OR:
-            return "OR"
-        elif logic_operator == LogicOperatorTypes.IMPLIES:
-            return "=>"
-        elif logic_operator == LogicOperatorTypes.BI_CONDITIONAL:
-            return "<=>"
-        else:
-            raise SentenceError("Error converting Sentence to a string. Illegal Operator type.")
-
-    @classmethod
-    def string_to_sentence(cls, input_str: str) -> Sentence:
-        return parse_sentence(input_str)
-
     def to_string(self, full_parentheses: bool = False) -> str:
         """
         Creates a string representation of the current (self) Sentence.
@@ -359,7 +355,7 @@ class Sentence:
             else:
                 # Full complex sentence
                 ret_val += "(" + self.first_sentence.to_string(True) + " " + \
-                           Sentence.logic_operator_to_string(self.logic_operator) + " " + \
+                           logic_operator_to_string(self.logic_operator) + " " + \
                            self.second_sentence.to_string(True) + ")"
 
             return ret_val
@@ -380,7 +376,7 @@ class Sentence:
                 # First Sentence
                 ret_val += to_string_sub_sentence(self.first_sentence)
                 # Logical operator
-                ret_val += " " + Sentence.logic_operator_to_string(self.logic_operator) + " "
+                ret_val += " " + logic_operator_to_string(self.logic_operator) + " "
                 # Second Sentence
                 ret_val += to_string_sub_sentence(self.second_sentence)
                 if self._negation:
