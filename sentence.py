@@ -75,8 +75,7 @@ def _split_and_lines(sentence: Sentence) -> List[Sentence]:
             sentence_list.append(a_sentence)
         elif a_sentence.logic_operator == LogicOperatorTypes.AND:
             # It is an and clause, so recurse
-            # TODO: NOt used in test cases
-            _split_and_lines(a_sentence)
+            sentence_list.extend(_split_and_lines(a_sentence))
         else:
             # It is neither an and nor an or, so we must not be in CNF form. Raise error.
             raise SentenceError("Function _split_and_lines was called with a 'sentence' not in CNF form.")
