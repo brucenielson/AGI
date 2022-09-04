@@ -523,7 +523,7 @@ class Sentence:
         :param other_sentence: The Sentence you want to see if it's equivalent to the current Sentence (self)
         :return: A boolean value set to True of the two Sentences are equivalent otherwise False.
         """
-        sentence: Sentence = kb.sentence_or_str(other_sentence)
+        sentence: Sentence = kb._sentence_or_str(other_sentence)
         if isinstance(sentence, str):
             sentence = Sentence(sentence)
 

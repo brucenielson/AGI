@@ -6,7 +6,7 @@ from copy import deepcopy
 from logic_symbols import LogicSymbol, SymbolList, LogicValue
 
 
-def sentence_or_str(sentence_in: Union[Sentence, str]) -> Sentence:
+def _sentence_or_str(sentence_in: Union[Sentence, str]) -> Sentence:
     # Pass in a Sentence or string and out comes a definitive Sentence
     sentence_out: Sentence
     # Make sure in right format
@@ -19,7 +19,7 @@ def sentence_or_str(sentence_in: Union[Sentence, str]) -> Sentence:
     return sentence_out
 
 
-def set_symbol_in_model(symbol: LogicSymbol, symbol_list: SymbolList, a_model: SymbolList) -> (SymbolList, SymbolList):
+def _set_symbol_in_model(symbol: LogicSymbol, symbol_list: SymbolList, a_model: SymbolList) -> (SymbolList, SymbolList):
     if symbol is not None:
         # Remove symbol from the list of symbols
         symbol_list = symbol_list.clone()
@@ -176,7 +176,7 @@ class PLKnowledgeBase:
             unit_symbol: LogicSymbol = self.find_unit_clause(model)
             if unit_symbol is not None:
                 # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-                symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+                symbols, model = _set_symbol_in_model(unit_symbol, symbols, model)
                 return self._truth_table(query, symbols, model, use_speedup=use_speedup)
 
         # Done with pure symbol and unit clause short cuts for now
@@ -196,7 +196,7 @@ class PLKnowledgeBase:
         return true_count1 + true_count2, false_count1 + false_count2
 
     def truth_table_entails(self, query: Union[Sentence, str]) -> LogicValue:
-        query_sentence: Sentence = sentence_or_str(query)
+        query_sentence: Sentence = _sentence_or_str(query)
         # Make a list of symbols all reset to undefined
         symbols: SymbolList = self.get_symbol_list()
         symbols.add(query_sentence.get_symbol_list())
@@ -218,7 +218,7 @@ class PLKnowledgeBase:
         return self.dpll_entails(query)
 
     def is_query_false(self, query: Union[Sentence, str]) -> bool:
-        sentence: Sentence() = sentence_or_str(query)
+        sentence: Sentence() = _sentence_or_str(query)
         sentence.negate_sentence()
         return self.dpll_entails(sentence)
 
@@ -270,13 +270,13 @@ class PLKnowledgeBase:
         unit_symbol: LogicSymbol = self.find_unit_clause(model)
         if unit_symbol is not None:
             # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-            symbols, model = set_symbol_in_model(unit_symbol, symbols, model)
+            symbols, model = _set_symbol_in_model(unit_symbol, symbols, model)
             return self._dpll(symbols, model)
         # Strategy 2: Handle pure symbols
         pure_symbol: LogicSymbol = self.find_pure_symbol(symbols, model)
         if pure_symbol is not None:
             # Move this symbol from the symbols list (of symbols to try) to the model (symbols with values assigned)
-            symbols, model = set_symbol_in_model(pure_symbol, symbols, model)
+            symbols, model = _set_symbol_in_model(pure_symbol, symbols, model)
             return self._dpll(symbols, model)
 
         # Done with pure symbol and unit clause short cuts for now
@@ -295,7 +295,7 @@ class PLKnowledgeBase:
         #  so we change the query to be it's negation
         model: SymbolList
         # Make sure in right format
-        query_sentence: Sentence = sentence_or_str(query)
+        query_sentence: Sentence = _sentence_or_str(query)
         # Negate query before adding to the knowledge base
         query_sentence.negate_sentence()
         # Check for CNF format
