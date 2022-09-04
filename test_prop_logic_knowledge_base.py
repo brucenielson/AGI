@@ -485,6 +485,7 @@ class TestPLKnowledgeBase(TestCase):
         input_str = input_str + "A or Z => ~X"
 
         kb.add(input_str)
+        kb = kb.convert_to_cnf()
         # evaluates to True
         self.assertEqual(LogicValue.TRUE, kb.truth_table_entails('q'))
         # self.assertTrue(kb.is_query_true('q'))

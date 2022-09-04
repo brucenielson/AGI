@@ -290,8 +290,8 @@ class PLKnowledgeBase:
         sentence.negate_sentence()
         return self.dpll_entails(sentence)
 
-    def is_query_undefined(self, query: Union[Sentence, str], use_dpll=False) -> bool:
-        if use_dpll:
+    def is_query_undefined(self, query: Union[Sentence, str], use_dpll=True) -> bool:
+        if use_dpll and self.is_cnf:
             is_true: bool = self.is_query_true(query)
             is_false: bool = self.is_query_false(query)
             if not is_true and not is_false:
