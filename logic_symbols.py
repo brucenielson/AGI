@@ -170,7 +170,8 @@ class _SymbolListIterator:
 
 class SymbolList:
     """
-    A SymbolList is a list of LogicSymbol(s) with related methods.
+    A SymbolList is a list of LogicSymbol(s) with related methods. It can be iterated and sliced like a list with all
+    symbols sorted in alphabetical order.
     """
 
     # See https://riptutorial.com/python/example/1571/indexing-custom-classes----getitem------setitem---and---delitem--
@@ -219,9 +220,17 @@ class SymbolList:
             self._symbols.pop(key)
 
     def get_symbols(self) -> dict[str, LogicValue]:
+        """
+        Returns a dictionary of symbols indexed by symbol name (str)
+        :return: A dictionary of type dict[str, LogicValue]
+        """
         return self._symbols
 
     def get_keys(self) -> List[str]:
+        """
+        Returns a list of all symbol names, sorted alphabetically.
+        :return: A list of type List[str]
+        """
         keys: list[str] = list(self._symbols.keys())
         keys.sort()
         return keys
@@ -230,23 +239,50 @@ class SymbolList:
     def length(self) -> int:
         return len(self._symbols)
 
-    def get_symbol(self, index: Optional[str, int]) -> LogicSymbol:
+    def get_symbol(self, index: Union[str, int]) -> Optional[LogicSymbol]:
+        """
+        Pass an index and get back the associated LogicSymbol contained within the SymbolList
+
+        :param index: Can be a str or int. A string would reference a symbol by its name. An integer would
+        reference it by its sorter order.
+        :return: Returns the symbol as a type LogicSymbol. Returns None if the str symbol_name does not exist
+        but raises an error if integer indexed out of bounds.
+        """
         if isinstance(index, str):
             index = index.upper()
             if index in self._symbols:
                 return LogicSymbol(index, self._symbols[index])
-        else:
+            else:
+                return None
+        elif isinstance(index, int):
+            # index is an integer
             if index > len(self._symbols) - 1 or index < 0:
                 raise SymbolListError("Call to get_symbol was out of bounds.")
             keys: List[str] = self.get_keys()
             if keys[index] in keys:
                 return LogicSymbol(keys[index], self._symbols[keys[index]])
+        else:
+            raise SymbolListError("Passed an index for a symbol that was not a string or integer.")
 
-    def pop(self, symbol_name: str) -> LogicSymbol:
-        return LogicSymbol(symbol_name, self._symbols.pop(symbol_name))
+    def pop(self, index: Union[str, int]) -> Optional[LogicSymbol]:
+        """
+        Gets the symbol from the SymbolList of with the associated symbol_name (str). Removes that symbol from the list.
+        Similar to get_symbol function but removes the symbol from the SymbolList.
+
+        :param index: Can be a str or int. A string would reference a symbol by its name. An integer would
+        reference it by its sorter order.
+        :return: Returns the symbol as a type LogicSymbol
+        """
+        symbol = self.get_symbol(index)
+        self._symbols.pop(symbol.name)
+        return symbol
 
     def get_next_symbol(self) -> Optional[LogicSymbol]:
-        # This function returns the first symbol in the list while removing it
+        """
+        This function returns the first symbol in the list while removing it
+
+        :return: Returns a LogicSymbol of the next symbol in the list ordered alphabetically.
+        """
         if len(self._symbols) == 0 or self._symbols is None:
             return None
         else:
@@ -254,6 +290,12 @@ class SymbolList:
             return self.pop(symbol_keys[0])
 
     def index(self, symbol_name: str) -> Optional[int]:
+        """
+        Give the name of a symbol (symbol_name) return the associated integer index.
+
+        :param symbol_name: A string with the name of the symbol.
+        :return: Returns an integer of the index of this symbol_name. Returns None it does not exist.
+        """
         symbol_name = symbol_name.upper()
         keys: List[str] = self.get_keys()
         index: Optional[int]
@@ -265,42 +307,78 @@ class SymbolList:
 
     def add(self, symbol_or_list: Union[LogicSymbol, str, SymbolList, List[LogicSymbol], List[str, int]],
             value: Union[LogicValue, bool] = LogicValue.UNDEFINED) -> None:
+        """
+        Adds to this Sentence a symbol or a list of symbols with a given LogicValue, defaulting to UNDEFINED.
 
-        logic_value: LogicValue = _bool_to_logic_value(value)
+        :param symbol_or_list: This is either a symbol as a str or LogicSymbol or a list of symbols
+        as a List[LogicSymbol] or SymbolList.
+        :param value: An optional parameter to set the LogicValue for this symbol if passed as a symbol_name str
+        Defaults to UNDEFINED. For any other type of symbol_or_list passed this parameter is ignored because we're
+        passing the values we want to use.
+        :return: None
+        """
         if isinstance(symbol_or_list, LogicSymbol):
-            self._symbols[symbol_or_list.name] = symbol_or_list.value
+            symbol: LogicSymbol = symbol_or_list
+            self._symbols[symbol.name] = symbol.value
+        elif isinstance(symbol_or_list, str):
+            symbol_name: str = symbol_or_list
+            symbol_name = symbol_name.upper()
+            self._symbols[symbol_name] = _bool_to_logic_value(value)
         elif isinstance(symbol_or_list, list):
+            symbol_list: List[LogicSymbol] = symbol_or_list
             # Concatenate the SymbolList into this SymbolList
-            for symbol in symbol_or_list:
+            for symbol in symbol_list:
                 self.add(symbol)
         elif isinstance(symbol_or_list, SymbolList):
+            symbol_list: SymbolList = symbol_or_list
             # Concatenate the SymbolList into this SymbolList
-            keys: List[str] = symbol_or_list.get_keys()
-            for symbol in keys:
-                self.add(symbol, symbol_or_list[symbol])
-        elif isinstance(symbol_or_list, str):
-            symbol_or_list = symbol_or_list.upper()
-            self._symbols[symbol_or_list] = logic_value
+            keys: List[str] = symbol_list.get_keys()
+            for key in keys:
+                self.add(key, symbol_list[key])
         else:
             raise SymbolListError("The 'add' command requires a string symbol, LogicSymbol, or a SymbolList")
 
     def set_value(self, symbol_name: str, value: Optional[Union[LogicValue, bool]]) -> None:
+        """
+        Sets the value of a specific symbol in the SymbolList indexed by the name of the symbol. (i.e. symbol_name: str)
+
+        :param symbol_name: A string with the name of the symbol to set.
+        :param value: The LogicValue or boolean value to set the symbol to.
+        :return: None
+        """
         symbol_name = symbol_name.upper()
         logic_value: LogicValue = _bool_to_logic_value(value)
         self._symbols[symbol_name] = logic_value
 
     def get_value(self, symbol_name: str) -> LogicValue:
+        """
+        Gets the LogicValue of the symbol with symbol_name (str).
+
+        :param symbol_name: A string with the name of the symbol you want to get.
+        :return: The LogicValue of this symbol. Returns UNDEFINED if it is not found rather than None.
+        """
         if symbol_name is None:
             return LogicValue.UNDEFINED
         else:
             return self._symbols[symbol_name]
 
-    def clone(self):
+    def clone(self) -> SymbolList:
+        """
+        Makes a clone of this SymbolList.
+
+        :return: A new SymbolList that clones the current (self) SymbolList.
+        """
         return deepcopy(self)
 
     def extend_model(self, symbol_name: str, value: bool) -> SymbolList:
-        # Like set_value except that it clone the model first and returns the clone
-        # thereby leaving the original unchanged
+        """
+        Like set_value except that it clones the model first and returns the clone
+        thereby leaving the original unchanged.
+
+        :param symbol_name: The name (str) of the symbol to extend.
+        :param value: The LogicValue you want to set symbol (symbol_name) to.
+        :return: Returns a new SymbolList that now has symbol_name (str) set to value (LogicValue).
+        """
         copy_model: SymbolList = self.clone()
         copy_model.set_value(symbol_name, value)
         return copy_model
