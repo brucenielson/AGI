@@ -36,6 +36,19 @@ class KnowledgeBaseError(Exception):
 
 
 class PLKnowledgeBase:
+    """
+    PLKnowledgeBase is a class that wraps up the functionality of a Propositional Logic Knowledge Base.
+
+    Usage
+    _____
+
+        kb = PLKnowledgeBase()
+        input_str = "A"
+        kb.add(input_str)
+        # evaluates to True
+        kb.is_query_true('A')
+
+    """
     # Static parser -- so that Sentence can parse propositional logic text
     _parser: LogicParser = LogicParser()
 
@@ -55,10 +68,22 @@ class PLKnowledgeBase:
         return self._sentences
 
     def clear(self) -> None:
+        """
+        Clears the knowledge base by deleting all of its sentences.
+        :return: None
+        """
         self._sentences = []
         self._is_cnf = False
 
     def exists(self, sentence: Union[Sentence, str], check_logical_equivalence: bool = False) -> bool:
+        """
+        The exists method checks if a given sentence (Sentence or str) is already in the database.
+        :param sentence: The sentence (Sentence or str) you want to check.
+        :param check_logical_equivalence: If set to False (default) just checks if that specific string is in the
+        database already via a comparison of this sentence with a string representation of all other sentences
+        in the knowledge base. But if set to True, it will do an actual logical comparison instead via a truth table.
+        :return: A boolean value of True if this sentences is already in the database, otherwise returns False.
+        """
         if isinstance(sentence, Sentence):
             for a_sentence in self._sentences:
                 if not check_logical_equivalence:
@@ -81,6 +106,11 @@ class PLKnowledgeBase:
             raise KnowledgeBaseError("Call to 'exists' call requires a Sentence or string.")
 
     def add(self, sentence_or_list:  Union[Sentence, List[Sentence], str]) -> None:
+        """
+        Adds a sentence (Sentence or str) or list of sentences (List[Sentence] to the database.
+        :param sentence_or_list: A Sentence, str, or List[Sentence] of what you want to add.
+        :return: None
+        """
         if isinstance(sentence_or_list, str):
             PLKnowledgeBase._parser.set_input(sentence_or_list)
             sentence_list: List[Sentence] = PLKnowledgeBase._parser.parse_input()
@@ -98,35 +128,64 @@ class PLKnowledgeBase:
 
     @property
     def line_count(self) -> int:
+        """
+        :return: Returns the number of sentences contained in the database.
+        """
         return len(self._sentences)
 
     def get_sentence(self, index: int) -> Sentence:
+        """
+
+        :param index:
+        :return:
+        """
         if index <= len(self._sentences):
             return self._sentences[index]
         else:
             raise KnowledgeBaseError("Attempted to use get_sentence(index) with index out of bounds.")
 
     def clone(self):
+        """
+        Makes a clone of this PLKnowledgeBase.
+
+        :return: A new PLKnowledgeBase that clones the current (self) one.
+        """
         return deepcopy(self)
 
     def get_symbol_list(self) -> SymbolList:
-        # Traverse the knowledge base tree and find each symbol
-        # This returns a list of symbols all set to undefined rather than to values they currently hold
+        """
+        Traverses the knowledge base tree and finds each symbol and then returns them all as a SymbolList.
+        :return: This returns a SymbolList of all symbols all set to UNDEFINED
+        """
         sl: SymbolList = SymbolList()
         for sentence in self._sentences:
             sl.add(sentence.get_symbol_list())
         return sl
 
     def is_false(self, model: SymbolList) -> bool:
+        """
+        Given a model, determines if we know enough to determine the knowledge base is False.
+        :param model: A SymbolList
+        :return: A boolean result.
+        """
         return self.evaluate(model) == LogicValue.FALSE
 
     def is_true(self, model: SymbolList) -> bool:
+        """
+        Given a model, determines if we know enough to determine the knowledge base is True.
+        :param model: A SymbolList
+        :return: A boolean result.
+        """
         return self.evaluate(model) == LogicValue.TRUE
 
     def evaluate(self, model: SymbolList) -> LogicValue:
-        # Take the model (a SymbolList with values) and evaluate each Sentence in the knowledge base.
-        # If all are true, the whole is true. If any are false the whole is false.
-        # If there isn't enough information available, return Undefined.
+        """
+        Takes a model (a SymbolList with values) and evaluate each Sentence in the knowledge base with that model.
+        If all sentences are True, the whole knowledge base is True. If any are False the whole is False.
+        If there isn't enough information available, return UNDEFINED.
+        :param model: A SymbolList to use in the evaluation.
+        :return: A LogicValue
+        """
         result: LogicValue = LogicValue.TRUE
         for sentence in self._sentences:
             if sentence.evaluate(model) == LogicValue.FALSE:
@@ -195,14 +254,23 @@ class PLKnowledgeBase:
             return 1, 1
         return true_count1 + true_count2, false_count1 + false_count2
 
-    def truth_table_entails(self, query: Union[Sentence, str]) -> LogicValue:
+    def truth_table_entails(self, query: Union[Sentence, str], use_speedup=False) -> LogicValue:
+        """
+        An implementation of the Truth Table entails algorithm. Given a query sentence, returns if the knowledge base
+        entails that sentence as True, False, or Undefined.
+
+        This algorithm includes some dpll speedups if the knowledge base is in CNF format and you ask for it.
+        :param query: A Sentence or str that contains the query to the database.
+        :param use_speedup: Defaults to False. Set to True if you want to use unit clause heuristic if already in CNF.
+        :return: A LogicValue
+        """
         query_sentence: Sentence = _sentence_or_str(query)
         # Make a list of symbols all reset to undefined
         symbols: SymbolList = self.get_symbol_list()
         symbols.add(query_sentence.get_symbol_list())
         model: SymbolList = symbols.clone()
         # Get true and false counts
-        true_count, false_count = self._truth_table(query_sentence, symbols, model)
+        true_count, false_count = self._truth_table(query_sentence, symbols, model, use_speedup=use_speedup)
         # Do final evaluation
         if true_count > 0 and false_count == 0:
             # All True Knowledge Bases evaluate this query as True
