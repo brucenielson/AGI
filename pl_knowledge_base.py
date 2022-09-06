@@ -283,14 +283,37 @@ class PLKnowledgeBase:
             return LogicValue.UNDEFINED
 
     def is_query_true(self, query: Union[Sentence, str]) -> bool:
-        return self.dpll_entails(query)
+        """
+        Returns True if the query is entailed by the knowledge base.
+        :param query: The sentence you are asking if it is entailed in the form of a Sentence or str.
+        :return: A boolean value.
+        """
+        if self.is_cnf:
+            return self.dpll_entails(query)
+        else:
+            return self.truth_table_entails(query) == LogicValue.TRUE
 
     def is_query_false(self, query: Union[Sentence, str]) -> bool:
-        sentence: Sentence() = _sentence_or_str(query)
-        sentence.negate_sentence()
-        return self.dpll_entails(sentence)
+        """
+        Returns True if the query is known to be False by the knowledge base.
+        :param query: The sentence you are asking if it is False in the form of a Sentence or str.
+        :return: A boolean value.
+        """
+        if self.is_cnf:
+            sentence: Sentence() = _sentence_or_str(query)
+            sentence.negate_sentence()
+            return self.dpll_entails(sentence)
+        else:
+            return self.truth_table_entails(query) == LogicValue.FALSE
 
     def is_query_undefined(self, query: Union[Sentence, str], use_dpll=True) -> bool:
+        """
+        Returns True if the query is UNDEFINED by the knowledge base.
+        :param query: The sentence you are asking if it is UNDEFINED in the form of a Sentence or str.
+        :param use_dpll: Optional parameter defaults to True if you wish to use DPLL if in CNF format. Otherwise
+        uses a Truth Table instead. This matters because DPLL needs to run twice to find out if something is UNDEFINED.
+        :return: A boolean value.
+        """
         if use_dpll and self.is_cnf:
             is_true: bool = self.is_query_true(query)
             is_false: bool = self.is_query_false(query)
@@ -302,8 +325,14 @@ class PLKnowledgeBase:
             return self.truth_table_entails(query) == LogicValue.UNDEFINED
 
     def convert_to_cnf(self) -> PLKnowledgeBase:
-        # This function takes the whole knowledge base and converts it to a single knowledge base in CNF form
-        # with each sentence in the knowledge base being one OR clause
+        """
+        This function takes the whole knowledge base and converts it to a single knowledge base in CNF form
+        with each sentence in the knowledge base being one OR clause
+
+        Returns a version of the knowledge base that is logically equivalent but in CNF format so that it can be used
+        with the DPLL algorithms.
+        :return: Returns a PLKnowledgeBase
+        """
         sentence_list: List[Sentence] = deepcopy(self._sentences)
         converted_list: List[Sentence] = []
         for sentence in sentence_list:
@@ -358,6 +387,11 @@ class PLKnowledgeBase:
         return self._dpll(symbols.clone(), copy_model1) or self._dpll(symbols.clone(), copy_model2)
 
     def dpll_entails(self, query: Union[Sentence, str]) -> bool:
+        """
+        Returns True if the query is entailed by the knowledge base. Uses the DPLL algorithm. Must be in CNF format.
+        :param query: The sentence you are asking if it is entailed in the form of a Sentence or str.
+        :return: A boolean value.
+        """
         #  satisfiability is the same as entails via this formula
         #  a entails b if a AND ~b are unsatisfiable
         #  so we change the query to be it's negation
@@ -383,10 +417,24 @@ class PLKnowledgeBase:
             model: SymbolList = symbols.clone()
             return not cnf_clauses._dpll(symbols, model)
 
-    def entails(self, query):
-        return self.dpll_entails(query)
+    def entails(self, query) -> bool:
+        """
+        Returns True if the query is entailed by the knowledge base.
+        :param query: The sentence you are asking if it is entailed in the form of a Sentence or str.
+        :return: A boolean value.
+        """
+        if self.is_cnf:
+            return self.dpll_entails(query)
+        else:
+            return self.truth_table_entails(query) == LogicValue.TRUE
 
     def find_unit_clause(self, model: SymbolList) -> Optional[LogicSymbol]:
+        """
+        If the knowledge base is in CNF format this function will return any unit clauses with a LogicValue to set
+        it too in the model. Raises an error if not in CNF format.
+        :param model: The current model (SymbolList)
+        :return: A LogicSymbol of any unit clause and the value it should be set to.
+        """
         def search_for_unit_symbol(clause: Sentence, a_model: SymbolList) -> Optional[LogicSymbol]:
             possible_unit: Optional[LogicSymbol]
             total_count: int
@@ -470,6 +518,12 @@ class PLKnowledgeBase:
         return None
 
     def is_pure_symbol(self, model: SymbolList, search_symbol: str) -> LogicValue:
+        """
+        Given a model (SymbolList) and a proposed symbol (str) returns if that symbol is a pure symbol (as a LogicValue)
+        :param model: A SymbolList with current model values for the symbols.
+        :param search_symbol: A symbol (str) to search for.
+        :return: A LogicValue where if TRUE or FALSE is a pure symbol and UNDEFINED if not.
+        """
         def assess_symbol(a_sentence: Sentence, a_search_symbol: str) -> (int, int):
             # Recursively look through this sentence for symbol_name and return True if there
             # are no negated versions of the symbol in this sentence.
@@ -525,6 +579,12 @@ class PLKnowledgeBase:
             return LogicValue.UNDEFINED
 
     def find_pure_symbol(self, symbols: SymbolList, model: SymbolList) -> Optional[LogicSymbol]:
+        """
+        If in CNF format this method will return any pure symbols it can find. If not in CNF format it raises an error.
+        :param symbols:The list of symbols to loop through.
+        :param model: The current model with values for each symbol.
+        :return: Returns a LogicSymbol with a symbol name and LogicValue for the pure symbol found, otherwise None.
+        """
         # Traverse the entire 'clauses' knowledge base looking for a 'pure symbol' which is a symbol that
         # is either all not negated or all negated. These are symbols we can easily decide to set in the model
         # to either True (if not negated) or False (if negated).
