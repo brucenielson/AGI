@@ -4,7 +4,7 @@ from copy import deepcopy
 from enum import Enum
 
 
-def _slice_to_ints(a_slice: slice, max_index: int):
+def _slice_to_ints(a_slice: slice, max_index: int) -> list:
     start: int = 0
     stop: int = max_index
     step: int = 1

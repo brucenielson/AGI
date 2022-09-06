@@ -6,7 +6,12 @@ from copy import deepcopy
 from logic_symbols import LogicSymbol, SymbolList, LogicValue
 
 
-def _sentence_or_str(sentence_in: Union[Sentence, str]) -> Sentence:
+def sentence_or_str(sentence_in: Union[Sentence, str]) -> Sentence:
+    """
+    Given a sentence in the format of a Sentence or str, return it as a Sentence.
+    :param sentence_in: The sentence as a Sentence or str
+    :return: A Sentence
+    """
     # Pass in a Sentence or string and out comes a definitive Sentence
     sentence_out: Sentence
     # Make sure in right format
@@ -144,7 +149,7 @@ class PLKnowledgeBase:
         else:
             raise KnowledgeBaseError("Attempted to use get_sentence(index) with index out of bounds.")
 
-    def clone(self):
+    def clone(self) -> PLKnowledgeBase:
         """
         Makes a clone of this PLKnowledgeBase.
 
@@ -264,7 +269,7 @@ class PLKnowledgeBase:
         :param use_speedup: Defaults to False. Set to True if you want to use unit clause heuristic if already in CNF.
         :return: A LogicValue
         """
-        query_sentence: Sentence = _sentence_or_str(query)
+        query_sentence: Sentence = sentence_or_str(query)
         # Make a list of symbols all reset to undefined
         symbols: SymbolList = self.get_symbol_list()
         symbols.add(query_sentence.get_symbol_list())
@@ -300,7 +305,7 @@ class PLKnowledgeBase:
         :return: A boolean value.
         """
         if self.is_cnf:
-            sentence: Sentence() = _sentence_or_str(query)
+            sentence: Sentence() = sentence_or_str(query)
             sentence.negate_sentence()
             return self.dpll_entails(sentence)
         else:
@@ -397,7 +402,7 @@ class PLKnowledgeBase:
         #  so we change the query to be it's negation
         model: SymbolList
         # Make sure in right format
-        query_sentence: Sentence = _sentence_or_str(query)
+        query_sentence: Sentence = sentence_or_str(query)
         # Negate query before adding to the knowledge base
         query_sentence.negate_sentence()
         # Check for CNF format

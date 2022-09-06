@@ -18,7 +18,7 @@ class LogicOperatorTypes(Enum):
     BI_CONDITIONAL = 4
     IMPLIES = 5
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         # Only work if both classes are the same
         if self.__class__ is other.__class__:
             return self.value < other.value
@@ -109,7 +109,7 @@ def parse_sentence(input_str: str) -> Sentence:
     return result
 
 
-def logic_operator_to_string(logic_operator: LogicOperatorTypes):
+def logic_operator_to_string(logic_operator: LogicOperatorTypes) -> str:
     if logic_operator == LogicOperatorTypes.AND:
         return "AND"
     elif logic_operator == LogicOperatorTypes.OR:
@@ -135,7 +135,7 @@ class Sentence:
     sentence1 = Sentence("a => b")
     """
     def __init__(self, sentence1: Union[Sentence, str] = None, logical_operator: LogicOperatorTypes = None,
-                 sentence2: Union[Sentence, str] = None, negated: bool = False):
+                 sentence2: Union[Sentence, str] = None, negated: bool = False) -> None:
         # Set default values
         self._symbol: Optional[str] = None
         self._first_sentence: Optional[Sentence] = None
@@ -274,7 +274,7 @@ class Sentence:
         self._second_sentence._parent_sentence = self
 
     @property
-    def is_atomic(self):
+    def is_atomic(self) -> bool:
         """
         Returns True if this Sentence has no operator an contains just a single symbol (with or without a negation)
         :return: A boolean value set to True if this is an atomic Sentence otherwise False
@@ -523,7 +523,7 @@ class Sentence:
         :param other_sentence: The Sentence you want to see if it's equivalent to the current Sentence (self)
         :return: A boolean value set to True of the two Sentences are equivalent otherwise False.
         """
-        sentence: Sentence = kb._sentence_or_str(other_sentence)
+        sentence: Sentence = kb.sentence_or_str(other_sentence)
         if isinstance(sentence, str):
             sentence = Sentence(sentence)
 
@@ -742,7 +742,7 @@ class Sentence:
             return is_valid_node(self) and self.first_sentence._is_valid_cnf_or_only() \
                      and self.second_sentence._is_valid_cnf_or_only()
 
-    def _is_valid_cnf_include_and(self,  previous_or: bool):
+    def _is_valid_cnf_include_and(self,  previous_or: bool) -> bool:
         # This function will verify that the current sentence is really in CNF formatting
         # A Sentence is in CNF format if the following are true:
         # 1. There are no AND operators under an OR operator
