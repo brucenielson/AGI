@@ -1,6 +1,6 @@
 from unittest import TestCase
 from pl_knowledge_base import LogicSymbol, LogicValue, PLKnowledgeBase, Sentence, \
-    KnowledgeBaseError, _set_symbol_in_model
+    KnowledgeBaseError, _set_symbol_in_model, _pl_resolve
 from logic_symbols import SymbolList, SymbolListError
 
 # How to add regions
@@ -833,15 +833,13 @@ class TestPLKnowledgeBase(TestCase):
         sentence: Sentence = Sentence("A OR B OR C OR A")
         sentence = sentence.convert_to_cnf(or_clauses_only=True)[0]
         symbols = sentence.get_atomic_symbols()
-        self.assertEqual(4, len(symbols))
+        self.assertEqual(3, len(symbols))
         self.assertEqual("A", symbols[0].name)
         self.assertEqual(LogicValue.TRUE, symbols[0].value)
         self.assertEqual("B", symbols[1].name)
         self.assertEqual(LogicValue.TRUE, symbols[1].value)
         self.assertEqual("C", symbols[2].name)
         self.assertEqual(LogicValue.TRUE, symbols[2].value)
-        self.assertEqual("A", symbols[3].name)
-        self.assertEqual(LogicValue.TRUE, symbols[3].value)
         # Try out duplicates with a negation
         sentence: Sentence = Sentence("A OR B OR C OR ~A")
         sentence = sentence.convert_to_cnf(or_clauses_only=True)[0]
@@ -855,3 +853,70 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual(LogicValue.TRUE, symbols[2].value)
         self.assertEqual("A", symbols[3].name)
         self.assertEqual(LogicValue.FALSE, symbols[3].value)
+
+    def test__pl_resolve(self):
+        # Basic Test
+        sentence1 = Sentence("A OR B OR C")
+        sentence2 = Sentence("B OR C OR ~D OR ~A")
+        resolvent = _pl_resolve(sentence1, sentence2)
+        self.assertEqual("B OR C OR ~D", resolvent.to_string())
+        # Test multiple resolvents
+        sentence1 = Sentence("A OR B OR C")
+        sentence2 = Sentence("~B OR C OR ~D OR ~A")
+        resolvent = _pl_resolve(sentence1, sentence2)
+        self.assertEqual("C OR ~D", resolvent.to_string())
+        # Test entails
+        sentence1 = Sentence("A OR B OR ~C")
+        sentence2 = Sentence("~B OR C OR ~A")
+        resolvent = _pl_resolve(sentence1, sentence2)
+        self.assertEqual(None, resolvent)
+
+    def test_basic_pl_resolution(self):
+        kb = PLKnowledgeBase()
+        input_str: str
+        input_str = "A"
+        input_str += "\n"
+        input_str = input_str + "B"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND B => L"
+        input_str = input_str + "\n"
+        input_str = input_str + "B AND L => M"
+        input_str = input_str + "\n"
+        input_str = input_str + "L AND M => P"
+        input_str = input_str + "\n"
+        input_str = input_str + "P => Q"
+
+        kb.add(input_str)
+        kb = kb.convert_to_cnf()
+        # evaluates to True
+        self.assertTrue(kb.pl_resolution('q'))
+        # self.assertFalse(kb.pl_resolution('~q'))
+        # self.assertTrue(kb.pl_resolution('~x'))
+        # self.assertFalse(kb.pl_resolution('x'))
+        # # Z is Undefined
+        # self.assertFalse(kb.pl_resolution('z'))
+        # # Always True even if otherwise undefined
+        # self.assertTrue(kb.pl_resolution('~w or w'))
+        # self.assertTrue(kb.pl_resolution('~z or z'))
+        # self.assertTrue(kb.pl_resolution('~z or z'))
+        # # Y is Undefined because it is not in the model
+        # self.assertTrue(kb.pl_resolution('y'))
+        # # False
+        # # Removed to speed up tests
+        # self.assertFalse(kb.pl_resolution('x'))
+        # # Entailments
+        # self.assertTrue(kb.pl_resolution('a'))
+        # self.assertTrue(kb.pl_resolution('l'))
+        # self.assertTrue(kb.pl_resolution('p'))
+        # self.assertTrue(kb.pl_resolution('a and b and l and m and p and q'))
+        # self.assertFalse(kb.pl_resolution('a and b and l and m and p and q and ~a'))
+        # self.assertFalse(kb.pl_resolution('a and b and l and m and p and q and z'))
+        # # False statements
+        # self.assertFalse(kb.pl_resolution('~a'))
+        # # Always False
+        # self.assertFalse(kb.pl_resolution('a and ~a'))
+        # self.assertFalse(kb.pl_resolution('z and ~z'))
+        # # Always False even though not in the model
+        # self.assertFalse(kb.pl_resolution('y and ~y'))
+        # # Always True even though not in the model
+        # self.assertFalse(kb.pl_resolution('y or ~y'))

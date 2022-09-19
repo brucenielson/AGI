@@ -35,6 +35,49 @@ def _set_symbol_in_model(symbol: LogicSymbol, symbol_list: SymbolList, a_model: 
         return symbol_list, a_model
 
 
+def _pl_resolve(clause1: Sentence, clause2: Sentence) -> Optional[Sentence]:
+    def create_clause(symbol_list1: List[LogicSymbol], symbol_list2: List[LogicSymbol]):
+        symbol_list: List[LogicSymbol] = []
+        sentence_str: str = ""
+        symbol_list.extend(symbol_list1)
+        symbol_list.extend(symbol_list2)
+        symbol_list = list(set(symbol_list))
+        symbol_list.sort()
+        for a_symbol in symbol_list:
+            if a_symbol.value == LogicValue.TRUE:
+                sentence_str += a_symbol.name
+            elif a_symbol.value == LogicValue.FALSE:
+                sentence_str += "~" + a_symbol.name
+            else:
+                raise KnowledgeBaseError("Called 'create_clause with UNDEFINED logic value.")
+            if a_symbol != symbol_list[len(symbol_list)-1]:
+                sentence_str += " OR "
+        if sentence_str == "":
+            return None
+        else:
+            return Sentence(sentence_str)
+
+    # A cnf clause is entirely made up of OR operators and negations
+    # So just get a list of all symbols (including duplicates) and their negations and do resolution on those
+    symbols1: List[LogicSymbol] = clause1.get_atomic_symbols()
+    symbols2: List[LogicSymbol] = clause2.get_atomic_symbols()
+    for symbol in deepcopy(symbols1):
+        # Look for a negated version of this symbol
+        negated_symbol = LogicSymbol(symbol.name)
+        if symbol.value == LogicValue.TRUE:
+            negated_symbol.value = LogicValue.FALSE
+        elif symbol.value == LogicValue.FALSE:
+            negated_symbol.value = LogicValue.TRUE
+        else:
+            raise KnowledgeBaseError("Should never have an UNDEFINED value returned from get_atomic_symbols.")
+        # Is a negated version of this symbol in the other clause?
+        if negated_symbol in symbols2:
+            # Remove both symbols and create a new combined clause
+            symbols1.remove(symbol)
+            symbols2.remove(negated_symbol)
+    return create_clause(symbols1, symbols2)
+
+
 class KnowledgeBaseError(Exception):
     def __init__(self, message):
         super().__init__(message)
@@ -644,23 +687,16 @@ class PLKnowledgeBase:
 
     def pl_resolution(self, query: Union[Sentence, str]) -> bool:
         clauses: PLKnowledgeBase = self._put_in_cnf_format(query)
-        new: PLKnowledgeBase = PLKnowledgeBase()
         while True:
+            new: PLKnowledgeBase = PLKnowledgeBase()
             for clause1 in clauses:
                 for clause2 in clauses:
                     if clause1 is not clause2:
-                        resolvents: List[Sentence] = self._pl_resolve(clause1, clause2)
-                        if len(resolvents) == 0:
+                        resolvents: Optional[Sentence] = _pl_resolve(clause1, clause2)
+                        if resolvents is None:
                             return True
                         new.add(resolvents)
                 # If new is a subset of clauses then return False
             if new.is_subset(clauses):
                 return False
             clauses.add(new._sentences)
-
-    def _pl_resolve(self, clause1: Sentence, clause2: Sentence) -> List[Sentence]:
-        # A cnf clause is entirely made up of OR operators and negations
-        # So just get a list of all symbols (including duplicates) and their negations and do resolution on those
-        symbols1: List[LogicSymbol] = clause1.get_atomic_symbols()
-        symbols2: List[LogicSymbol] = clause2.get_atomic_symbols()
-        

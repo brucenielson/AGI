@@ -101,7 +101,7 @@ class LogicSymbol:
     A LogicSymbol is a class with a name (string) and value (LogicValue) for each Symbol.
     Also contains and_op and or_op functions to perform AND and OR operations on LogicSymbol(s)
     """
-    def __init__(self, name: str, value: LogicValue = LogicValue.UNDEFINED):
+    def __init__(self, name: str, value: LogicValue = LogicValue.UNDEFINED) -> None:
         if name.isalnum() and name[0].isalpha():
             self._name = name
         else:
@@ -111,11 +111,17 @@ class LogicSymbol:
     def __repr__(self) -> str:
         return self.name + ": " + repr(self.value)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if type(self) == type(other) and self.name == other.name and self.value == other.value:
             return True
         else:
             return False
+
+    def __hash__(self) -> int:
+        return hash(repr(self))
+
+    def __lt__(self, other):
+        return self.name < other.name
 
     @property
     def name(self) -> str:

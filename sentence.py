@@ -437,7 +437,9 @@ class Sentence:
         if sub_sentence.is_atomic:
             symbol: LogicSymbol = LogicSymbol(sub_sentence.symbol)
             symbol.value = not sub_sentence.negation
-            temp_symbol_list.append(symbol)
+            # Only append this symbol if it is not already in the list (with the same name value combo)
+            if symbol not in temp_symbol_list:
+                temp_symbol_list.append(symbol)
         else:
             # All complex sentences have at least one sentence
             Sentence._get_atomic_symbols(sub_sentence.first_sentence, temp_symbol_list)
