@@ -5,6 +5,7 @@ import pl_knowledge_base as kb
 from copy import deepcopy
 from enum import Enum
 import pl_parser
+from logic_symbols import LogicSymbol, LogicValue
 
 
 @total_ordering
@@ -417,6 +418,33 @@ class Sentence:
                     ret_val = "~(" + ret_val + ")"
 
             return ret_val
+
+    def get_atomic_symbols(self) -> List[LogicSymbol]:
+        """
+        Similar to get_symbol_list except returns an actual list of LogicSymbols with the values set to TRUE or FALSE
+        depending on if the sentence contains that literal with a negation or not. There can be duplicates in the list.
+        :return: List[LogicSymbol]
+        """
+        return self._get_atomic_symbols()
+
+    def _get_atomic_symbols(self, temp_symbol_list: kb.List[LogicSymbol] = None, sub_sentence: Sentence = None)\
+            -> List[LogicSymbol]:
+        if temp_symbol_list is None:
+            temp_symbol_list = []
+        if sub_sentence is None:
+            sub_sentence = self
+
+        if sub_sentence.is_atomic:
+            symbol: LogicSymbol = LogicSymbol(sub_sentence.symbol)
+            symbol.value = not sub_sentence.negation
+            temp_symbol_list.append(symbol)
+        else:
+            # All complex sentences have at least one sentence
+            Sentence._get_atomic_symbols(sub_sentence.first_sentence, temp_symbol_list)
+            # If we have a second sentence, then process that
+            if sub_sentence.second_sentence is not None:
+                Sentence._get_atomic_symbols(sub_sentence.second_sentence, temp_symbol_list)
+        return temp_symbol_list
 
     def get_symbol_list(self) -> kb.SymbolList:
         """

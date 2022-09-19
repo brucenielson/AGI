@@ -823,3 +823,35 @@ class TestPLKnowledgeBase(TestCase):
         # Run tests
         self.assertTrue(kb2.is_subset(kb1))
         self.assertFalse(kb1.is_subset(kb2))
+
+    def test_get_atomic_symbols(self):
+        sentence: Sentence = Sentence("A OR B OR C")
+        sentence = sentence.convert_to_cnf(or_clauses_only=True)[0]
+        symbols = sentence.get_atomic_symbols()
+        self.assertEqual(3, len(symbols))
+        # Try out duplicates
+        sentence: Sentence = Sentence("A OR B OR C OR A")
+        sentence = sentence.convert_to_cnf(or_clauses_only=True)[0]
+        symbols = sentence.get_atomic_symbols()
+        self.assertEqual(4, len(symbols))
+        self.assertEqual("A", symbols[0].name)
+        self.assertEqual(LogicValue.TRUE, symbols[0].value)
+        self.assertEqual("B", symbols[1].name)
+        self.assertEqual(LogicValue.TRUE, symbols[1].value)
+        self.assertEqual("C", symbols[2].name)
+        self.assertEqual(LogicValue.TRUE, symbols[2].value)
+        self.assertEqual("A", symbols[3].name)
+        self.assertEqual(LogicValue.TRUE, symbols[3].value)
+        # Try out duplicates with a negation
+        sentence: Sentence = Sentence("A OR B OR C OR ~A")
+        sentence = sentence.convert_to_cnf(or_clauses_only=True)[0]
+        symbols = sentence.get_atomic_symbols()
+        self.assertEqual(4, len(symbols))
+        self.assertEqual("A", symbols[0].name)
+        self.assertEqual(LogicValue.TRUE, symbols[0].value)
+        self.assertEqual("B", symbols[1].name)
+        self.assertEqual(LogicValue.TRUE, symbols[1].value)
+        self.assertEqual("C", symbols[2].name)
+        self.assertEqual(LogicValue.TRUE, symbols[2].value)
+        self.assertEqual("A", symbols[3].name)
+        self.assertEqual(LogicValue.FALSE, symbols[3].value)

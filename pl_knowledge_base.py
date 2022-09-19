@@ -659,7 +659,8 @@ class PLKnowledgeBase:
             clauses.add(new._sentences)
 
     def _pl_resolve(self, clause1: Sentence, clause2: Sentence) -> List[Sentence]:
-        symbols1: SymbolList = clause1.get_symbol_list()
-        symbols2: SymbolList = clause2.get_symbol_list()
         # A cnf clause is entirely made up of OR operators and negations
-
+        # So just get a list of all symbols (including duplicates) and their negations and do resolution on those
+        symbols1: List[LogicSymbol] = clause1.get_atomic_symbols()
+        symbols2: List[LogicSymbol] = clause2.get_atomic_symbols()
+        
