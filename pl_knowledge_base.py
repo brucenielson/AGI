@@ -40,6 +40,21 @@ class KnowledgeBaseError(Exception):
         super().__init__(message)
 
 
+class _KBIterator:
+    def __init__(self, kb: PLKnowledgeBase):
+        self._clauses: List[Sentence] = kb.sentences
+        self._index: int = 0
+
+    def __next__(self):
+        result: Sentence
+        if self._index < len(self._clauses):
+            result = self._clauses[self._index]
+            self._index += 1
+            return result
+        else:
+            raise StopIteration
+
+
 class PLKnowledgeBase:
     """
     PLKnowledgeBase is a class that wraps up the functionality of a Propositional Logic Knowledge Base.
@@ -63,6 +78,9 @@ class PLKnowledgeBase:
         # Used for finding symbol that is a unit clause
         self._count_of_symbols: int = 0
         self._is_cnf: bool = False
+
+    def __iter__(self) -> _KBIterator:
+        return _KBIterator(self)
 
     @property
     def is_cnf(self) -> bool:
@@ -110,6 +128,22 @@ class PLKnowledgeBase:
         else:
             raise KnowledgeBaseError("Call to 'exists' call requires a Sentence or string.")
 
+    def is_subset(self, other_kb: PLKnowledgeBase, check_logical_equivalence: bool = False) -> bool:
+        """
+        Checks if one knowledge base (self) is a subset of another knowledge base (other_kb)
+        :param other_kb: The knowledge base to compare
+        :param check_logical_equivalence: Set this to True if you want to do a full equivalence check instead of just
+        checking if the two string representations match.
+        :return: Returns bool value of True if self is a subset of other_kb, otherwise False
+        :return:
+        """
+        sentence: Sentence
+        for sentence in self.sentences:
+            if not other_kb.exists(sentence, check_logical_equivalence=check_logical_equivalence):
+                return False
+        # There were no unique sentences found, so this is subset
+        return True
+
     def add(self, sentence_or_list:  Union[Sentence, List[Sentence], str]) -> None:
         """
         Adds a sentence (Sentence or str) or list of sentences (List[Sentence] to the database.
@@ -127,9 +161,13 @@ class PLKnowledgeBase:
                 self._is_cnf = True
             else:
                 self._is_cnf = False
-        else:
+        elif isinstance(sentence_or_list, list) and isinstance(sentence_or_list[0], Sentence):
+            # A list of Sentences
             for sentence in sentence_or_list:
                 self.add(sentence)
+        else:
+            raise KnowledgeBaseError("Function 'add' called with an incorrect type. Must be a Sentence, str, "
+                                     "or List[Sentence]")
 
     @property
     def line_count(self) -> int:
@@ -341,7 +379,7 @@ class PLKnowledgeBase:
         sentence_list: List[Sentence] = deepcopy(self._sentences)
         converted_list: List[Sentence] = []
         for sentence in sentence_list:
-            converted_list.append(sentence.convert_to_cnf(or_clauses_only=True))
+            converted_list.extend(sentence.convert_to_cnf(or_clauses_only=True))
         new_kb: PLKnowledgeBase = PLKnowledgeBase()
         new_kb.add(converted_list)
         new_kb._is_cnf = True
@@ -391,15 +429,12 @@ class PLKnowledgeBase:
         # Try both extended models
         return self._dpll(symbols.clone(), copy_model1) or self._dpll(symbols.clone(), copy_model2)
 
-    def dpll_entails(self, query: Union[Sentence, str]) -> bool:
-        """
-        Returns True if the query is entailed by the knowledge base. Uses the DPLL algorithm. Must be in CNF format.
-        :param query: The sentence you are asking if it is entailed in the form of a Sentence or str.
-        :return: A boolean value.
-        """
-        #  satisfiability is the same as entails via this formula
-        #  a entails b if a AND ~b are unsatisfiable
-        #  so we change the query to be it's negation
+    def _put_in_cnf_format(self, query: Union[Sentence, str]) -> PLKnowledgeBase:
+        # This function does the work for both dpll_entails and pl_resolution to make sure
+        # The entire knowledge base is in CNF format including the query.
+        # satisfiability is the same as entails via this formula
+        # a entails b if a AND ~b are unsatisfiable
+        # so we change the query to be it's negation
         model: SymbolList
         # Make sure in right format
         query_sentence: Sentence = sentence_or_str(query)
@@ -411,18 +446,25 @@ class PLKnowledgeBase:
             # Make sure query is in CNF format
             query_list: List[Sentence] = query_sentence.convert_to_cnf(or_clauses_only=True)
             kb_clone.add(query_list)
-            symbols: SymbolList = kb_clone.get_symbol_list()
-            model: SymbolList = symbols.clone()
-            return not kb_clone._dpll(symbols, model)
+            return kb_clone
         else:
             cnf_clauses: PLKnowledgeBase = self.clone()
             cnf_clauses.add(query_sentence)
             cnf_clauses = cnf_clauses.convert_to_cnf()
-            symbols: SymbolList = cnf_clauses.get_symbol_list()
-            model: SymbolList = symbols.clone()
-            return not cnf_clauses._dpll(symbols, model)
+            return cnf_clauses
 
-    def entails(self, query) -> bool:
+    def dpll_entails(self, query: Union[Sentence, str]) -> bool:
+        """
+        Returns True if the query is entailed by the knowledge base. Uses the DPLL algorithm. Must be in CNF format.
+        :param query: The sentence you are asking if it is entailed in the form of a Sentence or str.
+        :return: A boolean value.
+        """
+        cnf_kb: PLKnowledgeBase = self._put_in_cnf_format(query)
+        symbols: SymbolList = cnf_kb.get_symbol_list()
+        model: SymbolList = symbols.clone()
+        return not cnf_kb._dpll(symbols, model)
+
+    def entails(self, query: Union[Sentence, str]) -> bool:
         """
         Returns True if the query is entailed by the knowledge base.
         :param query: The sentence you are asking if it is entailed in the form of a Sentence or str.
@@ -599,3 +641,25 @@ class PLKnowledgeBase:
             symbol.value = self.is_pure_symbol(model, symbol.name)
             if symbol.value != LogicValue.UNDEFINED:
                 return symbol
+
+    def pl_resolution(self, query: Union[Sentence, str]) -> bool:
+        clauses: PLKnowledgeBase = self._put_in_cnf_format(query)
+        new: PLKnowledgeBase = PLKnowledgeBase()
+        while True:
+            for clause1 in clauses:
+                for clause2 in clauses:
+                    if clause1 is not clause2:
+                        resolvents: List[Sentence] = self._pl_resolve(clause1, clause2)
+                        if len(resolvents) == 0:
+                            return True
+                        new.add(resolvents)
+                # If new is a subset of clauses then return False
+            if new.is_subset(clauses):
+                return False
+            clauses.add(new._sentences)
+
+    def _pl_resolve(self, clause1: Sentence, clause2: Sentence) -> List[Sentence]:
+        symbols1: SymbolList = clause1.get_symbol_list()
+        symbols2: SymbolList = clause2.get_symbol_list()
+        # A cnf clause is entirely made up of OR operators and negations
+

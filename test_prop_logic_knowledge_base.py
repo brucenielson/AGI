@@ -128,6 +128,25 @@ class TestSymbolList(TestCase):
         self.assertEqual('Q3', symbols[7].name)
         self.assertEqual('UA45', symbols[8].name)
 
+    def test_symbol_list_doubles(self):
+        symbols = SymbolList()
+        symbols.add("b")
+        self.assertEqual(1, symbols.length)
+        symbols.add("c")
+        symbols.add("c")
+        self.assertEqual(2, symbols.length)
+        symbols.add("A")
+        self.assertEqual(3, symbols.length)
+        symbols.add("B")
+        self.assertEqual(3, symbols.length)
+        error = False
+        try:
+            symbols.add("~B")
+        except SymbolListError:
+            error = True
+        self.assertTrue(error)
+        self.assertEqual(3, symbols.length)
+
     def test_symbol_list_set_value(self):
         symbols = SymbolList()
         symbols.add("Q3")
@@ -784,3 +803,23 @@ class TestPLKnowledgeBase(TestCase):
         self.assertEqual("A OR ~D OR ~C", sentences[2].to_string())
         self.assertEqual("B OR ~D OR ~C", sentences[3].to_string())
 
+    def test_is_subset(self):
+        # First knowledge base
+        kb1 = PLKnowledgeBase()
+        input_str: str
+        input_str = "A"
+        input_str += "\n"
+        input_str = input_str + "B"
+        input_str = input_str + "\n"
+        input_str = input_str + "A AND B => L"
+        kb1.add(input_str)
+        # Second knowledge base
+        kb2 = PLKnowledgeBase()
+        input_str: str
+        input_str = "A"
+        input_str += "\n"
+        input_str = input_str + "A AND B => L"
+        kb2.add(input_str)
+        # Run tests
+        self.assertTrue(kb2.is_subset(kb1))
+        self.assertFalse(kb1.is_subset(kb2))

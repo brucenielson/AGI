@@ -91,13 +91,21 @@ def _bool_to_logic_value(value: Union[bool, LogicValue]) -> LogicValue:
         return value
 
 
+class LogicSymbolError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class LogicSymbol:
     """
     A LogicSymbol is a class with a name (string) and value (LogicValue) for each Symbol.
     Also contains and_op and or_op functions to perform AND and OR operations on LogicSymbol(s)
     """
     def __init__(self, name: str, value: LogicValue = LogicValue.UNDEFINED):
-        self._name = name
+        if name.isalnum() and name[0].isalpha():
+            self._name = name
+        else:
+            raise LogicSymbolError("Logic symbols must start with an alpha and then be alphanumeric.")
         self.value = value
 
     def __repr__(self) -> str:
@@ -323,7 +331,10 @@ class SymbolList:
         elif isinstance(symbol_or_list, str):
             symbol_name: str = symbol_or_list
             symbol_name = symbol_name.upper()
-            self._symbols[symbol_name] = _bool_to_logic_value(value)
+            if symbol_name.isalnum() and symbol_name[0].isalpha():
+                self._symbols[symbol_name] = _bool_to_logic_value(value)
+            else:
+                raise SymbolListError("Symbols must start with a letter.")
         elif isinstance(symbol_or_list, list):
             symbol_list: List[LogicSymbol] = symbol_or_list
             # Concatenate the SymbolList into this SymbolList
