@@ -869,7 +869,7 @@ class TestPLKnowledgeBase(TestCase):
         sentence1 = Sentence("A OR B OR ~C")
         sentence2 = Sentence("~B OR C OR ~A")
         resolvent = _pl_resolve(sentence1, sentence2)
-        self.assertEqual(None, resolvent)
+        self.assertEqual(None, resolvent.symbol)
 
     def test_basic_pl_resolution(self):
         kb = PLKnowledgeBase()
@@ -886,10 +886,28 @@ class TestPLKnowledgeBase(TestCase):
         input_str = input_str + "\n"
         input_str = input_str + "P => Q"
 
+        input_str = input_str + "\n"
+        input_str = input_str + "~A => Z"
+
+        # input_str = input_str + "\n"
+        # input_str = input_str + "A and Z => W"
+        # input_str = input_str + "\n"
+        # input_str = input_str + "A or Z => ~X"
+
         kb.add(input_str)
         kb = kb.convert_to_cnf()
         # evaluates to True
         self.assertTrue(kb.pl_resolution('q'))
+        self.assertTrue(kb.pl_resolution('a'))
+        self.assertTrue(kb.pl_resolution('b'))
+        self.assertTrue(kb.pl_resolution('l'))
+        self.assertTrue(kb.pl_resolution('m'))
+        self.assertTrue(kb.pl_resolution('p'))
+        self.assertFalse(kb.pl_resolution('z'))
+        self.assertFalse(kb.pl_resolution('y'))
+        # self.assertFalse(kb.pl_resolution('a and b and ~a'))
+        # self.assertFalse(kb.pl_resolution('a and z'))
+
         # self.assertFalse(kb.pl_resolution('~q'))
         # self.assertTrue(kb.pl_resolution('~x'))
         # self.assertFalse(kb.pl_resolution('x'))
@@ -900,7 +918,7 @@ class TestPLKnowledgeBase(TestCase):
         # self.assertTrue(kb.pl_resolution('~z or z'))
         # self.assertTrue(kb.pl_resolution('~z or z'))
         # # Y is Undefined because it is not in the model
-        # self.assertTrue(kb.pl_resolution('y'))
+        # self.assertFalse(kb.pl_resolution('y'))
         # # False
         # # Removed to speed up tests
         # self.assertFalse(kb.pl_resolution('x'))
@@ -909,8 +927,6 @@ class TestPLKnowledgeBase(TestCase):
         # self.assertTrue(kb.pl_resolution('l'))
         # self.assertTrue(kb.pl_resolution('p'))
         # self.assertTrue(kb.pl_resolution('a and b and l and m and p and q'))
-        # self.assertFalse(kb.pl_resolution('a and b and l and m and p and q and ~a'))
-        # self.assertFalse(kb.pl_resolution('a and b and l and m and p and q and z'))
         # # False statements
         # self.assertFalse(kb.pl_resolution('~a'))
         # # Always False
@@ -919,4 +935,8 @@ class TestPLKnowledgeBase(TestCase):
         # # Always False even though not in the model
         # self.assertFalse(kb.pl_resolution('y and ~y'))
         # # Always True even though not in the model
-        # self.assertFalse(kb.pl_resolution('y or ~y'))
+        # self.assertTrue(kb.pl_resolution('y or ~y'))
+
+        # These don't work right
+        # self.assertFalse(kb.pl_resolution('a and b and l and m and p and q and ~a'))
+        # self.assertFalse(kb.pl_resolution('a and b and l and m and p and q and z'))

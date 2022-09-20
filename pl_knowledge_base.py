@@ -52,16 +52,14 @@ def _pl_resolve(clause1: Sentence, clause2: Sentence) -> Optional[Sentence]:
                 raise KnowledgeBaseError("Called 'create_clause with UNDEFINED logic value.")
             if a_symbol != symbol_list[len(symbol_list)-1]:
                 sentence_str += " OR "
-        if sentence_str == "":
-            return None
-        else:
-            return Sentence(sentence_str)
+        return Sentence(sentence_str)
 
     # A cnf clause is entirely made up of OR operators and negations
     # So just get a list of all symbols (including duplicates) and their negations and do resolution on those
     symbols1: List[LogicSymbol] = clause1.get_atomic_symbols()
     symbols2: List[LogicSymbol] = clause2.get_atomic_symbols()
-    for symbol in deepcopy(symbols1):
+    copy_symbols1: List[LogicSymbol] = deepcopy(symbols1)
+    for symbol in deepcopy(copy_symbols1):
         # Look for a negated version of this symbol
         negated_symbol = LogicSymbol(symbol.name)
         if symbol.value == LogicValue.TRUE:
@@ -75,7 +73,11 @@ def _pl_resolve(clause1: Sentence, clause2: Sentence) -> Optional[Sentence]:
             # Remove both symbols and create a new combined clause
             symbols1.remove(symbol)
             symbols2.remove(negated_symbol)
-    return create_clause(symbols1, symbols2)
+    if len(symbols1) == len(copy_symbols1):
+        # Return None if nothing changed because we don't want to create increasingly large (but redundant) clauses
+        return None
+    else:
+        return create_clause(symbols1, symbols2)
 
 
 class KnowledgeBaseError(Exception):
@@ -689,14 +691,25 @@ class PLKnowledgeBase:
         clauses: PLKnowledgeBase = self._put_in_cnf_format(query)
         while True:
             new: PLKnowledgeBase = PLKnowledgeBase()
-            for clause1 in clauses:
-                for clause2 in clauses:
-                    if clause1 is not clause2:
-                        resolvents: Optional[Sentence] = _pl_resolve(clause1, clause2)
-                        if resolvents is None:
+            i: int
+            j: int
+            for i in range(len(clauses.sentences)):
+                clause1: Sentence = clauses.sentences[i]
+                for j in range(i+1, len(clauses.sentences)):
+                    clause2: Sentence = clauses.sentences[j]
+                    if clause1 is clause2:
+                        raise KnowledgeBaseError("This should not happen!")
+                    resolvent: Optional[Sentence] = _pl_resolve(clause1, clause2)
+                    if resolvent is not None:
+                        # We removed a symbol, so a new clause was generated
+                        if resolvent.logic_operator == LogicOperatorTypes.NO_OPERATOR and resolvent.symbol is None \
+                                and resolvent.is_atomic:
                             return True
-                        new.add(resolvents)
+                        new.add(resolvent)
                 # If new is a subset of clauses then return False
             if new.is_subset(clauses):
                 return False
-            clauses.add(new._sentences)
+            if new.line_count > 0:
+                clauses.add(new._sentences)
+            else:
+                return False
