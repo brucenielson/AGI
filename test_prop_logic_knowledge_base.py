@@ -905,8 +905,8 @@ class TestPLKnowledgeBase(TestCase):
         self.assertTrue(kb.pl_resolution('p'))
         self.assertFalse(kb.pl_resolution('z'))
         self.assertFalse(kb.pl_resolution('y'))
-        # self.assertFalse(kb.pl_resolution('a and b and ~a'))
-        # self.assertFalse(kb.pl_resolution('a and z'))
+        self.assertFalse(kb.pl_resolution('a and b and ~a'))
+        self.assertFalse(kb.pl_resolution('a and z'))
 
         # self.assertFalse(kb.pl_resolution('~q'))
         # self.assertTrue(kb.pl_resolution('~x'))

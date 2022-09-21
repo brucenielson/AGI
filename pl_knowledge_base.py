@@ -68,8 +68,9 @@ def _pl_resolve(clause1: Sentence, clause2: Sentence) -> Optional[Sentence]:
             negated_symbol.value = LogicValue.TRUE
         else:
             raise KnowledgeBaseError("Should never have an UNDEFINED value returned from get_atomic_symbols.")
-        # Is a negated version of this symbol in the other clause?
-        if negated_symbol in symbols2:
+        # Is a negated version of this symbol in the other clause? (and this clause has no negated version of itself)
+        if negated_symbol in symbols2 and symbol not in symbols2 \
+                and symbol in symbols1 and negated_symbol not in symbols1:
             # Remove both symbols and create a new combined clause
             symbols1.remove(symbol)
             symbols2.remove(negated_symbol)
@@ -704,8 +705,10 @@ class PLKnowledgeBase:
                         # We removed a symbol, so a new clause was generated
                         if resolvent.logic_operator == LogicOperatorTypes.NO_OPERATOR and resolvent.symbol is None \
                                 and resolvent.is_atomic:
-                            return True
-                        new.add(resolvent)
+                            if clause1.is_atomic or clause2.is_atomic:
+                                return True
+                        else:
+                            new.add(resolvent)
                 # If new is a subset of clauses then return False
             if new.is_subset(clauses):
                 return False
