@@ -754,10 +754,21 @@ class PLKnowledgeBase:
         """
         if force_cnf_format:
             self._sentences = self.convert_to_cnf()._sentences
+            self._is_cnf = True
         if not self.is_cnf:
             raise KnowledgeBaseError("Called cache_resolvents when not in CNF format.")
         return do_resolution(self)
 
-    def pl_resolution(self, query: Union[Sentence, str]) -> bool:
-        clauses: PLKnowledgeBase = self._put_in_cnf_format(query)
-        return do_resolution(clauses)
+    def pl_resolution(self, query: Union[Sentence, str], use_cache=False) -> bool:
+        if use_cache and self._is_cnf:
+            # Make sure in right format
+            query_sentence: Sentence = sentence_or_str(query)
+            # Negate query before adding to the knowledge base
+            query_sentence.negate_sentence()
+            query_list: List[Sentence] = query_sentence.convert_to_cnf(or_clauses_only=True)
+            query_kb = PLKnowledgeBase()
+            query_kb.add(query_list)
+            return do_resolution(self, query_kb)
+        else:
+            clauses: PLKnowledgeBase = self._put_in_cnf_format(query)
+            return do_resolution(clauses)
