@@ -689,27 +689,44 @@ class PLKnowledgeBase:
                 return symbol
 
     def pl_resolution(self, query: Union[Sentence, str]) -> bool:
-        clauses: PLKnowledgeBase = self._put_in_cnf_format(query)
-        while True:
-            new: PLKnowledgeBase = PLKnowledgeBase()
+        def each_pair(current_clauses: PLKnowledgeBase, new_clauses: PLKnowledgeBase = None) -> (Sentence, Sentence):
             i: int
             j: int
-            for i in range(len(clauses.sentences)):
-                clause1: Sentence = clauses.sentences[i]
-                for j in range(i+1, len(clauses.sentences)):
-                    clause2: Sentence = clauses.sentences[j]
-                    if clause1 is clause2:
-                        raise KnowledgeBaseError("This should not happen!")
-                    resolvent: Optional[Sentence] = _pl_resolve(clause1, clause2)
-                    if resolvent is not None:
-                        # We removed a symbol, so a new clause was generated
-                        if resolvent.logic_operator == LogicOperatorTypes.NO_OPERATOR and resolvent.symbol is None \
-                                and resolvent.is_atomic:
-                            if clause1.is_atomic or clause2.is_atomic:
-                                return True
+            if new_clauses is None:
+                new_clauses = current_clauses
+            for i in range(len(current_clauses.sentences)):
+                first_clause: Sentence = clauses.sentences[i]
+                if current_clauses is new_clauses:
+                    for j in range(i+1, len(current_clauses.sentences)):
+                        second_clause: Sentence = current_clauses.sentences[j]
+                        if first_clause != second_clause:
+                            yield first_clause, second_clause
                         else:
-                            new.add(resolvent)
-                # If new is a subset of clauses then return False
+                            continue
+                else:
+                    for j in range(len(new_clauses.sentences)):
+                        second_clause: Sentence = new_clauses.sentences[j]
+                        if first_clause != second_clause:
+                            yield first_clause, second_clause
+                        else:
+                            continue
+
+        clauses: PLKnowledgeBase = self._put_in_cnf_format(query)
+        new: PLKnowledgeBase = clauses
+        while True:
+            last: PLKnowledgeBase = new
+            new = PLKnowledgeBase()
+            for clause1, clause2 in each_pair(clauses, last):
+                resolvent: Optional[Sentence] = _pl_resolve(clause1, clause2)
+                if resolvent is not None:
+                    # We removed a symbol, so a new clause was generated
+                    if resolvent.logic_operator == LogicOperatorTypes.NO_OPERATOR and resolvent.symbol is None \
+                            and resolvent.is_atomic:
+                        if clause1.is_atomic or clause2.is_atomic:
+                            return True
+                    else:
+                        new.add(resolvent)
+            # If new is a subset of clauses then return False
             if new.is_subset(clauses):
                 return False
             if new.line_count > 0:
