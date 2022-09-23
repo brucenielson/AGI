@@ -858,18 +858,25 @@ class TestPLKnowledgeBase(TestCase):
         # Basic Test
         sentence1 = Sentence("A OR B OR C")
         sentence2 = Sentence("B OR C OR ~D OR ~A")
-        resolvent = _pl_resolve(sentence1, sentence2)
-        self.assertEqual("B OR C OR ~D", resolvent.to_string())
+        resolvents = _pl_resolve(sentence1, sentence2)
+        self.assertEqual(1, len(resolvents))
+        self.assertEqual("B OR C OR ~D", resolvents[0].to_string())
         # Test multiple resolvents
         sentence1 = Sentence("A OR B OR C")
         sentence2 = Sentence("~B OR C OR ~D OR ~A")
-        resolvent = _pl_resolve(sentence1, sentence2)
-        self.assertEqual("C OR ~D", resolvent.to_string())
+        resolvents = _pl_resolve(sentence1, sentence2)
+        self.assertEqual(2, len(resolvents))
+        self.assertTrue(resolvents[0].is_equivalent("B OR ~B OR C OR ~D"))
+        self.assertTrue(resolvents[1].is_equivalent("~A OR A OR C OR ~D"))
         # Test entails
         sentence1 = Sentence("A OR B OR ~C")
         sentence2 = Sentence("~B OR C OR ~A")
-        resolvent = _pl_resolve(sentence1, sentence2)
-        self.assertEqual(None, resolvent.symbol)
+        resolvents = _pl_resolve(sentence1, sentence2)
+        self.assertEqual(3, len(resolvents))
+        self.assertTrue(resolvents[0].is_equivalent("B OR ~B OR ~C OR C"))
+        self.assertTrue(resolvents[1].is_equivalent("A OR ~A OR C OR ~C"))
+        self.assertTrue(resolvents[2].is_equivalent("A OR ~A OR B OR ~B"))
+        # self.assertEqual(None, resolvents[0].symbol)
 
     def test_basic_pl_resolution(self):
         kb = PLKnowledgeBase()
@@ -936,7 +943,18 @@ class TestPLKnowledgeBase(TestCase):
         # self.assertFalse(kb.pl_resolution('y and ~y'))
         # # Always True even though not in the model
         # self.assertTrue(kb.pl_resolution('y or ~y'))
-
         # These don't work right
         # self.assertFalse(kb.pl_resolution('a and b and l and m and p and q and ~a'))
         # self.assertFalse(kb.pl_resolution('a and b and l and m and p and q and z'))
+
+    def test_resolution_issue(self):
+        kb = PLKnowledgeBase()
+        input_str: str
+        input_str = "A"
+        input_str += "\n"
+        input_str = input_str + "B"
+        input_str = input_str + "\n"
+        input_str = input_str + "~A => Z"
+        kb.add(input_str)
+        kb = kb.convert_to_cnf()
+        self.assertFalse(kb.pl_resolution('a and b and z'))

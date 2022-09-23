@@ -35,7 +35,58 @@ def _set_symbol_in_model(symbol: LogicSymbol, symbol_list: SymbolList, a_model: 
         return symbol_list, a_model
 
 
-def _pl_resolve(clause1: Sentence, clause2: Sentence) -> Optional[Sentence]:
+def each_pair(current_clauses: PLKnowledgeBase, new_clauses: PLKnowledgeBase = None) -> (Sentence, Sentence):
+    i: int
+    j: int
+    if new_clauses is None:
+        new_clauses = current_clauses
+    for i in range(len(current_clauses.sentences)):
+        first_clause: Sentence = current_clauses.sentences[i]
+        if current_clauses is new_clauses:
+            for j in range(i+1, len(current_clauses.sentences)):
+                second_clause: Sentence = current_clauses.sentences[j]
+                if first_clause != second_clause:
+                    yield first_clause, second_clause
+                else:
+                    continue
+        else:
+            for j in range(len(new_clauses.sentences)):
+                second_clause: Sentence = new_clauses.sentences[j]
+                if first_clause != second_clause:
+                    yield first_clause, second_clause
+                else:
+                    continue
+
+
+def do_resolution(current_clauses: PLKnowledgeBase, new_clauses: PLKnowledgeBase = None) -> bool:
+    new: PLKnowledgeBase
+    if new_clauses is None:
+        new = current_clauses
+    else:
+        new = new_clauses
+    while True:
+        last: PLKnowledgeBase = new
+        new = PLKnowledgeBase()
+        for clause1, clause2 in each_pair(current_clauses, last):
+            resolvents: List[Sentence] = _pl_resolve(clause1, clause2)
+            if len(resolvents) > 0:
+                # One or more new clauses was generated
+                for resolvent in resolvents:
+                    if resolvent.logic_operator == LogicOperatorTypes.NO_OPERATOR and resolvent.symbol is None \
+                            and resolvent.is_atomic:
+                        return True
+                else:
+                    new.add(resolvents)
+        # If new is a subset of clauses then return False
+        if new.is_subset(current_clauses):
+            return False
+        if new.line_count > 0:
+            current_clauses.add(new.sentences)
+        else:
+            return False
+
+
+def _pl_resolve(clause1: Sentence, clause2: Sentence) -> List[Sentence]:
     def create_clause(symbol_list1: List[LogicSymbol], symbol_list2: List[LogicSymbol]):
         symbol_list: List[LogicSymbol] = []
         sentence_str: str = ""
@@ -58,8 +109,8 @@ def _pl_resolve(clause1: Sentence, clause2: Sentence) -> Optional[Sentence]:
     # So just get a list of all symbols (including duplicates) and their negations and do resolution on those
     symbols1: List[LogicSymbol] = clause1.get_atomic_symbols()
     symbols2: List[LogicSymbol] = clause2.get_atomic_symbols()
-    copy_symbols1: List[LogicSymbol] = deepcopy(symbols1)
-    for symbol in deepcopy(copy_symbols1):
+    resolvents: List[Sentence] = []
+    for symbol in deepcopy(symbols1):
         # Look for a negated version of this symbol
         negated_symbol = LogicSymbol(symbol.name)
         if symbol.value == LogicValue.TRUE:
@@ -72,13 +123,12 @@ def _pl_resolve(clause1: Sentence, clause2: Sentence) -> Optional[Sentence]:
         if negated_symbol in symbols2 and symbol not in symbols2 \
                 and symbol in symbols1 and negated_symbol not in symbols1:
             # Remove both symbols and create a new combined clause
-            symbols1.remove(symbol)
-            symbols2.remove(negated_symbol)
-    if len(symbols1) == len(copy_symbols1):
-        # Return None if nothing changed because we don't want to create increasingly large (but redundant) clauses
-        return None
-    else:
-        return create_clause(symbols1, symbols2)
+            clone_symbols1 = deepcopy(symbols1)
+            clone_symbols2 = deepcopy(symbols2)
+            clone_symbols1.remove(symbol)
+            clone_symbols2.remove(negated_symbol)
+            resolvents.append(create_clause(clone_symbols1, clone_symbols2))
+    return resolvents
 
 
 class KnowledgeBaseError(Exception):
@@ -688,48 +738,26 @@ class PLKnowledgeBase:
             if symbol.value != LogicValue.UNDEFINED:
                 return symbol
 
-    def pl_resolution(self, query: Union[Sentence, str]) -> bool:
-        def each_pair(current_clauses: PLKnowledgeBase, new_clauses: PLKnowledgeBase = None) -> (Sentence, Sentence):
-            i: int
-            j: int
-            if new_clauses is None:
-                new_clauses = current_clauses
-            for i in range(len(current_clauses.sentences)):
-                first_clause: Sentence = clauses.sentences[i]
-                if current_clauses is new_clauses:
-                    for j in range(i+1, len(current_clauses.sentences)):
-                        second_clause: Sentence = current_clauses.sentences[j]
-                        if first_clause != second_clause:
-                            yield first_clause, second_clause
-                        else:
-                            continue
-                else:
-                    for j in range(len(new_clauses.sentences)):
-                        second_clause: Sentence = new_clauses.sentences[j]
-                        if first_clause != second_clause:
-                            yield first_clause, second_clause
-                        else:
-                            continue
+    def cache_resolvents(self, force_cnf_format=False) -> bool:
+        """
+        Calling this function runs through all current clauses in the database and works out the existing resolvents,
+        i.e. the known consequences of the database, and then stores those in the database.
 
+        This is particularly useful if you plan to run a series of queries but don't want to have to work out
+        all the resolvents each time.
+
+        It can also be used to determine if the database is satisfiable or not.
+
+        The database must be in CNF format before calling this function or it will raise an error, unless
+        force_cnf_format is set to True. In that case it will first change the database to be in CNF format.
+        :return: Returns if the database is satisfiable or not (as if you called sat_resolution.
+        """
+        if force_cnf_format:
+            self._sentences = self.convert_to_cnf()._sentences
+        if not self.is_cnf:
+            raise KnowledgeBaseError("Called cache_resolvents when not in CNF format.")
+        return do_resolution(self)
+
+    def pl_resolution(self, query: Union[Sentence, str]) -> bool:
         clauses: PLKnowledgeBase = self._put_in_cnf_format(query)
-        new: PLKnowledgeBase = clauses
-        while True:
-            last: PLKnowledgeBase = new
-            new = PLKnowledgeBase()
-            for clause1, clause2 in each_pair(clauses, last):
-                resolvent: Optional[Sentence] = _pl_resolve(clause1, clause2)
-                if resolvent is not None:
-                    # We removed a symbol, so a new clause was generated
-                    if resolvent.logic_operator == LogicOperatorTypes.NO_OPERATOR and resolvent.symbol is None \
-                            and resolvent.is_atomic:
-                        if clause1.is_atomic or clause2.is_atomic:
-                            return True
-                    else:
-                        new.add(resolvent)
-            # If new is a subset of clauses then return False
-            if new.is_subset(clauses):
-                return False
-            if new.line_count > 0:
-                clauses.add(new._sentences)
-            else:
-                return False
+        return do_resolution(clauses)
