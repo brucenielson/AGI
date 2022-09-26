@@ -87,6 +87,20 @@ def do_resolution(current_clauses: PLKnowledgeBase, new_clauses: PLKnowledgeBase
 
 
 def _pl_resolve(clause1: Sentence, clause2: Sentence) -> List[Sentence]:
+    def is_always_true(a_clause: Sentence) -> bool:
+        all_symbols: List[LogicSymbol] = a_clause.get_atomic_symbols()
+        symbol_dict = {}
+        i: int
+        j: int
+        a_symbol: LogicSymbol
+        for a_symbol in all_symbols:
+            if a_symbol.name in symbol_dict:
+                if symbol_dict[a_symbol.name] != a_symbol.value:
+                    return True
+            else:
+                symbol_dict[a_symbol.name] = a_symbol.value
+        return False
+
     def create_clause(symbol_list1: List[LogicSymbol], symbol_list2: List[LogicSymbol]):
         symbol_list: List[LogicSymbol] = []
         sentence_str: str = ""
@@ -127,7 +141,11 @@ def _pl_resolve(clause1: Sentence, clause2: Sentence) -> List[Sentence]:
             clone_symbols2 = deepcopy(symbols2)
             clone_symbols1.remove(symbol)
             clone_symbols2.remove(negated_symbol)
-            resolvents.append(create_clause(clone_symbols1, clone_symbols2))
+            new_clause: Sentence = create_clause(clone_symbols1, clone_symbols2)
+            # If you combine a literal and its negation, this leads to long run times even though it makes
+            # the clause always True, so you can actually ignore this clause. So check for that.
+            if not is_always_true(new_clause):
+                resolvents.append(new_clause)
     return resolvents
 
 
@@ -761,14 +779,20 @@ class PLKnowledgeBase:
 
     def pl_resolution(self, query: Union[Sentence, str], use_cache=False) -> bool:
         if use_cache and self._is_cnf:
-            # Make sure in right format
+            # Make sure query in right format
             query_sentence: Sentence = sentence_or_str(query)
-            # Negate query before adding to the knowledge base
+            # Negate query then build a query knowledge base
             query_sentence.negate_sentence()
             query_list: List[Sentence] = query_sentence.convert_to_cnf(or_clauses_only=True)
             query_kb = PLKnowledgeBase()
             query_kb.add(query_list)
-            return do_resolution(self, query_kb)
+            # Do resolution on the query itself
+            result: bool = do_resolution(query_kb)
+            if result:
+                return True
+            # Make a clone
+            clone_kb = self.clone()
+            return do_resolution(clone_kb, query_kb)
         else:
             clauses: PLKnowledgeBase = self._put_in_cnf_format(query)
             return do_resolution(clauses)
