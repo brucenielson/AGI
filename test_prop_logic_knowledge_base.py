@@ -931,7 +931,6 @@ class TestPLKnowledgeBase(TestCase):
         # self.assertTrue(kb.pl_resolution('y or ~y', use_cache=True))
         # self.assertFalse(kb.pl_resolution('x', use_cache=True))
         # self.assertFalse(kb.pl_resolution('z', use_cache=True))
-        # # These don't work right
         # self.assertFalse(kb.pl_resolution('a and b and l and m and p and q and ~a', use_cache=True))
 
         # Takes forever - so can't use even normally, even for medium tests
