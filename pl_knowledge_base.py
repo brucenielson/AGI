@@ -301,13 +301,16 @@ class PLKnowledgeBase:
         else:
             raise KnowledgeBaseError("Attempted to use get_sentence(index) with index out of bounds.")
 
-    def clone(self) -> PLKnowledgeBase:
+    def clone(self, query: Union[Sentence, str] = None) -> PLKnowledgeBase:
         """
         Makes a clone of this PLKnowledgeBase.
-
+        :param query: A Sentence or str with a query to add to the clone (for convenience)
         :return: A new PLKnowledgeBase that clones the current (self) one.
         """
-        return deepcopy(self)
+        kb_clone: PLKnowledgeBase = deepcopy(self)
+        if query is not None:
+            kb_clone.add(query)
+        return kb_clone
 
     def get_symbol_list(self) -> SymbolList:
         """
@@ -577,6 +580,19 @@ class PLKnowledgeBase:
         symbols: SymbolList = cnf_kb.get_symbol_list()
         model: SymbolList = symbols.clone()
         return not cnf_kb._dpll(symbols, model)
+
+    def walk_sat(self, p: float = 0.5, max_flips: int = 50) -> bool:
+        """
+        Returns True if the query is entailed by the knowledge base. Uses the DPLL algorithm. Must be in CNF format.
+        :param p: The probability of choosing to do a 'random walk' instead of flipping to max satisfiable statements.
+        :param max_flips: Number of flips to try before giving up.
+        :return: A boolean value. True if this knowledge base can be satisfied. False if it can't or we ran out of time.
+        """
+        kb_clone: PLKnowledgeBase = self.clone()
+        symbols: SymbolList = kb_clone.get_symbol_list()
+        model: SymbolList = symbols.clone()
+        kb_clone = kb_clone.convert_to_cnf()
+        return kb_clone._dpll(symbols, model)
 
     def entails(self, query: Union[Sentence, str]) -> bool:
         """
