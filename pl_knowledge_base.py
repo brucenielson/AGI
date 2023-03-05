@@ -4,6 +4,7 @@ from sentence import Sentence, LogicOperatorTypes
 from typing import Optional, List, Union
 from copy import deepcopy
 from logic_symbols import LogicSymbol, SymbolList, LogicValue
+import random
 
 
 def sentence_or_str(sentence_in: Union[Sentence, str]) -> Sentence:
@@ -581,7 +582,20 @@ class PLKnowledgeBase:
         model: SymbolList = symbols.clone()
         return not cnf_kb._dpll(symbols, model)
 
-    def walk_sat(self, p: float = 0.5, max_flips: int = 50) -> bool:
+    def satisfied_sentence_count(self, model: SymbolList):
+        """
+        Count the number of currently satisfied sentences in this knowledge base given a model.
+        :param model: The model to use to count with
+        :return: Returns the count of currently satisfied sentences given the model
+        """
+        sentence: Sentence
+        count: int = 0
+        for sentence in self.sentences:
+            if sentence.is_true(model):
+                count += 1
+        return count
+
+    def walk_sat(self, p: float = 0.05, max_flips: int = 200) -> bool:
         """
         Returns True if the query is entailed by the knowledge base. Uses the DPLL algorithm. Must be in CNF format.
         :param p: The probability of choosing to do a 'random walk' instead of flipping to max satisfiable statements.
@@ -589,10 +603,43 @@ class PLKnowledgeBase:
         :return: A boolean value. True if this knowledge base can be satisfied. False if it can't or we ran out of time.
         """
         kb_clone: PLKnowledgeBase = self.clone()
-        symbols: SymbolList = kb_clone.get_symbol_list()
-        model: SymbolList = symbols.clone()
-        kb_clone = kb_clone.convert_to_cnf()
-        return kb_clone._dpll(symbols, model)
+        # symbols: SymbolList = kb_clone.get_symbol_list()
+        # model: SymbolList = symbols.clone()
+        # kb_clone = kb_clone.convert_to_cnf()
+        # return kb_clone._dpll(symbols, model)
+
+        # Initialize model to random values
+        model: SymbolList = kb_clone.get_symbol_list()
+        symbol: str
+        for symbol in model.get_symbols():
+            model.set_value(symbol, random.choice([True, False]))
+        # Try flipping values
+        for i in range(max_flips):
+            if kb_clone.is_true(model):
+                return True
+            if random.random() <= p:
+                # Random choice
+                flip_symbol = random.choice(model.get_keys())
+                model.flip_value(flip_symbol)
+            else:
+                # Flip whichever symbol in the select clause maximizes the number of satisfied clauses
+                # Loop through each symbol in the clause
+                # Select a random clause
+                clause: Sentence = random.choice(kb_clone.sentences)
+                flip_symbol: str
+                sentence_model: SymbolList = clause.get_symbol_list(model)
+                best_count: int = self.satisfied_sentence_count(model)
+                best_model: SymbolList = model.clone()
+                for symbol in sentence_model.get_symbols():
+                    # Clone current model
+                    model_clone: SymbolList = model.clone()
+                    model_clone.flip_value(symbol)
+                    count: int = self.satisfied_sentence_count(model_clone)
+                    if count >= best_count:
+                        best_count = count
+                        best_model = model_clone
+                model = best_model
+        return False
 
     def entails(self, query: Union[Sentence, str]) -> bool:
         """

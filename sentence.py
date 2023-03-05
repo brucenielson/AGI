@@ -449,29 +449,40 @@ class Sentence:
                 Sentence._get_atomic_symbols(sub_sentence.second_sentence, temp_symbol_list)
         return temp_symbol_list
 
-    def get_symbol_list(self) -> kb.SymbolList:
+    def get_symbol_list(self, model: kb.SymbolList = None) -> kb.SymbolList:
         """
         For each symbol, check if it's already in the list and, if not, add it then return the full list.
         It will default to value undefined for everything. then handle the rest, i.e. atomic vs. complex.
 
-        :return: This returns a list of symbols all set to undefined rather than to values they currently hold
+        :param model: If you pass an optional model (SymbolList) in the SymbolList returned will contain those booleans
+        :return: This returns a list of symbols all set to undefined (unless a model is passed in) rather than to
+        values they currently hold. If a model is passed in, it will populate with those boolean values where possible.
         """
-        return self._get_symbol_list()
+        return self._get_symbol_list(model=model)
 
-    def _get_symbol_list(self, temp_symbol_list: kb.SymbolList = None, sub_sentence: Sentence = None) -> kb.SymbolList:
+    def _get_symbol_list(self, temp_symbol_list: kb.SymbolList = None, sub_sentence: Sentence = None,
+                         model: kb.SymbolList = None) -> kb.SymbolList:
         if temp_symbol_list is None:
             temp_symbol_list = kb.SymbolList()
         if sub_sentence is None:
             sub_sentence = self
 
         if sub_sentence.is_atomic:
-            temp_symbol_list.add(sub_sentence.symbol)
+            symbol: str = sub_sentence.symbol
+            value: LogicValue = LogicValue.UNDEFINED
+            if model is not None:
+                current: LogicSymbol = model.get_symbol(symbol)
+                if current is not None:
+                    value = current.value
+            temp_symbol_list.add(symbol, value=value)
         else:
             # All complex sentences have at least one sentence
-            Sentence._get_symbol_list(sub_sentence.first_sentence, temp_symbol_list)
+            self._get_symbol_list(temp_symbol_list=temp_symbol_list, sub_sentence=sub_sentence.first_sentence,
+                                  model=model)
             # If we have a second sentence, then process that
             if sub_sentence.second_sentence is not None:
-                Sentence._get_symbol_list(sub_sentence.second_sentence, temp_symbol_list)
+                self._get_symbol_list(temp_symbol_list=temp_symbol_list, sub_sentence=sub_sentence.second_sentence,
+                                      model=model)
         return temp_symbol_list
 
     def evaluate(self, model: kb.SymbolList) -> kb.LogicValue:

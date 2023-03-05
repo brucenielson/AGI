@@ -367,6 +367,19 @@ class SymbolList:
         logic_value: LogicValue = _bool_to_logic_value(value)
         self._symbols[symbol_name] = logic_value
 
+    def flip_value(self, symbol_name: str) -> None:
+        """
+        Flips value of symbol_name from LogicValue.TRUE to LogicValue.FALSE. Does nothing if LogicValue.UNDEFINED.
+
+        :param symbol_name: A string with the name of the symbol to flip
+        :return: None
+        """
+        current_value: LogicValue = self.get_value(symbol_name)
+        if current_value == LogicValue.TRUE:
+            self.set_value(symbol_name, LogicValue.FALSE)
+        elif current_value == LogicValue.FALSE:
+            self.set_value(symbol_name,  LogicValue.TRUE)
+
     def get_value(self, symbol_name: str) -> LogicValue:
         """
         Gets the LogicValue of the symbol with symbol_name (str).

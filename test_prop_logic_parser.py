@@ -1393,6 +1393,14 @@ class TestSentence(TestCase):
         self.assertEqual(LogicValue.TRUE, sentence.evaluate(model))
         self.assertTrue(sentence.is_true(model))
         self.assertFalse(sentence.is_false(model))
+        # Test getting a symbol list with a model passed in
+        other_sentence = Sentence("A and ~B")
+        other_model = other_sentence.get_symbol_list(model)
+        self.assertEqual(LogicValue.TRUE, other_model.get_symbol("A").value)
+        self.assertEqual(LogicValue.FALSE, other_model.get_symbol("B").value)
+        self.assertEqual(None, other_model.get_symbol("C"))
+        self.assertEqual(None, other_model.get_symbol("D"))
+        self.assertEqual(None, other_model.get_symbol("E"))
         # Test False
         model.set_value("A", True)
         model.set_value("B", True)
