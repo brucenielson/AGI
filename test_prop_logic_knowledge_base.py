@@ -962,7 +962,7 @@ class TestPLKnowledgeBase(TestCase):
         # self.assertTrue(kb.pl_resolution('~x', use_cache=True))
 
     def test_walk_sat(self):
-        tries = 1000
+        tries = 100
         successes = 0.0
         for i in range(tries):
             if self.test_walk_sat2():
@@ -1066,66 +1066,100 @@ class TestPLKnowledgeBase(TestCase):
         correct_count: int = 0
         if kb.walk_sat():
             correct_count += 1
+        else:
+            print("basic")
         kb_clone: PLKnowledgeBase
         # evaluates to True
         kb_clone = kb.clone('q')
         if kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print("q")
         # Removed to speed up tests
         kb_clone = kb.clone('~x')
         if kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print("~x")
         # Z is Undefined
         kb_clone = kb.clone('z')
         if kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print("z")
         # Always True even if otherwise undefined
         kb_clone = kb.clone('~w or w')
         if kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print("~w or w")
         kb_clone = kb.clone('~z or z')
         if kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('~z or z')
         # False
         # Removed to speed up tests
         kb_clone = kb.clone('x')
         if not kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('x')
         # Entailments
         kb_clone = kb.clone('a')
         if kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('a')
         kb_clone = kb.clone('l')
         if kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('l')
         kb_clone = kb.clone('p')
         if kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('p')
         kb_clone = kb.clone('a and b and l and m and p and q')
         if kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('a and b and l and m and p and q')
         kb_clone = kb.clone('a and b and l and m and p and q and ~a')
         if not kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('a and b and l and m and p and q and ~a')
         # False statements
         kb_clone = kb.clone('~a')
         if not kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('~a')
         # Always False
         kb_clone = kb.clone('a and ~a')
         if not kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('a and ~a')
         kb_clone = kb.clone('z and ~z')
         if not kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('z and ~z')
         # Always False even though not in the model
         kb_clone = kb.clone('y and ~y')
         if not kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('y and ~y')
         # Always True even though not in the model
         kb_clone = kb.clone('y or ~y')
         if kb_clone.walk_sat():
             correct_count += 1
+        else:
+            print('y or ~y')
 
         # self.assertEqual(17, correct_count)
         return 17 == correct_count

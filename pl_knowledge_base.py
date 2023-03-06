@@ -595,7 +595,7 @@ class PLKnowledgeBase:
                 count += 1
         return count
 
-    def walk_sat(self, p: float = 0.50, max_flips: int = 95) -> bool:
+    def walk_sat(self, p: float = 0.01, max_flips: int = 150) -> bool:
         """
         Returns True if the query is entailed by the knowledge base. Uses the DPLL algorithm. Must be in CNF format.
         :param p: The probability of choosing to do a 'random walk' instead of flipping to max satisfiable statements.
@@ -619,7 +619,7 @@ class PLKnowledgeBase:
                 return True
             if random.random() <= p:
                 # Random choice
-                flip_symbol = random.choice(model.get_keys())
+                flip_symbol: str = random.choice(model.get_keys())
                 model.flip_value(flip_symbol)
             else:
                 # Flip whichever symbol in the select clause maximizes the number of satisfied clauses
@@ -632,17 +632,26 @@ class PLKnowledgeBase:
                 clause: Sentence = random.choice(false_clauses)
                 flip_symbol: str
                 sentence_model: SymbolList = clause.get_symbol_list(model)
-                best_count: int = 0
-                best_model: Optional[SymbolList] = None
+                best_count: int = self.satisfied_sentence_count(model)
+                best_symbols: List[LogicSymbol] = []
                 for symbol in sentence_model.get_symbols():
                     # Clone current model
                     model_clone: SymbolList = model.clone()
                     model_clone.flip_value(symbol)
                     count: int = self.satisfied_sentence_count(model_clone)
-                    if count >= best_count:
+                    if count > best_count:
                         best_count = count
-                        best_model = model_clone
-                model = best_model
+                        best_symbols = [model_clone.get_symbol(symbol)]
+                    elif count == best_count:
+                        best_symbols.append(model_clone.get_symbol(symbol))
+                if len(best_symbols) > 0:
+                    rand_symbol: LogicSymbol = random.choice(best_symbols)
+                    # rand_symbol: LogicSymbol = best_symbols[len(best_symbols)-1]
+                    model.set_value(rand_symbol.name, rand_symbol.value)
+                else:
+                    # Random choice
+                    flip_symbol: str = random.choice(model.get_keys())
+                    model.flip_value(flip_symbol)
         return False
 
     def entails(self, query: Union[Sentence, str]) -> bool:
