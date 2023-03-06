@@ -595,7 +595,7 @@ class PLKnowledgeBase:
                 count += 1
         return count
 
-    def walk_sat(self, p: float = 0.01, max_flips: int = 150) -> bool:
+    def walk_sat(self, p: float = 0.0, max_flips: int = 250) -> bool:
         """
         Returns True if the query is entailed by the knowledge base. Uses the DPLL algorithm. Must be in CNF format.
         :param p: The probability of choosing to do a 'random walk' instead of flipping to max satisfiable statements.
@@ -630,8 +630,8 @@ class PLKnowledgeBase:
                     if sentence.evaluate(model) == LogicValue.FALSE:
                         false_clauses.append(sentence)
                 clause: Sentence = random.choice(false_clauses)
-                flip_symbol: str
                 sentence_model: SymbolList = clause.get_symbol_list(model)
+                # Only interested in models better than what we currently have
                 best_count: int = self.satisfied_sentence_count(model)
                 best_symbols: List[LogicSymbol] = []
                 for symbol in sentence_model.get_symbols():
@@ -646,10 +646,10 @@ class PLKnowledgeBase:
                         best_symbols.append(model_clone.get_symbol(symbol))
                 if len(best_symbols) > 0:
                     rand_symbol: LogicSymbol = random.choice(best_symbols)
-                    # rand_symbol: LogicSymbol = best_symbols[len(best_symbols)-1]
                     model.set_value(rand_symbol.name, rand_symbol.value)
                 else:
-                    # Random choice
+                    # Flipping each of the symbols in a false statement failed to find a better model
+                    # So instead do a random choice
                     flip_symbol: str = random.choice(model.get_keys())
                     model.flip_value(flip_symbol)
         return False
