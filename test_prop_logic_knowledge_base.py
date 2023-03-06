@@ -962,7 +962,7 @@ class TestPLKnowledgeBase(TestCase):
         # self.assertTrue(kb.pl_resolution('~x', use_cache=True))
 
     def test_walk_sat(self):
-        tries = 100
+        tries = 1000
         successes = 0.0
         for i in range(tries):
             if self.test_walk_sat2():
