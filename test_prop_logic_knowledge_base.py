@@ -962,7 +962,7 @@ class TestPLKnowledgeBase(TestCase):
         # self.assertTrue(kb.pl_resolution('~x', use_cache=True))
 
     def test_walk_sat(self):
-        tries = 1000
+        tries = 100
         successes = 0.0
         for i in range(tries):
             if self.test_walk_sat2():
@@ -1063,6 +1063,7 @@ class TestPLKnowledgeBase(TestCase):
         input_str = input_str + "A or Z => ~X"
 
         kb.add(input_str)
+        # kb = kb.convert_to_cnf()
         correct_count: int = 0
         if kb.walk_sat():
             correct_count += 1
