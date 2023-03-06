@@ -595,7 +595,7 @@ class PLKnowledgeBase:
                 count += 1
         return count
 
-    def walk_sat(self, p: float = 0.05, max_flips: int = 200) -> bool:
+    def walk_sat(self, p: float = 0.4, max_flips: int = 100) -> bool:
         """
         Returns True if the query is entailed by the knowledge base. Uses the DPLL algorithm. Must be in CNF format.
         :param p: The probability of choosing to do a 'random walk' instead of flipping to max satisfiable statements.
@@ -624,8 +624,12 @@ class PLKnowledgeBase:
             else:
                 # Flip whichever symbol in the select clause maximizes the number of satisfied clauses
                 # Loop through each symbol in the clause
-                # Select a random clause
-                clause: Sentence = random.choice(kb_clone.sentences)
+                # Select a random clause that is False
+                false_clauses: List[Sentence] = []
+                for sentence in kb_clone.sentences:
+                    if sentence.evaluate(model) == LogicValue.FALSE:
+                        false_clauses.append(sentence)
+                clause: Sentence = random.choice(false_clauses)
                 flip_symbol: str
                 sentence_model: SymbolList = clause.get_symbol_list(model)
                 best_count: int = self.satisfied_sentence_count(model)

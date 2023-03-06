@@ -488,7 +488,7 @@ class Sentence:
     def evaluate(self, model: kb.SymbolList) -> kb.LogicValue:
         """
         Given a model (SymbolList) evaluates the Sentence and returns a LogicValue
-        Note: there is a limitation fo this evaluation. To save time it does not try every possible
+        Note: There is a limitation of this evaluation. To save time it does not try every possible
         value. So a sentence like Z OR ~Z with a model of Z: UNDEFINED will return UNDEFINED and not TRUE.
         There is no way around this problem if we want to stay in linear computational time for the evaluation.
 
