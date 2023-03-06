@@ -632,13 +632,13 @@ class PLKnowledgeBase:
                 clause: Sentence = random.choice(false_clauses)
                 sentence_model: SymbolList = clause.get_symbol_list(model)
                 # Only interested in models better than what we currently have
-                best_count: int = self.satisfied_sentence_count(model)
+                best_count: int = kb_clone.satisfied_sentence_count(model)
                 best_symbols: List[LogicSymbol] = []
                 for symbol in sentence_model.get_symbols():
                     # Clone current model
                     model_clone: SymbolList = model.clone()
                     model_clone.flip_value(symbol)
-                    count: int = self.satisfied_sentence_count(model_clone)
+                    count: int = kb_clone.satisfied_sentence_count(model_clone)
                     if count > best_count:
                         best_count = count
                         best_symbols = [model_clone.get_symbol(symbol)]
