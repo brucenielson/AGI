@@ -595,7 +595,7 @@ class PLKnowledgeBase:
                 count += 1
         return count
 
-    def walk_sat(self, p: float = 0.50, max_flips: int = 100) -> bool:
+    def walk_sat(self, p: float = 0.50, max_flips: int = 95) -> bool:
         """
         Returns True if the query is entailed by the knowledge base. Uses the DPLL algorithm. Must be in CNF format.
         :param p: The probability of choosing to do a 'random walk' instead of flipping to max satisfiable statements.
