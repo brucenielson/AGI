@@ -597,20 +597,16 @@ class PLKnowledgeBase:
 
     def walk_sat(self, p: float = 0.5, max_flips: int = 210, seed: Optional[int] = None) -> bool:
         """
-        Returns True if the query is entailed by the knowledge base. Uses the DPLL algorithm. Must be in CNF format.
+        Returns True if the query in the knowledge base can be satisfied. Uses the WalkSAT algorithm, which is random.
+        Does not need to be in CNF format.
         :param p: The probability of choosing to do a 'random walk' instead of flipping to max satisfiable statements.
         :param max_flips: Number of flips to try before giving up.
-        :param seed: An optional random seed
+        :param seed: An optional random seed so that the outcome can be repeated (for unit testing)
         :return: A boolean value. True if this knowledge base can be satisfied. False if it can't or we ran out of time.
         """
         if seed is not None:
             random.seed(seed)
         kb_clone: PLKnowledgeBase = self.clone()
-        # symbols: SymbolList = kb_clone.get_symbol_list()
-        # model: SymbolList = symbols.clone()
-        # kb_clone = kb_clone.convert_to_cnf()
-        # return kb_clone._dpll(symbols, model)
-
         # Initialize model to random values
         model: SymbolList = kb_clone.get_symbol_list()
         symbol: str
@@ -657,11 +653,30 @@ class PLKnowledgeBase:
                     model.flip_value(flip_symbol)
         return False
 
+    def walk_sat_entails(self, query: Union[Sentence, str], seed: Optional[int] = None) -> bool:
+        """
+        Returns True if the query is entailed by the knowledge base. Uses the walk_sat algorithm.
+        Does not need to be in CNF format.
+        :param query: The sentence you are asking if it is entailed in the form of a Sentence or str.
+        :param seed: An optional random seed so that the outcome can be repeated (for unit testing)
+        :return: A boolean value. True if the algorithm thinks the query can be entailed by the knowledge base.
+        However, since this is a local search random algorithm, there are no guarantees.
+        """
+        if seed is not None:
+            random.seed(seed)
+        kb_clone: PLKnowledgeBase = self.clone()
+        # Make sure in right format
+        query_sentence: Sentence = sentence_or_str(query)
+        # Negate query before adding to the knowledge base
+        query_sentence.negate_sentence()
+        kb_clone.add(query_sentence)
+        return not kb_clone.walk_sat()
+
     def entails(self, query: Union[Sentence, str]) -> bool:
         """
         Returns True if the query is entailed by the knowledge base.
         :param query: The sentence you are asking if it is entailed in the form of a Sentence or str.
-        :return: A boolean value.
+        :return: A boolean value. True if this query is entailed by the knowledge base.
         """
         if self.is_cnf:
             return self.dpll_entails(query)

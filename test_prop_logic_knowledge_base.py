@@ -997,47 +997,47 @@ class TestPLKnowledgeBase(TestCase):
         kb_clone: PLKnowledgeBase
         # evaluates to True
         kb_clone = kb.clone('q')
-        self.assertTrue(kb_clone.walk_sat())
+        self.assertTrue(kb_clone.walk_sat(seed=10))
         # Removed to speed up tests
         kb_clone = kb.clone('~x')
-        self.assertTrue(kb_clone.walk_sat())
+        self.assertTrue(kb_clone.walk_sat(seed=10))
         # Z is Undefined
         kb_clone = kb.clone('z')
-        self.assertTrue(kb_clone.walk_sat())
+        self.assertTrue(kb_clone.walk_sat(seed=10))
         # Always True even if otherwise undefined
         kb_clone = kb.clone('~w or w')
-        self.assertTrue(kb_clone.walk_sat())
+        self.assertTrue(kb_clone.walk_sat(seed=10))
         kb_clone = kb.clone('~z or z')
-        self.assertTrue(kb_clone.walk_sat())
+        self.assertTrue(kb_clone.walk_sat(seed=10))
         # False
         # Removed to speed up tests
         kb_clone = kb.clone('x')
-        self.assertFalse(kb_clone.walk_sat())
+        self.assertFalse(kb_clone.walk_sat(seed=10))
         # Entailments
         kb_clone = kb.clone('a')
-        self.assertTrue(kb_clone.walk_sat())
+        self.assertTrue(kb_clone.walk_sat(seed=10))
         kb_clone = kb.clone('l')
-        self.assertTrue(kb_clone.walk_sat())
+        self.assertTrue(kb_clone.walk_sat(seed=10))
         kb_clone = kb.clone('p')
-        self.assertTrue(kb_clone.walk_sat())
+        self.assertTrue(kb_clone.walk_sat(seed=10))
         kb_clone = kb.clone('a and b and l and m and p and q')
-        self.assertTrue(kb_clone.walk_sat())
+        self.assertTrue(kb_clone.walk_sat(seed=10))
         kb_clone = kb.clone('a and b and l and m and p and q and ~a')
-        self.assertFalse(kb_clone.walk_sat())
+        self.assertFalse(kb_clone.walk_sat(seed=10))
         # False statements
         kb_clone = kb.clone('~a')
-        self.assertFalse(kb_clone.walk_sat())
+        self.assertFalse(kb_clone.walk_sat(seed=10))
         # Always False
         kb_clone = kb.clone('a and ~a')
-        self.assertFalse(kb_clone.walk_sat())
+        self.assertFalse(kb_clone.walk_sat(seed=10))
         kb_clone = kb.clone('z and ~z')
-        self.assertFalse(kb_clone.walk_sat())
+        self.assertFalse(kb_clone.walk_sat(seed=10))
         # Always False even though not in the model
         kb_clone = kb.clone('y and ~y')
-        self.assertFalse(kb_clone.walk_sat())
+        self.assertFalse(kb_clone.walk_sat(seed=10))
         # Always True even though not in the model
         kb_clone = kb.clone('y or ~y')
-        self.assertTrue(kb_clone.walk_sat())
+        self.assertTrue(kb_clone.walk_sat(seed=10))
 
     # def test_walk_sat2(self):
     #     kb = PLKnowledgeBase()
@@ -1191,41 +1191,37 @@ class TestPLKnowledgeBase(TestCase):
         kb.add(input_str)
         kb = kb.convert_to_cnf()
         # evaluates to True
-        self.assertTrue(kb.dpll_entails('q'))
-        self.assertTrue(kb.is_query_true('q'))
-        self.assertFalse(kb.is_query_false('q'))
+        self.assertTrue(kb.walk_sat_entails('q', seed=10))
         # Removed to speed up tests
-        self.assertTrue(kb.dpll_entails('~x'))
+        self.assertTrue(kb.walk_sat_entails('~x', seed=10))
         # Z is Undefined
-        self.assertFalse(kb.dpll_entails('z'))
-        self.assertTrue(kb.is_query_undefined('z'))
-        self.assertTrue(kb.is_query_undefined('~z'))
-        self.assertTrue(kb.is_query_undefined('w'))
-        self.assertTrue(kb.is_query_undefined('~w'))
+        self.assertFalse(kb.walk_sat_entails('z', seed=10))
+        self.assertFalse(kb.walk_sat_entails('~z', seed=10))
+        self.assertFalse(kb.walk_sat_entails('w', seed=10))
+        self.assertFalse(kb.walk_sat_entails('~w', seed=10))
         # Always True even if otherwise undefined
-        self.assertTrue(kb.is_query_true('~w or w'))
-        self.assertTrue(kb.is_query_true('~z or z'))
-        self.assertTrue(kb.is_query_true('~z or z'))
+        self.assertTrue(kb.walk_sat_entails('~w or w', seed=10))
+        self.assertTrue(kb.walk_sat_entails('~z or z', seed=10))
+        self.assertTrue(kb.walk_sat_entails('~z or z', seed=10))
         # Y is Undefined because it is not in the model
-        self.assertTrue(kb.is_query_undefined('y'))
+        self.assertFalse(kb.walk_sat_entails('y', seed=10))
         # False
         # Removed to speed up tests
-        self.assertFalse(kb.dpll_entails('x'))
+        self.assertFalse(kb.walk_sat_entails('x', seed=10))
         # Entailments
-        self.assertTrue(kb.dpll_entails('a'))
-        self.assertTrue(kb.dpll_entails('l'))
-        self.assertTrue(kb.dpll_entails('p'))
-        self.assertTrue(kb.dpll_entails('a and b and l and m and p and q'))
-        self.assertFalse(kb.dpll_entails('a and b and l and m and p and q and ~a'))
-        self.assertTrue(kb.is_query_undefined('a and b and l and m and p and q and z'))
+        self.assertTrue(kb.walk_sat_entails('a', seed=10))
+        self.assertTrue(kb.walk_sat_entails('l', seed=10))
+        self.assertTrue(kb.walk_sat_entails('p', seed=10))
+        self.assertTrue(kb.walk_sat_entails('a and b and l and m and p and q', seed=10))
+        self.assertFalse(kb.walk_sat_entails('a and b and l and m and p and q and ~a', seed=10))
+        self.assertFalse(kb.walk_sat_entails('a and b and l and m and p and q and z', seed=10))
         # False statements
-        self.assertFalse(kb.dpll_entails('~a'))
-        self.assertFalse(kb.is_query_true('~a'))
-        self.assertTrue(kb.is_query_false('~a'))
+        self.assertFalse(kb.walk_sat_entails('~a', seed=10))
+        self.assertFalse(kb.walk_sat_entails('~a', seed=10))
         # Always False
-        self.assertTrue(kb.is_query_false('a and ~a'))
-        self.assertTrue(kb.is_query_false('z and ~z'))
+        self.assertFalse(kb.walk_sat_entails('a and ~a', seed=10))
+        self.assertFalse(kb.walk_sat_entails('z and ~z', seed=10))
         # Always False even though not in the model
-        self.assertTrue(kb.is_query_false('y and ~y'))
+        self.assertFalse(kb.walk_sat_entails('y and ~y', seed=10))
         # Always True even though not in the model
-        self.assertTrue(kb.is_query_true('y or ~y'))
+        self.assertTrue(kb.walk_sat_entails('y or ~y', seed=10))
