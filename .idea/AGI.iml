@@ -11,6 +11,7 @@
     <option name="namespacePackageFolders">
       <list>
         <option value="$MODULE_DIR$/proplogic" />
+        <option value="$MODULE_DIR$/graph" />
       </list>
     </option>
   </component>
