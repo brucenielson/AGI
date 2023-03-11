@@ -1,11 +1,11 @@
 from __future__ import annotations
 from typing import Optional, List, Union
 from functools import total_ordering
-import pl_knowledge_base as kb
+import proplogic.pl_knowledge_base as kb
 from copy import deepcopy
 from enum import Enum
-import pl_parser
-from logic_symbols import LogicSymbol, LogicValue
+import proplogic.pl_parser as pl_parser
+from proplogic.logic_symbols import LogicSymbol, LogicValue
 
 
 @total_ordering

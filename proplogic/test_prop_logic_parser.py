@@ -1,7 +1,7 @@
 from unittest import TestCase
-from pl_parser import LogicParser
-from sentence import Sentence, SentenceError, LogicOperatorTypes
-from pl_knowledge_base import SymbolList, LogicValue
+from proplogic.pl_parser import LogicParser
+from proplogic.sentence import Sentence, SentenceError, LogicOperatorTypes
+from proplogic.pl_knowledge_base import SymbolList, LogicValue
 
 
 class TestPropLogicParser(TestCase):

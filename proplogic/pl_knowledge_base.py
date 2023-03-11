@@ -1,9 +1,9 @@
 from __future__ import annotations
-from pl_parser import LogicParser
-from sentence import Sentence, LogicOperatorTypes
+from proplogic.pl_parser import LogicParser
+from proplogic.sentence import Sentence, LogicOperatorTypes
 from typing import Optional, List, Union
 from copy import deepcopy
-from logic_symbols import LogicSymbol, SymbolList, LogicValue
+from proplogic.logic_symbols import LogicSymbol, SymbolList, LogicValue
 import random
 
 

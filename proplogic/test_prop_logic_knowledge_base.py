@@ -1,7 +1,7 @@
 from unittest import TestCase
-from pl_knowledge_base import LogicSymbol, LogicValue, PLKnowledgeBase, Sentence, \
+from proplogic.pl_knowledge_base import LogicSymbol, LogicValue, PLKnowledgeBase, Sentence, \
     KnowledgeBaseError, _set_symbol_in_model, _pl_resolve
-from logic_symbols import SymbolList, SymbolListError
+from proplogic.logic_symbols import SymbolList, SymbolListError
 
 # How to add regions
 # https://www.jetbrains.com/help/rider/Coding_Assistance__Surrounding_with_Region.html#managing-regions-in-the-editor

@@ -2,7 +2,7 @@ from __future__ import annotations
 from pyparsing import alphas, alphanums, Word, ZeroOrMore, Forward, OneOrMore, Group, exceptions, oneOf, Literal
 from enum import Enum
 from typing import Optional, List
-from sentence import Sentence, LogicOperatorTypes
+from proplogic.sentence import Sentence, LogicOperatorTypes
 
 # Original Grammar for the Propositional Logic Parser (I've changed it a bit since)
 #
