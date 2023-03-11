@@ -1,5 +1,5 @@
 # noinspection SpellCheckingInspection
-import proplogic.pl_knowledge_base as plkb
+import proplogic.knowledge_base as plkb
 
 # This is a sample Python script.
 
