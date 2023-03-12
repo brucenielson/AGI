@@ -1,9 +1,9 @@
 from __future__ import annotations
-from typing import Optional, List, Union
+from typing import Optional, List
 
 
 class Vertex:
-    def __init__(self, name: str = None):
+    def __init__(self, name: Optional[str] = None):
         # Node names are optional for human reading and serve no other purpose
         self.name = name
         self.vertex = None
@@ -12,7 +12,7 @@ class Vertex:
     def relate(self, edge: Edge) -> None:
         self.edges.append(edge)
 
-    def relate_vertex(self, vertex: Vertex, name: str = None, value: float = 1.0) -> Edge:
+    def relate_vertex(self, vertex: Vertex, name: Optional[str] = None, value: float = 1.0) -> Edge:
         edge = Edge(vertex, name=name, value=value)
         self.relate(edge)
         return edge
@@ -22,7 +22,7 @@ class Edge:
     name: str
     vertex: Vertex
 
-    def __init__(self, vertex: Vertex, name: str = None, value: float = 1.0):
+    def __init__(self, vertex: Vertex, name: Optional[str] = None, value: float = 1.0):
         # Node names are optional for human reading and serve no other purpose
         self.name = name
         self.vertex = vertex
@@ -35,12 +35,12 @@ class Edge:
 class Graph:
     name: str
 
-    def __init__(self, name: str = None):
+    def __init__(self, name: Optional[str] = None):
         self.name = name
         self.vertices: List[Vertex] = []
         self.edges: List[Edge] = []
 
-    def create_vertex(self, name: str = None) -> Vertex:
+    def create_vertex(self, name: Optional[str] = None) -> Vertex:
         # Create a vertex
         vertex = Vertex(name)
         # Save it in the graph
