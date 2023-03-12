@@ -6,7 +6,6 @@ class Vertex:
     def __init__(self, name: Optional[str] = None) -> None:
         # Node names are optional for human reading and serve no other purpose
         self.name = name
-        self.vertex = None
         self.edges: List[Edge] = []
 
     def relate(self, edge: Edge) -> None:
