@@ -3,7 +3,7 @@ from typing import Optional, List
 
 
 class Vertex:
-    def __init__(self, name: Optional[str] = None):
+    def __init__(self, name: Optional[str] = None) -> None:
         # Node names are optional for human reading and serve no other purpose
         self.name = name
         self.vertex = None
@@ -22,20 +22,20 @@ class Edge:
     name: str
     vertex: Vertex
 
-    def __init__(self, vertex: Vertex, name: Optional[str] = None, value: float = 1.0):
+    def __init__(self, vertex: Vertex, name: Optional[str] = None, value: float = 1.0) -> None:
         # Node names are optional for human reading and serve no other purpose
         self.name = name
         self.vertex = vertex
         self.value = value
 
-    def traverse(self):
+    def traverse(self) -> Vertex:
         return self.vertex
 
 
 class Graph:
     name: str
 
-    def __init__(self, name: Optional[str] = None):
+    def __init__(self, name: Optional[str] = None) -> None:
         self.name = name
         self.vertices: List[Vertex] = []
         self.edges: List[Edge] = []
@@ -47,11 +47,11 @@ class Graph:
         self.vertices.append(vertex)
         return vertex
 
-    def _register_vertex(self, vertex: Vertex):
+    def _register_vertex(self, vertex: Vertex) -> None:
         if vertex not in self.vertices:
             self.vertices.append(vertex)
 
-    def _register_edge(self, edge: Edge):
+    def _register_edge(self, edge: Edge) -> None:
         if edge not in self.edges:
             self.edges.append(edge)
 
