@@ -116,6 +116,44 @@ class TestGraph(TestCase):
         self.assertEqual('friend', graph.vertices[0].edges_out[2].name)
         self.assertEqual('Timmy', graph.vertices[0].edges_out[2].to_vertex.name)
 
+    def test_create_vertex2(self):
+        graph = Graph()
+        vertex = graph.create_vertex()
+        self.assertIn(vertex, graph.vertices)
+
+    def test_link_vertices2(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        self.assertIn(edge, vertex_b.edges_in)
+        self.assertEqual(edge.from_vertex, vertex_a)
+        self.assertEqual(edge.to_vertex, vertex_b)
+
+    def test_link_vertices_two_way(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        graph.link_vertices(vertex_a, vertex_b, two_way=True)
+        edge1 = vertex_a.edges_out[0]
+        edge2 = vertex_b.edges_out[0]
+        self.assertIn(edge1, vertex_b.edges_in)
+        self.assertIn(edge2, vertex_a.edges_in)
+        self.assertEqual(edge1.from_vertex, vertex_a)
+        self.assertEqual(edge1.to_vertex, vertex_b)
+        self.assertEqual(edge2.from_vertex, vertex_b)
+        self.assertEqual(edge2.to_vertex, vertex_a)
+
+    def test_vertex_id(self):
+        vertex = Vertex()
+        self.assertIsInstance(vertex.id, int)
+
+    def test_edge_id(self):
+        vertex_a = Vertex()
+        vertex_b = Vertex()
+        edge = Edge(vertex_a, vertex_b)
+        self.assertIsInstance(edge.id, int)
+
 
 class TestEdge(TestCase):
     def test_traverse(self):
