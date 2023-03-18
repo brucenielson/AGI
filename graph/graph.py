@@ -1,6 +1,42 @@
 from __future__ import annotations
-from typing import Optional, List, Union
-import uuid
+from typing import Optional, List, Union, Dict, TypeVar
+
+T = TypeVar('T')
+
+
+class ComboListDict:
+    def __init__(self):
+        self._values: List[T] = []
+        self._id_map: Dict[int, int] = {}
+
+    def __getitem__(self, key: int) -> T:
+        index = self._id_map[key]
+        return self._values[index]
+
+    def __setitem__(self, key: int, value: T) -> None:
+        if key in self._id_map:
+            index = self._id_map[key]
+            self._values[index] = value
+        else:
+            self._id_map[key] = len(self._values)
+            self._values.append(value)
+
+    def __delitem__(self, key: int) -> None:
+        index = self._id_map[key]
+        del self._id_map[key]
+        del self._values[index]
+
+    def __contains__(self, key: int) -> bool:
+        return key in self._values
+
+    def __len__(self) -> int:
+        return len(self._values)
+
+    def __iter__(self):
+        return iter(self._values)
+
+    def values(self) -> List[T]:
+        return self._values
 
 
 class Vertex:
@@ -8,8 +44,8 @@ class Vertex:
 
     def __init__(self, name: Optional[str] = None) -> None:
         self._name: Optional[str] = name
-        self._edges_out: List[Edge] = []
-        self._edges_in: List[Edge] = []
+        self._edges_out: ComboListDict[Edge] = ComboListDict()
+        self._edges_in: ComboListDict[Edge] = ComboListDict()
         self._id = Vertex._id
         Vertex._id += 1
 
@@ -22,16 +58,30 @@ class Vertex:
         self._name = name
 
     @property
-    def edges_out(self) -> List[Edge]:
+    def edges_out(self) -> ComboListDict[Edge]:
         return self._edges_out
 
     @property
-    def edges_in(self) -> List[Edge]:
+    def edges_in(self) -> ComboListDict[Edge]:
         return self._edges_in
 
     @property
     def id(self) -> int:
         return self._id
+
+    def edges_out_list(self, name: Optional[str] = None) -> List[Edge]:
+        edges: List[Edge] = []
+        for edge in self._edges_out.values():
+            if name is None or name == edge.name:
+                edges.append(edge)
+        return edges
+
+    def edges_in_list(self, name: Optional[str] = None) -> List[Edge]:
+        edges: List[Edge] = []
+        for edge in self._edges_in.values():
+            if name is None or name == edge.name:
+                edges.append(edge)
+        return edges
 
 
 class Edge:
@@ -45,9 +95,6 @@ class Edge:
         self._value: Union[float, int] = value
         self._id = Edge._id
         Edge._id += 1
-
-    def traverse(self) -> Vertex:
-        return self._to_vertex
 
     @property
     def name(self) -> Optional[str]:
@@ -83,25 +130,25 @@ class Graph:
 
     def __init__(self, name: Optional[str] = None) -> None:
         self.name = name
-        self.vertices: List[Vertex] = []
-        self.edges: List[Edge] = []
+        self.vertices: ComboListDict[Vertex] = ComboListDict()
+        self.edges: ComboListDict[Edge] = ComboListDict()
 
     def create_vertex(self, name: Optional[str] = None) -> Vertex:
         # Create a vertex
         vertex = Vertex(name)
         # Save it in the graph
-        self.vertices.append(vertex)
+        self.vertices[vertex.id] = vertex
         return vertex
 
     def _register_vertex(self, vertex: Vertex) -> None:
-        if vertex not in self.vertices:
-            self.vertices.append(vertex)
+        if vertex.id not in self.vertices:
+            self.vertices[vertex.id] = vertex
 
     def _register_edge(self, from_vertex: Vertex, edge: Edge) -> None:
-        if edge not in self.edges and edge not in from_vertex.edges_out and edge not in edge.to_vertex.edges_in:
-            self.edges.append(edge)
-            from_vertex.edges_out.append(edge)
-            edge.to_vertex.edges_in.append(edge)
+        if edge.id not in self.edges and edge not in from_vertex.edges_out and edge not in edge.to_vertex.edges_in:
+            self.edges[edge.id] = edge
+            from_vertex.edges_out[edge.id] = edge
+            edge.to_vertex.edges_in[edge.id] = edge
 
     def link_vertices(self, vertex_a: Vertex, vertex_b: Vertex, name: Optional[str] = None, two_way: bool = False,
                       value: Union[float, int] = 1) -> Edge:
@@ -114,5 +161,21 @@ class Graph:
         if two_way:
             edge2: Edge = Edge(vertex_b, vertex_a, name=name, value=value)
             self._register_edge(vertex_b, edge2)
-            return edge2
         return edge1
+
+    def get_edges(self, name: Optional[str] = None) -> List[Edge]:
+        edges: List[Edge] = []
+        for edge in self.edges.values():
+            if name is None or name == edge.name:
+                edges.append(edge)
+        return edges
+
+    def get_vertices(self, name: Optional[str] = None) -> Union[Vertex, List[Vertex]]:
+        vertices: List[Vertex] = []
+        for vertex in self.vertices.values():
+            if name is None or name == vertex.name:
+                vertices.append(vertex)
+        if len(vertices) == 1:
+            return vertices[0]
+        else:
+            return vertices
