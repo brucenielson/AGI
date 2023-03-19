@@ -10,7 +10,7 @@ class GraphError(Exception):
 T = TypeVar('T')
 
 
-class ListDict:
+class ComboListDict:
     def __init__(self):
         self._values: List[T] = []
         self._id_map: Dict[int, int] = {}
@@ -68,8 +68,8 @@ class Vertex:
 
     def __init__(self, name: Optional[str] = None) -> None:
         self._name: Optional[str] = name
-        self._edges_out: ListDict[Edge] = ListDict()
-        self._edges_in: ListDict[Edge] = ListDict()
+        self._edges_out: ComboListDict[Edge] = ComboListDict()
+        self._edges_in: ComboListDict[Edge] = ComboListDict()
         self._id = Vertex._id
         Vertex._id += 1
 
@@ -82,11 +82,11 @@ class Vertex:
         self._name = name
 
     @property
-    def edges_out(self) -> ListDict[Edge]:
+    def edges_out(self) -> ComboListDict[Edge]:
         return self._edges_out
 
     @property
-    def edges_in(self) -> ListDict[Edge]:
+    def edges_in(self) -> ComboListDict[Edge]:
         return self._edges_in
 
     @property
@@ -140,8 +140,8 @@ class Graph:
 
     def __init__(self, name: Optional[str] = None) -> None:
         self.name = name
-        self.vertices: ListDict[Vertex] = ListDict()
-        self.edges: ListDict[Edge] = ListDict()
+        self.vertices: ComboListDict[Vertex] = ComboListDict()
+        self.edges: ComboListDict[Edge] = ComboListDict()
 
     def create_vertex(self, name: Optional[str] = None) -> Vertex:
         # Create a vertex

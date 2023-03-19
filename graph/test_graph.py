@@ -1,5 +1,5 @@
 from unittest import TestCase
-from graph.graph import Graph, Edge, Vertex, ListDict
+from graph.graph import Graph, Edge, Vertex, ComboListDict
 
 
 class TestGraph(TestCase):
@@ -247,7 +247,7 @@ class TestVertex(TestCase):
 
 class ComboListDictTestCase(TestCase):
     def setUp(self):
-        self.dict = ListDict()
+        self.dict = ComboListDict()
         self.dict[1] = {'name': 'John', 'age': 30}
         self.dict[2] = {'name': 'Alice', 'age': 25}
         self.dict[3] = {'name': 'Bob', 'age': 40}
