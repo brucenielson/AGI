@@ -1,12 +1,12 @@
 from unittest import TestCase
-from graph.graph import Graph, Edge, Vertex
+from graph.graph import Graph, Edge, Vertex, ListDict
 
 
 class TestGraph(TestCase):
     def test_create_vertex(self):
         graph = Graph()
         bobby = graph.create_vertex('Bobby')
-        self.assertEqual(bobby, graph.get_vertices('Bobby'))
+        self.assertEqual(bobby, graph.vertices.filter('Bobby')[0])
         self.assertEqual(1, len(graph.vertices))
         self.assertEqual(0, len(graph.edges))
         self.assertEqual('Bobby', bobby.name)
@@ -17,11 +17,11 @@ class TestGraph(TestCase):
         graph._register_vertex(vertex)
         self.assertEqual(1, len(graph.vertices))
         self.assertEqual(0, len(graph.edges))
-        self.assertEqual(vertex, graph.get_vertices('Bobby'))
+        self.assertEqual(vertex, graph.vertices.filter('Bobby')[0])
         graph._register_vertex(vertex)
         self.assertEqual(1, len(graph.vertices))
         self.assertEqual(0, len(graph.edges))
-        self.assertEqual(vertex, graph.get_vertices('Bobby'))
+        self.assertEqual(vertex, graph.vertices.filter('Bobby')[0])
 
     def test_register_edge(self):
         graph = Graph()
@@ -30,34 +30,34 @@ class TestGraph(TestCase):
         # Verify vertices and no edges
         self.assertEqual(2, len(graph.vertices))
         self.assertEqual(0, len(graph.edges))
-        self.assertEqual(bobby, graph.get_vertices('Bobby'))
-        self.assertEqual(timmy, graph.get_vertices('Timmy'))
+        self.assertEqual(bobby, graph.vertices.filter('Bobby')[0])
+        self.assertEqual(timmy, graph.vertices.filter('Timmy')[0])
         # Register an edge
         edge = Edge(bobby, timmy, name='friend', value=2.0)
         graph._register_edge(bobby, edge)
         # Verify vertices again - but now we have one edge
         self.assertEqual(2, len(graph.vertices))
         self.assertEqual(1, len(graph.edges))
-        self.assertEqual(bobby, graph.get_vertices('Bobby'))
-        self.assertEqual(timmy, graph.get_vertices('Timmy'))
-        self.assertEqual('friend', bobby.edges_out_list()[0].name)
-        self.assertEqual(2.0, bobby.edges_out_list()[0].value)
+        self.assertEqual(bobby, graph.vertices.filter('Bobby')[0])
+        self.assertEqual(timmy, graph.vertices.filter('Timmy')[0])
+        self.assertEqual('friend', bobby.edges_out.index(0).name)
+        self.assertEqual(2.0, bobby.edges_out.index(0).value)
         # We didn't actually link these vertices so no edge here
         self.assertEqual(0, len(timmy.edges_out))
         # However, we should find it in Timmy's edges_in
-        self.assertEqual(edge, timmy.edges_in_list()[0])
+        self.assertEqual(edge, timmy.edges_in.to_list()[0])
         self.assertEqual(1, len(timmy.edges_in))
         # Attempt to register an edge twice
         graph._register_edge(bobby, edge)
         self.assertEqual(2, len(graph.vertices))
         self.assertEqual(1, len(graph.edges))
-        self.assertEqual(bobby, graph.get_vertices('Bobby'))
-        self.assertEqual(timmy, graph.get_vertices('Timmy'))
-        self.assertEqual('friend', bobby.edges_out_list()[0].name)
+        self.assertEqual(bobby, graph.vertices.filter('Bobby')[0])
+        self.assertEqual(timmy, graph.vertices.filter('Timmy')[0])
+        self.assertEqual('friend', bobby.edges_out.index(0).name)
         self.assertEqual(0, len(timmy.edges_out))
-        self.assertEqual(edge, timmy.edges_in_list()[0])
+        self.assertEqual(edge, timmy.edges_in.to_list()[0])
         self.assertEqual(1, len(timmy.edges_in))
-        self.assertEqual('Timmy', bobby.edges_out_list()[0].to_vertex.name)
+        self.assertEqual('Timmy', bobby.edges_out.index(0).to_vertex.name)
 
     def test_link_vertices(self):
         graph = Graph()
@@ -67,36 +67,36 @@ class TestGraph(TestCase):
         # Verify vertices and no edges
         self.assertEqual(2, len(graph.vertices))
         self.assertEqual(2, len(graph.edges))
-        self.assertEqual(bobby, graph.get_vertices('Bobby'))
-        self.assertEqual(timmy, graph.get_vertices('Timmy'))
+        self.assertEqual(bobby, graph.vertices.filter('Bobby')[0])
+        self.assertEqual(timmy, graph.vertices.filter('Timmy')[0])
         self.assertEqual(1, len(bobby.edges_out))
-        self.assertIn(friend_edge, bobby.edges_out_list('friend'))
+        self.assertEqual(friend_edge, bobby.edges_out.filter('friend')[0])
         self.assertEqual(1.0, friend_edge.value)
         self.assertEqual(1, len(timmy.edges_out))
-        self.assertEqual('friend', timmy.edges_out_list('friend')[0].name)
-        self.assertEqual('Bobby', timmy.edges_out_list('friend')[0].to_vertex.name)
-        self.assertEqual('Timmy', bobby.edges_out_list('friend')[0].to_vertex.name)
-        self.assertEqual(1.0, timmy.edges_out_list('friend')[0].value)
-        self.assertEqual(1, len(timmy.edges_out_list('friend')))
-        self.assertEqual(timmy, bobby.edges_out_list('friend')[0].to_vertex)
-        self.assertEqual(bobby, timmy.edges_out_list('friend')[0].to_vertex)
+        self.assertEqual('friend', timmy.edges_out.filter('friend')[0].name)
+        self.assertEqual('Bobby', timmy.edges_out.filter('friend')[0].to_vertex.name)
+        self.assertEqual('Timmy', bobby.edges_out.filter('friend')[0].to_vertex.name)
+        self.assertEqual(1.0, timmy.edges_out.filter('friend')[0].value)
+        self.assertEqual(1, len(timmy.edges_out.filter('friend')))
+        self.assertEqual(timmy, bobby.edges_out.filter('friend')[0].to_vertex)
+        self.assertEqual(bobby, timmy.edges_out.filter('friend')[0].to_vertex)
         # Attempt to add a second edge (which is allowed)
         roommate_edge = graph.link_vertices(bobby, timmy, 'roommate', two_way=True)
         self.assertEqual(2, len(graph.vertices))
         self.assertEqual(4, len(graph.edges))
-        self.assertEqual(bobby, graph.get_vertices('Bobby'))
-        self.assertEqual(timmy, graph.get_vertices('Timmy'))
+        self.assertEqual(bobby, graph.vertices.filter('Bobby')[0])
+        self.assertEqual(timmy, graph.vertices.filter('Timmy')[0])
         self.assertEqual(2, len(bobby.edges_out))
-        self.assertIn(friend_edge, bobby.edges_out_list('friend'))
-        self.assertIn(roommate_edge, bobby.edges_out_list('roommate'))
+        self.assertEqual(friend_edge, bobby.edges_out.filter('friend')[0])
+        self.assertEqual(roommate_edge, bobby.edges_out.filter('roommate')[0])
         self.assertEqual(2, len(timmy.edges_out))
-        self.assertEqual('friend', timmy.edges_out_list('friend')[0].name)
-        self.assertEqual('roommate', timmy.edges_out_list('roommate')[0].name)
+        self.assertEqual('friend', timmy.edges_out.filter('friend')[0].name)
+        self.assertEqual('roommate', timmy.edges_out.filter('roommate')[0].name)
         self.assertEqual(2, len(timmy.edges_out))
-        self.assertEqual('Timmy', bobby.edges_out_list('friend')[0].to_vertex.name)
-        self.assertEqual('Bobby', timmy.edges_out_list('friend')[0].to_vertex.name)
-        self.assertEqual('Timmy', bobby.edges_out_list('roommate')[0].to_vertex.name)
-        self.assertEqual('Bobby', timmy.edges_out_list('roommate')[0].to_vertex.name)
+        self.assertEqual('Timmy', bobby.edges_out.filter('friend')[0].to_vertex.name)
+        self.assertEqual('Bobby', timmy.edges_out.filter('friend')[0].to_vertex.name)
+        self.assertEqual('Timmy', bobby.edges_out.filter('roommate')[0].to_vertex.name)
+        self.assertEqual('Bobby', timmy.edges_out.filter('roommate')[0].to_vertex.name)
 
     def test_graph(self):
         graph = Graph()
@@ -107,16 +107,16 @@ class TestGraph(TestCase):
         dad_edge = graph.link_vertices(bobby, dad, name='parent')
         mom_edge = graph.link_vertices(bobby, mom, name='parent')
         friend_edge = graph.link_vertices(bobby, timmy, name='friend', two_way=True)
-        self.assertEqual(bobby, graph.get_vertices('Bobby'))
-        self.assertEqual(dad, graph.get_vertices('Dad'))
-        self.assertEqual(mom, graph.get_vertices('Mom'))
-        self.assertEqual(timmy, graph.get_vertices('Timmy'))
+        self.assertEqual(bobby, graph.vertices.filter('Bobby')[0])
+        self.assertEqual(dad, graph.vertices.filter('Dad')[0])
+        self.assertEqual(mom, graph.vertices.filter('Mom')[0])
+        self.assertEqual(timmy, graph.vertices.filter('Timmy')[0])
 
-        self.assertIn(dad_edge, bobby.edges_out_list('parent'))
-        self.assertIn(mom_edge, bobby.edges_out_list('parent'))
+        self.assertIn(dad_edge, bobby.edges_out.filter('parent', 'name'))
+        self.assertIn(mom_edge, bobby.edges_out.filter('parent', 'name'))
         self.assertEqual('Dad', dad_edge.to_vertex.name)
         self.assertEqual('Mom', mom_edge.to_vertex.name)
-        self.assertIn(friend_edge, bobby.edges_out_list('friend'))
+        self.assertIn(friend_edge, bobby.edges_out.filter('friend', 'name'))
         self.assertEqual('Timmy', friend_edge.to_vertex.name)
 
     def test_create_vertex2(self):
@@ -129,8 +129,8 @@ class TestGraph(TestCase):
         vertex_a = graph.create_vertex()
         vertex_b = graph.create_vertex()
         edge = graph.link_vertices(vertex_a, vertex_b)
-        self.assertIn(edge, vertex_a.edges_out_list())
-        self.assertIn(edge, vertex_b.edges_in_list())
+        self.assertIn(edge, vertex_a.edges_out.to_list())
+        self.assertIn(edge, vertex_b.edges_in.to_list())
         self.assertEqual(edge.from_vertex, vertex_a)
         self.assertEqual(edge.to_vertex, vertex_b)
 
@@ -139,10 +139,10 @@ class TestGraph(TestCase):
         vertex_a = graph.create_vertex()
         vertex_b = graph.create_vertex()
         graph.link_vertices(vertex_a, vertex_b, two_way=True)
-        edge1 = vertex_a.edges_out_list()[0]
-        edge2 = vertex_b.edges_out_list()[0]
-        self.assertIn(edge1, vertex_b.edges_in_list())
-        self.assertIn(edge2, vertex_a.edges_in_list())
+        edge1 = vertex_a.edges_out.index(0)
+        edge2 = vertex_b.edges_out.index(0)
+        self.assertIn(edge1, vertex_b.edges_in.to_list())
+        self.assertIn(edge2, vertex_a.edges_in.to_list())
 
         self.assertEqual(edge1.from_vertex, vertex_a)
         self.assertEqual(edge1.to_vertex, vertex_b)
@@ -185,8 +185,8 @@ class TestEdge(TestCase):
         bobby = graph.create_vertex('Bobby')
         timmy = graph.create_vertex('Timmy')
         graph.link_vertices(bobby, timmy, 'friend', two_way=True)
-        self.assertEqual(timmy, bobby.edges_out_list('friend')[0].to_vertex)
-        self.assertEqual(bobby, timmy.edges_out_list('friend')[0].to_vertex)
+        self.assertEqual(timmy, bobby.edges_out.filter('friend')[0].to_vertex)
+        self.assertEqual(bobby, timmy.edges_out.filter('friend')[0].to_vertex)
 
 
 class TestVertex(TestCase):
@@ -196,9 +196,9 @@ class TestVertex(TestCase):
         timmy = graph.create_vertex('Timmy')
         graph.link_vertices(bobby, timmy, 'friend', two_way=True)
         self.assertEqual(1, len(timmy.edges_out))
-        self.assertEqual(graph.get_edges()[1], timmy.edges_out_list()[0])
+        self.assertEqual(graph.edges.to_list()[1], timmy.edges_out.index(0))
         self.assertEqual(1, len(bobby.edges_out))
-        self.assertEqual(graph.get_edges()[0], bobby.edges_out_list()[0])
+        self.assertEqual(graph.edges.to_list()[0], bobby.edges_out.index(0))
 
     def test_edges_in(self):
         graph = Graph()
@@ -206,9 +206,9 @@ class TestVertex(TestCase):
         timmy = graph.create_vertex('Timmy')
         graph.link_vertices(bobby, timmy, 'friend', two_way=True)
         self.assertEqual(1, len(timmy.edges_in))
-        self.assertEqual(graph.get_edges()[0], timmy.edges_in_list()[0])
+        self.assertEqual(graph.edges.to_list()[0], timmy.edges_in.to_list()[0])
         self.assertEqual(1, len(bobby.edges_in))
-        self.assertEqual(graph.get_edges()[1], bobby.edges_in_list()[0])
+        self.assertEqual(graph.edges.to_list()[1], bobby.edges_in.to_list()[0])
 
     def test_link_vertices_two_way(self):
         graph = Graph(name="TestGraph")
@@ -226,31 +226,81 @@ class TestVertex(TestCase):
         a = graph.create_vertex(name="A")
         b = graph.create_vertex(name="B")
         graph.link_vertices(a, b, name="AB")
-        self.assertEqual(len(graph.get_edges()), 1)
+        self.assertEqual(len(graph.edges.to_list()), 1)
         graph.link_vertices(b, a, name="BA", two_way=True)
-        self.assertEqual(len(graph.get_edges()), 3)
-        self.assertEqual(len(graph.get_edges(name="AB")), 1)
-        self.assertEqual(len(graph.get_edges(name="BA")), 2)
-        self.assertEqual(len(graph.get_edges(name="ABC")), 0)
+        self.assertEqual(len(graph.edges.to_list()), 3)
+        self.assertEqual(len(graph.edges.filter("AB")), 1)
+        self.assertEqual(len(graph.edges.filter("BA")), 2)
+        self.assertEqual(len(graph.edges.filter("ABC")), 0)
 
     def test_vertices_list(self):
         graph = Graph()
         vertex1 = graph.create_vertex(name="A")
         vertex2 = graph.create_vertex(name="B")
         vertex3 = graph.create_vertex(name="C")
-        vertices = graph.get_vertices()
+        vertices = graph.vertices
         self.assertEqual(len(vertices), 3)
         self.assertIn(vertex1, vertices)
         self.assertIn(vertex2, vertices)
         self.assertIn(vertex3, vertices)
 
-    def test_vertices_list_with_name(self):
-        graph = Graph()
-        vertex1 = graph.create_vertex(name="A")
-        vertex2 = graph.create_vertex(name="B")
-        vertex3 = graph.create_vertex(name="C")
-        vertices = graph.get_vertices()
-        self.assertEqual(len(vertices), 3)
-        self.assertIn(vertex1, vertices)
-        self.assertIn(vertex2, vertices)
-        self.assertIn(vertex3, vertices)
+
+class ComboListDictTestCase(TestCase):
+    def setUp(self):
+        self.dict = ListDict()
+        self.dict[1] = {'name': 'John', 'age': 30}
+        self.dict[2] = {'name': 'Alice', 'age': 25}
+        self.dict[3] = {'name': 'Bob', 'age': 40}
+        self.dict[4] = {'age': 20}
+        self.not_in = {'name': 'Bob', 'age': 44}
+
+    def test_getitem(self):
+        self.assertEqual(self.dict[1], {'name': 'John', 'age': 30})
+        self.assertEqual(self.dict[2], {'name': 'Alice', 'age': 25})
+        self.assertEqual(self.dict[3], {'name': 'Bob', 'age': 40})
+        self.assertEqual(self.dict[4], {'age': 20})
+
+    def test_setitem(self):
+        self.dict[1] = {'name': 'Mary', 'age': 35}
+        self.assertEqual(self.dict[1], {'name': 'Mary', 'age': 35})
+        self.assertEqual(len(self.dict), 4)
+
+    def test_delitem(self):
+        del self.dict[1]
+        self.assertNotIn(1, self.dict._id_map)
+        self.assertNotIn({'name': 'John', 'age': 30}, self.dict.values())
+        self.assertEqual(len(self.dict), 3)
+
+    def test_contains(self):
+        self.assertTrue(self.dict[1] in self.dict)
+        self.assertTrue(self.dict[3] in self.dict)
+        self.assertFalse(5 in self.dict)
+
+    def test_len(self):
+        self.assertEqual(len(self.dict), 4)
+
+    def test_iter(self):
+        result = []
+        for item in self.dict:
+            result.append(item)
+        self.assertEqual(result, [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
+                                  {'name': 'Bob', 'age': 40}, {'age': 20}])
+
+    def test_values(self):
+        self.assertEqual(self.dict.values(), [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
+                                              {'name': 'Bob', 'age': 40}, {'age': 20}])
+
+    def test_filter(self):
+        self.assertEqual(self.dict.filter('John', attr_name='name')[0], self.dict[1])
+        self.assertEqual(self.dict.filter(20, attr_name='age'), [{'age': 20}])
+        self.assertEqual(self.dict.filter('David', attr_name='name'), [])
+
+    def test_to_list(self):
+        self.assertEqual(self.dict.to_list(), [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
+                                               {'name': 'Bob', 'age': 40}, {'age': 20}])
+
+    def test_index(self):
+        self.assertEqual(self.dict.index(0), {'name': 'John', 'age': 30})
+        self.assertEqual(self.dict.index(1), {'name': 'Alice', 'age': 25})
+        self.assertEqual(self.dict.index(2), {'name': 'Bob', 'age': 40})
+        self.assertEqual(self.dict.index(3), {'age': 20})
