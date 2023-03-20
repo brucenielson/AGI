@@ -274,7 +274,7 @@ class ComboListDictTestCase(TestCase):
     def test_contains(self):
         self.assertTrue(self.dict[1] in self.dict)
         self.assertTrue(self.dict[3] in self.dict)
-        self.assertFalse(5 in self.dict)
+        self.assertFalse(self.not_in in self.dict)
 
     def test_len(self):
         self.assertEqual(len(self.dict), 4)

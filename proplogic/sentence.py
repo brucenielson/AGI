@@ -49,7 +49,7 @@ def _apply_operator(value1: kb.LogicValue, value2: kb.LogicValue, operator: Logi
         elif value1 == kb.LogicValue.TRUE and value2 == kb.LogicValue.FALSE:
             return kb.LogicValue.FALSE
     elif operator == LogicOperatorTypes.BI_CONDITIONAL:
-        # Bi-conditional is just implies going both ways connected by an And operator
+        # Biconditional is just implies going both ways connected by an And operator
         value3: kb.LogicValue = _apply_operator(value1, value2, LogicOperatorTypes.IMPLIES)
         value4: kb.LogicValue = _apply_operator(value2, value1, LogicOperatorTypes.IMPLIES)
         return _apply_operator(value3, value4, LogicOperatorTypes.AND)
@@ -60,14 +60,14 @@ def _apply_operator(value1: kb.LogicValue, value2: kb.LogicValue, operator: Logi
 def _split_and_lines(sentence: Sentence) -> List[Sentence]:
     """
     Remove all And clauses by splitting them into lines
-    This function takes a CNF Sentence and builds a list of Sentence(s0 where each OR clause
-    becomes becomes a single sentence in the list.
+    This function takes a CNF Sentence and builds a list of Sentence(s) where each OR clause
+    becomes a single sentence in the list.
 
     Assumption: this sentence is already in CNF form -- if it isn't, the results are unpredictable
     every time it's called, the top node must be an AND operator or symbol.
 
     :param sentence: A Sentence in CNF format but may have AND clauses that need to be split up
-    :return: A list of Sentence(s) that contain only atomics or OR clauses
+    :return: A list of Sentence(s) that contain only atomics or "OR clauses"
     """
     # This function will traverse a sentence finding disjunctions and splicing it all up into sentences
     # that are added to the knowledge base passed in.
@@ -77,7 +77,7 @@ def _split_and_lines(sentence: Sentence) -> List[Sentence]:
         raise SentenceError("Function _split_and_lines was called with a 'sentence' not in CNF form.")
     sentences: List[Sentence] = []
     if sentence.logic_operator == LogicOperatorTypes.OR or sentence.is_atomic:
-        # This is the top of an OR clause or it's atomic, so add it as is
+        # This is the top of an OR clause, or it's atomic, so add it as is
         sentences.append(sentence)
     elif sentence.logic_operator == LogicOperatorTypes.AND:
         if sentence.is_cnf:
@@ -204,7 +204,7 @@ class Sentence:
                     # Invalid value for a symbol since it doesn't start with a letter
                     SentenceError("Symbols must start with a letter.")
                 else:
-                    # Only first parameter was passed and it wasn't alpha numeric, so is it a full sentence?
+                    # Only first parameter was passed, and it wasn't alphanumeric, so is it a full sentence?
                     result: Sentence = parse_sentence(sentence1)  # Attempting to parse
                     # This was a full sentence, so do a shallow copy
                     self.copy(result, negated=negated)
@@ -277,7 +277,7 @@ class Sentence:
     @property
     def is_atomic(self) -> bool:
         """
-        Returns True if this Sentence has no operator an contains just a single symbol (with or without a negation)
+        Returns True if this Sentence has no operator and contains just a single symbol (with or without a negation)
         :return: A boolean value set to True if this is an atomic Sentence otherwise False
         """
         # Returns True if this is a simple atomic sentence and False if it is a complex sentence
@@ -367,7 +367,7 @@ class Sentence:
                   self.logic_operator == LogicOperatorTypes.BI_CONDITIONAL) \
                     and (sub_sentence.logic_operator == LogicOperatorTypes.IMPLIES or
                          sub_sentence.logic_operator == LogicOperatorTypes.BI_CONDITIONAL):
-                # Use parentheses with implies or bi-conditionals next to each other to be more clear
+                # Use parentheses with implies or biconditionals next to each other to be more clear
                 return "(" + sub_sentence.to_string() + ")"
             else:
                 # Otherwise, skip the parentheses
@@ -493,11 +493,12 @@ class Sentence:
         There is no way around this problem if we want to stay in linear computational time for the evaluation.
 
         :param model: A SymbolList with symbols set to TRUE, FALSE, or UNDEFINED
-        :return: A LogicValue that this Sentence evaluates to given the model
+        :return: A LogicValue that this Sentence evaluates to for the model
         """
         return self._traverse_and_evaluate(model)
 
     def is_true(self, model: kb.SymbolList) -> bool:
+        # noinspection GrazieInspection
         """
         Given a model, does this Sentence evaluate to LogicValue.TRUE?
         :param model: A SymbolList with symbols set to TRUE, FALSE, or UNDEFINED
@@ -506,6 +507,7 @@ class Sentence:
         return self.evaluate(model) == kb.LogicValue.TRUE
 
     def is_false(self, model: kb.SymbolList) -> bool:
+        # noinspection GrazieInspection
         """
         Given a model, does this Sentence evaluate to LogicValue.FALSE?
         :param model: A SymbolList with symbols set to TRUE, FALSE, or UNDEFINED
@@ -606,7 +608,7 @@ class Sentence:
         sentence: Sentence = self.clone()
         sentence = sentence._transform_conditionals()
         sentence = sentence._transform_not()
-        # Now loop over redistributing ORs until nothing changes any more
+        # Now loop over redistributing ORs until nothing changes anymore
         temp_sentence: Sentence = Sentence()
         while temp_sentence.to_string(True) != sentence.to_string(True):
             temp_sentence = sentence.clone()
@@ -652,7 +654,7 @@ class Sentence:
             sentence.first_sentence = neg_first_sentence
         # Top level should now be transformed -- if sentence is not atomic, recurse down the chain
         if not sentence.is_atomic:
-            # We have completed the current top node and it's not a condition, so we need to traverse down
+            # We have completed the current top node, and it's not a condition, so we need to traverse down
             sentence.first_sentence = sentence.first_sentence._transform_conditionals()
             if sentence.second_sentence is not None:
                 sentence.second_sentence = sentence.second_sentence._transform_conditionals()
@@ -709,7 +711,7 @@ class Sentence:
 
     def _redistribute_or(self, sub_sentence: Sentence) -> Sentence:
         sentence: Sentence = self.clone()
-        # This function should only be called if a) self is guaranteed to be an AND clause,
+        # This function should only be called if self is guaranteed to be an AND clause
         if self.logic_operator != LogicOperatorTypes.AND:
             raise SentenceError("redistribute_or can only be called on a sentence whose top node is an AND clause.")
         else:
@@ -721,7 +723,7 @@ class Sentence:
     def _transform_distribute_ors(self) -> Sentence:
         sentence: Sentence = self.clone()
         sub_sentence: Sentence
-        # This function assumes there are no logical operators except AND and OR plus NOT next to only literals
+        # This function assumes there are no logical operators except "AND" and "OR" plus NOT next to only literals
         # Anything else will throw an error
         if sentence.is_atomic:
             # Atomic sentences don't need to change, so just return them
@@ -734,7 +736,7 @@ class Sentence:
                 sub_sentence = sentence.second_sentence.clone()
                 # Drop the right side
                 sentence = sentence.first_sentence.clone()
-                # Now traverse the AND plus any more beneath it and put the left under each AND clause
+                # Now traverse the AND plus anymore beneath it and put the left under each AND clause
                 sentence = sentence._redistribute_or(sub_sentence)
             elif sentence.second_sentence.logic_operator == LogicOperatorTypes.AND:
                 # We have an OR above an AND on right side
@@ -742,7 +744,7 @@ class Sentence:
                 sub_sentence = sentence.first_sentence.clone()
                 # Drop the right side
                 sentence = sentence.second_sentence.clone()
-                # Now traverse the AND plus any more beneath it and put the left under each AND clause
+                # Now traverse the AND plus anymore beneath it and put the left under each AND clause
                 sentence = sentence._redistribute_or(sub_sentence)
         elif sentence.logic_operator == LogicOperatorTypes.AND:
             pass
@@ -789,7 +791,7 @@ class Sentence:
         # A Sentence is in CNF format if the following are true:
         # 1. There are no AND operators under an OR operator
         # 2. OR Operators have either atomic sentences under them or other OR sentences
-        # 3. AND Operators have either atomic sentences under them, or AND sentences, or OR sentences
+        # 3. AND Operators have either atomic sentences under them, or AND sentences, or "OR sentences"
         # 4. We never bump into any other type of operator
         # 5. We never have a 'negated sentence' i.e. a complex sentence without a second sentence
         # or_clauses_only set to True will enforce that the following replacement rules (the rest will remain):

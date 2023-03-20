@@ -39,7 +39,7 @@ class LogicValue(Enum):
     """
     An enumerated type of logic values including TRUE, FALSE, and UNDEFINED.
 
-    This enumerated types includes a few methods to allow AND and OR operations and to allow LogicValues to
+    This enumerated types includes a few methods to allow 'AND' and 'OR' operations and to allow LogicValues to
     have a string representation.
     """
     FALSE = 0
@@ -99,7 +99,7 @@ class LogicSymbolError(Exception):
 class LogicSymbol:
     """
     A LogicSymbol is a class with a name (string) and value (LogicValue) for each Symbol.
-    Also contains and_op and or_op functions to perform AND and OR operations on LogicSymbol(s)
+    Also contains and_op and or_op functions to perform 'AND' and 'OR' operations on LogicSymbol(s)
     """
     def __init__(self, name: str, value: LogicValue = LogicValue.UNDEFINED) -> None:
         if name.isalnum() and name[0].isalpha():
@@ -368,6 +368,7 @@ class SymbolList:
         self._symbols[symbol_name] = logic_value
 
     def flip_value(self, symbol_name: str) -> None:
+        # noinspection GrazieInspection
         """
         Flips value of symbol_name from LogicValue.TRUE to LogicValue.FALSE. Does nothing if LogicValue.UNDEFINED.
 

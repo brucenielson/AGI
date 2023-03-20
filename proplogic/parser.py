@@ -9,6 +9,7 @@ from proplogic.sentence import Sentence, LogicOperatorTypes
 # Line -> LogicalSentence EndOfLine
 # LogicalSentence -> OrAndOperands => OrAndOperands | OrAndOperands <=> OrAndOperands
 # OrAndOperands -> AndOperands OR AndOperands MoreOrOperators
+# noinspection GrazieInspection
 # MoreOrOperators -> OR AndOperands | ""
 # AndOperands -> Term AND Term MoreAndOperators
 # MoreAndOperators -> AND Term | ""
@@ -187,7 +188,7 @@ class LogicParser:
         Returns the next token (in the form of a string) to be parsed.
 
         :param check: Passing in the optional 'check' value will verify that the token you are about to consume
-        was of the expected type. If not passed or set to None, then it is ignored and
+        was of the expected type. If not passed or set to None, then it is ignored, and
         you just consume the next token. If the expected type if not matched, an ParseError is raised.
         :return: A string containing the next token
         """

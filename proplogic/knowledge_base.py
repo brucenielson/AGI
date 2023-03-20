@@ -13,7 +13,7 @@ def sentence_or_str(sentence_in: Union[Sentence, str]) -> Sentence:
     :param sentence_in: The sentence as a Sentence or str
     :return: A Sentence
     """
-    # Pass in a Sentence or string and out comes a definitive Sentence
+    # Pass in a Sentence or string and outcomes a definitive Sentence
     sentence_out: Sentence
     # Make sure in right format
     if isinstance(sentence_in, Sentence):
@@ -261,7 +261,7 @@ class PLKnowledgeBase:
 
     def add(self, sentence_or_list:  Union[Sentence, List[Sentence], str]) -> None:
         """
-        Adds a sentence (Sentence or str) or list of sentences (List[Sentence] to the database.
+        Adds a sentence (Sentence or str) or list of sentences (List[Sentence]) to the database.
         :param sentence_or_list: A Sentence, str, or List[Sentence] of what you want to add.
         :return: None
         """
@@ -363,7 +363,7 @@ class PLKnowledgeBase:
         if use_speedup and not self.is_cnf:
             use_speedup = False
 
-        # This function is a truth table check that utilizes dpll speed ups
+        # This function is a truth table check that utilizes dpll speed-ups
         # An experiment to see if this is faster/better
 
         # If we have no more symbols to try, then start doing evaluations
@@ -399,7 +399,7 @@ class PLKnowledgeBase:
                 symbols, model = _set_symbol_in_model(unit_symbol, symbols, model)
                 return self._truth_table(query, symbols, model, use_speedup=use_speedup)
 
-        # Done with pure symbol and unit clause short cuts for now
+        # Done with pure symbol and unit clause shortcuts for now.
         # Now extend the model with both True and False (similar to truth table entails)
         # You don't yet have a full model - so get next symbol to try out
         next_symbol: str = symbols.get_next_symbol().name
@@ -420,7 +420,7 @@ class PLKnowledgeBase:
         An implementation of the Truth Table entails algorithm. Given a query sentence, returns if the knowledge base
         entails that sentence as True, False, or Undefined.
 
-        This algorithm includes some dpll speedups if the knowledge base is in CNF format and you ask for it.
+        This algorithm includes some dpll speedups if the knowledge base is in CNF format, and you ask for it.
         :param query: A Sentence or str that contains the query to the database.
         :param use_speedup: Defaults to False. Set to True if you want to use unit clause heuristic if already in CNF.
         :return: A LogicValue
@@ -471,7 +471,7 @@ class PLKnowledgeBase:
         """
         Returns True if the query is UNDEFINED by the knowledge base.
         :param query: The sentence you are asking if it is UNDEFINED in the form of a Sentence or str.
-        :param use_dpll: Optional parameter defaults to True if you wish to use DPLL if in CNF format. Otherwise
+        :param use_dpll: Optional parameter defaults to True if you wish to use DPLL if in CNF format. Otherwise,
         uses a Truth Table instead. This matters because DPLL needs to run twice to find out if something is UNDEFINED.
         :return: A boolean value.
         """
@@ -537,7 +537,7 @@ class PLKnowledgeBase:
             symbols, model = _set_symbol_in_model(pure_symbol, symbols, model)
             return self._dpll(symbols, model)
 
-        # Done with pure symbol and unit clause short cuts for now
+        # Done with pure symbol and unit clause shortcuts for now.
         # Now extend the model with both True and False (similar to truth table entails)
         # You don't yet have a full model - so get next symbol to try out
         next_symbol: str = symbols.get_next_symbol().name
@@ -550,9 +550,8 @@ class PLKnowledgeBase:
     def _put_in_cnf_format(self, query: Union[Sentence, str]) -> PLKnowledgeBase:
         # This function does the work for both dpll_entails and pl_resolution to make sure
         # The entire knowledge base is in CNF format including the query.
-        # satisfiability is the same as entails via this formula
-        # a entails b if a AND ~b are unsatisfiable
-        # so we change the query to be it's negation
+        # satisfiability is the same as entails via this formula 'a' entails 'b' if a AND ~b are unsatisfiable,
+        # so we change the query to be its negation
         model: SymbolList
         # Make sure in right format
         query_sentence: Sentence = sentence_or_str(query)
@@ -602,7 +601,7 @@ class PLKnowledgeBase:
         :param p: The probability of choosing to do a 'random walk' instead of flipping to max satisfiable statements.
         :param max_flips: Number of flips to try before giving up.
         :param seed: An optional random seed so that the outcome can be repeated (for unit testing)
-        :return: A boolean value. True if this knowledge base can be satisfied. False if it can't or we ran out of time.
+        :return: A boolean value. True if knowledge base can be satisfied. False if it can't, or we ran out of time.
         """
         if seed is not None:
             random.seed(seed)
@@ -800,7 +799,7 @@ class PLKnowledgeBase:
                 return positive_count, negative_count
             elif a_sentence.is_atomic:
                 if a_sentence.symbol == a_search_symbol and not a_sentence.negation:
-                    # We found the symbol with out a negation
+                    # We found the symbol without a negation
                     return 1, 0
                 elif a_sentence.symbol == a_search_symbol and a_sentence.negation:
                     # We found the symbol with a negation
@@ -860,9 +859,9 @@ class PLKnowledgeBase:
 
         It can also be used to determine if the database is satisfiable or not.
 
-        The database must be in CNF format before calling this function or it will raise an error, unless
+        The database must be in CNF format before calling this function, or it will raise an error, unless
         force_cnf_format is set to True. In that case it will first change the database to be in CNF format.
-        :return: Returns if the database is satisfiable or not (as if you called sat_resolution.
+        :return: Returns if the database is satisfiable or not (as if you called sat_resolution).
         """
         if force_cnf_format:
             self._sentences = self.convert_to_cnf()._sentences

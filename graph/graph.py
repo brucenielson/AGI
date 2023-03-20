@@ -32,7 +32,7 @@ class ListDict:
         del self._id_map[key]
         del self._values[index]
 
-    def __contains__(self, key: int) -> bool:
+    def __contains__(self, key: T) -> bool:
         return key in self._values
 
     def __len__(self) -> int:
@@ -151,11 +151,12 @@ class Graph:
         return vertex
 
     def _register_vertex(self, vertex: Vertex) -> None:
-        if vertex.id not in self.vertices:
+        if vertex not in self.vertices:
             self.vertices[vertex.id] = vertex
 
     def _register_edge(self, from_vertex: Vertex, edge: Edge) -> None:
-        if edge.id not in self.edges and edge not in from_vertex.edges_out and edge not in edge.to_vertex.edges_in:
+        if edge not in self.edges and edge not in from_vertex.edges_out \
+                and edge not in edge.to_vertex.edges_in:
             self.edges[edge.id] = edge
             from_vertex.edges_out[edge.id] = edge
             edge.to_vertex.edges_in[edge.id] = edge
