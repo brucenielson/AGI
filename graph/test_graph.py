@@ -1,5 +1,5 @@
 from unittest import TestCase
-from graph.graph import Graph, Edge, Vertex, ListDict
+from graph.graph import Graph, Edge, Vertex, ListDict, GraphError
 
 
 class TestGraph(TestCase):
@@ -178,6 +178,61 @@ class TestGraph(TestCase):
         self.assertEqual('D', v2.name)
         self.assertEqual(3, e.value)
 
+    def test_name(self):
+        graph = Graph(name='Graph')
+        self.assertEqual(graph.name, 'Graph')
+
+    def test_vertices(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        self.assertEqual(graph.vertices.to_list(), [vertex_a, vertex_b])
+
+    def test_edges(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        self.assertEqual(graph.edges.to_list(), [edge])
+
+    def test__register_vertex(self):
+        graph = Graph()
+        vertex = graph.create_vertex()
+        self.assertEqual(graph.vertices.to_list(), [vertex])
+
+    def test__register_edge(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        self.assertEqual(graph.edges.to_list(), [edge])
+
+    def test_reset_visited(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        vertex_a.visited = True
+        vertex_b.visited = True
+        graph.reset_visited()
+        self.assertFalse(vertex_a.visited)
+        self.assertFalse(vertex_b.visited)
+
+    def test_explore(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        vertex_c = graph.create_vertex()
+        vertex_d = graph.create_vertex()
+        graph.link_vertices(vertex_a, vertex_b)
+        graph.link_vertices(vertex_a, vertex_c)
+        graph.link_vertices(vertex_b, vertex_d)
+        graph.link_vertices(vertex_c, vertex_d)
+        graph.explore(vertex_a.id)
+        self.assertTrue(vertex_a.visited)
+        self.assertTrue(vertex_b.visited)
+        self.assertTrue(vertex_c.visited)
+        self.assertTrue(vertex_d.visited)
+
 
 class TestEdge(TestCase):
     def test_traverse(self):
@@ -244,6 +299,194 @@ class TestVertex(TestCase):
         self.assertIn(vertex2, vertices)
         self.assertIn(vertex3, vertices)
 
+    def test_vertex_id(self):
+        graph = Graph()
+        vertex = graph.create_vertex()
+        self.assertIsInstance(vertex.id, int)
+
+    def test_edge_id(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        self.assertIsInstance(edge.id, int)
+
+    def test_assigning_properties(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        edge.name = 'edge'
+        edge.value = 2
+        self.assertEqual('edge', edge.name)
+        self.assertEqual(2, edge.value)
+        vertex_a.name = 'C'
+        vertex_b.name = 'D'
+        edge.name = 'edge 2'
+        edge.value = 3
+        self.assertEqual('edge 2', edge.name)
+        self.assertEqual('C', vertex_a.name)
+        self.assertEqual('D', vertex_b.name)
+        self.assertEqual(3, edge.value)
+
+    def test_vertex_properties(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        edge.name = 'edge'
+        edge.value = 2
+        self.assertEqual('edge', edge.name)
+        self.assertEqual(2, edge.value)
+        vertex_a.name = 'C'
+        vertex_b.name = 'D'
+        edge.name = 'edge 2'
+        edge.value = 3
+        self.assertEqual('edge 2', edge.name)
+        self.assertEqual('C', vertex_a.name)
+        self.assertEqual('D', vertex_b.name)
+        self.assertEqual(3, edge.value)
+
+    def test_edge_properties(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        edge.name = 'edge'
+        edge.value = 2
+        self.assertEqual('edge', edge.name)
+        self.assertEqual(2, edge.value)
+        vertex_a.name = 'C'
+        vertex_b.name = 'D'
+        edge.name = 'edge 2'
+        edge.value = 3
+        self.assertEqual('edge 2', edge.name)
+        self.assertEqual('C', vertex_a.name)
+        self.assertEqual('D', vertex_b.name)
+        self.assertEqual(3, edge.value)
+
+    # test __str__ and __repr__
+    def test_str(self):
+        graph = Graph(name='The Graph')
+        vertex_a = graph.create_vertex(name="vertex_a")
+        vertex_b = graph.create_vertex(name="vertex_b")
+        edge = graph.link_vertices(vertex_a, vertex_b, name="edge")
+        self.assertEqual(str(edge), 'Edge: edge')
+        self.assertEqual(repr(edge), 'Edge(37)')
+        self.assertEqual(str(vertex_a), 'Vertex: vertex_a')
+        self.assertEqual(repr(vertex_a), 'Vertex(63)')
+        self.assertEqual(str(graph), 'The Graph')
+        self.assertEqual(repr(graph), 'Graph(The Graph)')
+
+    # Test visited property
+    def test_visited(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        self.assertFalse(vertex_a.visited)
+        self.assertFalse(vertex_b.visited)
+        vertex_a.visited = True
+        self.assertTrue(vertex_a.visited)
+        self.assertFalse(vertex_b.visited)
+        vertex_b.visited = True
+        self.assertTrue(vertex_a.visited)
+        self.assertTrue(vertex_b.visited)
+        edge.visited = True
+        self.assertTrue(vertex_a.visited)
+        self.assertTrue(vertex_b.visited)
+
+    # Test __eq__ and __ne__
+    def test_eq(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        self.assertEqual(vertex_a, vertex_a)
+        self.assertEqual(vertex_b, vertex_b)
+        self.assertEqual(edge, edge)
+        self.assertNotEqual(vertex_a, vertex_b)
+        self.assertNotEqual(vertex_a, edge)
+        self.assertNotEqual(vertex_b, edge)
+        self.assertNotEqual(vertex_a, None)
+        self.assertNotEqual(vertex_b, None)
+        self.assertNotEqual(edge, None)
+        self.assertNotEqual(vertex_a, 1)
+        self.assertNotEqual(vertex_b, 1)
+        self.assertNotEqual(edge, 1)
+        self.assertNotEqual(vertex_a, 'a')
+        self.assertNotEqual(vertex_b, 'a')
+        self.assertNotEqual(edge, 'a')
+        self.assertNotEqual(vertex_a, [])
+        self.assertNotEqual(vertex_b, [])
+        self.assertNotEqual(edge, [])
+
+    # Test __hash__
+    def test_hash(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        self.assertEqual(hash(vertex_a), hash(vertex_a))
+        self.assertEqual(hash(vertex_b), hash(vertex_b))
+        self.assertEqual(hash(edge), hash(edge))
+        self.assertNotEqual(hash(vertex_a), hash(vertex_b))
+        self.assertNotEqual(hash(vertex_a), hash(edge))
+        self.assertNotEqual(hash(vertex_b), hash(edge))
+
+    def test_name(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex(name='Vertex 1')
+        vertex_b = graph.create_vertex(name='Vertex 2')
+        self.assertEqual(vertex_a.name, 'Vertex 1')
+        self.assertEqual(vertex_b.name, 'Vertex 2')
+
+    def test_id(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        self.assertEqual(vertex_a.id, 53)
+        self.assertEqual(vertex_b.id, 54)
+
+    def test_pre_visit(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        self.assertEqual(vertex_a.pre_visit(), None)
+        self.assertEqual(vertex_b.pre_visit(), None)
+        self.assertEqual(vertex_a.pre_visit(), None)
+        self.assertEqual(vertex_b.pre_visit(), None)
+
+    def test_post_visit(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        self.assertEqual(vertex_a.post_visit(), None)
+        self.assertEqual(vertex_b.post_visit(), None)
+        self.assertEqual(vertex_a.post_visit(), None)
+        self.assertEqual(vertex_b.post_visit(), None)
+
+    def test_from_vertex(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        self.assertEqual(edge.from_vertex, vertex_a)
+
+    def test_to_vertex(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b)
+        self.assertEqual(edge.to_vertex, vertex_b)
+
+    def test_value(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        edge = graph.link_vertices(vertex_a, vertex_b, value=5)
+        self.assertEqual(edge.value, 5)
+
 
 class ComboListDictTestCase(TestCase):
     def setUp(self):
@@ -304,3 +547,4 @@ class ComboListDictTestCase(TestCase):
         self.assertEqual(self.dict.index(1), {'name': 'Alice', 'age': 25})
         self.assertEqual(self.dict.index(2), {'name': 'Bob', 'age': 40})
         self.assertEqual(self.dict.index(3), {'age': 20})
+        self.assertRaises(GraphError, self.dict.index, 4)

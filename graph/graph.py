@@ -60,6 +60,8 @@ class ListDict:
         return result
 
     def index(self, index: int) -> T:
+        if index < 0 or index >= len(self._values):
+            raise GraphError(f'Index {index} out of range')
         return self._values[index]
 
 
@@ -71,7 +73,20 @@ class Vertex:
         self._edges_out: ListDict[Edge] = ListDict()
         self._edges_in: ListDict[Edge] = ListDict()
         self._id = Vertex._id
+        self._visited: bool = False
         Vertex._id += 1
+
+    def __str__(self) -> str:
+        if self._name:
+            return f'Vertex: {self._name}'
+        else:
+            return f'Vertex: {self._id}'
+
+    def __hash__(self) -> int:
+        return self.id
+
+    def __repr__(self):
+        return f'Vertex({self._id})'
 
     @property
     def name(self) -> Optional[str]:
@@ -93,6 +108,20 @@ class Vertex:
     def id(self) -> int:
         return self._id
 
+    @property
+    def visited(self) -> bool:
+        return self._visited
+
+    @visited.setter
+    def visited(self, visited: bool) -> None:
+        self._visited = visited
+
+    def pre_visit(self) -> None:
+        self.visited = True
+
+    def post_visit(self) -> None:
+        pass
+
 
 class Edge:
     _id: int = 0
@@ -105,6 +134,18 @@ class Edge:
         self._value: Union[float, int] = value
         self._id = Edge._id
         Edge._id += 1
+
+    def __str__(self) -> str:
+        if self.name:
+            return f'Edge: {self.name}'
+        else:
+            return f'Edge: {self._id}'
+
+    def __repr__(self):
+        return f'Edge({self._id})'
+
+    def __hash__(self) -> int:
+        return self.id
 
     @property
     def name(self) -> Optional[str]:
@@ -139,9 +180,27 @@ class Graph:
     name: str
 
     def __init__(self, name: Optional[str] = None) -> None:
-        self.name = name
-        self.vertices: ListDict[Vertex] = ListDict()
-        self.edges: ListDict[Edge] = ListDict()
+        self._name = name
+        self._vertices: ListDict[Vertex] = ListDict()
+        self._edges: ListDict[Edge] = ListDict()
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self):
+        return f'Graph({self._name})'
+
+    @property
+    def vertices(self) -> ListDict[Vertex]:
+        return self._vertices
+
+    @property
+    def edges(self) -> ListDict[Edge]:
+        return self._edges
+
+    @property
+    def name(self) -> Optional[str]:
+        return self._name
 
     def create_vertex(self, name: Optional[str] = None) -> Vertex:
         # Create a vertex
@@ -173,3 +232,17 @@ class Graph:
             edge2: Edge = Edge(vertex_b, vertex_a, name=name, value=value)
             self._register_edge(vertex_b, edge2)
         return edge1
+
+    # Reset all visited flags for Vertices
+    def reset_visited(self) -> None:
+        for vertex in self.vertices.values():
+            vertex.visited = False
+
+    # explore a graph
+    def explore(self, vertex_id: int) -> List[Vertex]:
+        self._vertices[vertex_id].pre_visit()
+        for edge in self._vertices[vertex_id].edges_out:
+            if not edge.to_vertex.visited:
+                self.explore(edge.to_vertex.id)
+        self._vertices[vertex_id].post_visit()
+        return self.vertices.to_list()
