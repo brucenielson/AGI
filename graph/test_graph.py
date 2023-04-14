@@ -233,7 +233,7 @@ class TestGraph(TestCase):
         self.assertTrue(vertex_c.visited)
         self.assertTrue(vertex_d.visited)
 
-    def test_dfs(self):
+    def test_explore_graph(self):
         graph = Graph()
         vertex_a = graph.create_vertex()
         vertex_b = graph.create_vertex()
@@ -246,7 +246,7 @@ class TestGraph(TestCase):
         graph.link_vertices(vertex_b, vertex_d)
         graph.link_vertices(vertex_c, vertex_d)
         graph.link_vertices(vertex_e, vertex_f)
-        graph.dfs()
+        graph.explore_graph()
         self.assertTrue(vertex_a.visited)
         self.assertTrue(vertex_b.visited)
         self.assertTrue(vertex_c.visited)
