@@ -246,3 +246,13 @@ class Graph:
                 self.explore(edge.to_vertex.id)
         self._vertices[vertex_id].post_visit()
         return self.vertices.to_list()
+
+    # Depth first search using explore to explore the whole graph
+    def dfs(self) -> None:
+        self.reset_visited()
+        # Get a list of vertices ids
+        vertices: List[Vertex] = self.vertices.values()
+        # Explore the graph
+        for vertex in vertices:
+            if not self._vertices[vertex.id].visited:
+                self.explore(vertex.id)

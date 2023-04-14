@@ -233,6 +233,27 @@ class TestGraph(TestCase):
         self.assertTrue(vertex_c.visited)
         self.assertTrue(vertex_d.visited)
 
+    def test_dfs(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        vertex_c = graph.create_vertex()
+        vertex_d = graph.create_vertex()
+        vertex_e = graph.create_vertex()
+        vertex_f = graph.create_vertex()
+        graph.link_vertices(vertex_a, vertex_b)
+        graph.link_vertices(vertex_a, vertex_c)
+        graph.link_vertices(vertex_b, vertex_d)
+        graph.link_vertices(vertex_c, vertex_d)
+        graph.link_vertices(vertex_e, vertex_f)
+        graph.dfs()
+        self.assertTrue(vertex_a.visited)
+        self.assertTrue(vertex_b.visited)
+        self.assertTrue(vertex_c.visited)
+        self.assertTrue(vertex_d.visited)
+        self.assertTrue(vertex_e.visited)
+        self.assertTrue(vertex_f.visited)
+
 
 class TestEdge(TestCase):
     def test_traverse(self):
@@ -372,9 +393,9 @@ class TestVertex(TestCase):
         vertex_b = graph.create_vertex(name="vertex_b")
         edge = graph.link_vertices(vertex_a, vertex_b, name="edge")
         self.assertEqual(str(edge), 'Edge: edge')
-        self.assertEqual(repr(edge), 'Edge(37)')
+        self.assertEqual(repr(edge), 'Edge(42)')
         self.assertEqual(str(vertex_a), 'Vertex: vertex_a')
-        self.assertEqual(repr(vertex_a), 'Vertex(63)')
+        self.assertEqual(repr(vertex_a), 'Vertex(69)')
         self.assertEqual(str(graph), 'The Graph')
         self.assertEqual(repr(graph), 'Graph(The Graph)')
 
@@ -445,8 +466,8 @@ class TestVertex(TestCase):
         graph = Graph()
         vertex_a = graph.create_vertex()
         vertex_b = graph.create_vertex()
-        self.assertEqual(vertex_a.id, 53)
-        self.assertEqual(vertex_b.id, 54)
+        self.assertEqual(vertex_a.id, 59)
+        self.assertEqual(vertex_b.id, 60)
 
     def test_pre_visit(self):
         graph = Graph()
