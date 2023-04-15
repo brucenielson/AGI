@@ -551,7 +551,7 @@ class ComboListDictTestCase(TestCase):
     def test_delitem(self):
         del self.dict[1]
         self.assertNotIn(1, self.dict._id_map)
-        self.assertNotIn({'name': 'John', 'age': 30}, self.dict.values())
+        self.assertNotIn({'name': 'John', 'age': 30}, self.dict)
         self.assertEqual(len(self.dict), 3)
 
     def test_contains(self):
@@ -570,8 +570,8 @@ class ComboListDictTestCase(TestCase):
                                   {'name': 'Bob', 'age': 40}, {'age': 20}])
 
     def test_values(self):
-        self.assertEqual(self.dict.values(), [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
-                                              {'name': 'Bob', 'age': 40}, {'age': 20}])
+        self.assertEqual(self.dict.to_list(), [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
+                                               {'name': 'Bob', 'age': 40}, {'age': 20}])
 
     def test_filter(self):
         self.assertEqual(self.dict.filter('John', attr_name='name')[0], self.dict[1])

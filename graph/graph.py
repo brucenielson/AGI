@@ -41,9 +41,6 @@ class ListDict:
     def __iter__(self):
         return iter(self._values)
 
-    def values(self) -> List[T]:
-        return self._values
-
     def filter(self, value: Any, attr_name: str = 'name', ) -> Union[List[T], T]:
         result: List[T] = []
         for item in self._values:
@@ -259,7 +256,7 @@ class Graph:
     # Reset all visited flags for Vertices
     def reset_visited(self) -> None:
         self._cc_last_id = 0
-        for vertex in self.vertices.values():
+        for vertex in self.vertices:
             vertex.visited = False
 
     def _pre_visit(self, vertex: Vertex) -> None:
@@ -285,7 +282,7 @@ class Graph:
     def explore_graph(self) -> None:
         self.reset_visited()
         # Get a list of vertices ids
-        vertices: List[Vertex] = self.vertices.values()
+        vertices: ListDict[Vertex] = self.vertices
         # Explore the graph
         for vertex in vertices:
             if not self._vertices[vertex.id].visited:
