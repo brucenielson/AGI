@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Dict, TypeVar, Any, Tuple
+from typing import List, Union, Dict, TypeVar, Any, Optional, Type
 
 T = TypeVar('T')
 
@@ -10,9 +10,10 @@ class ListDictError(Exception):
 
 
 class ListDict:
-    def __init__(self):
+    def __init__(self, item_type: Optional[Type[T]] = None) -> None:
         self._values: List[T] = []
         self._id_map: Dict[int, int] = {}
+        self._item_type: Optional[Type[T]] = item_type
 
     def __getitem__(self, key: int) -> T:
         try:
