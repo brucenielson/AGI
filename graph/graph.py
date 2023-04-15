@@ -74,6 +74,9 @@ class Vertex:
         self._edges_in: ListDict[Edge] = ListDict()
         self._id = Vertex._id
         self._visited: bool = False
+        self._cc_id: int = 0
+        self._pre: int = 0
+        self._post: int = 0
         Vertex._id += 1
 
     def __str__(self) -> str:
@@ -116,11 +119,29 @@ class Vertex:
     def visited(self, visited: bool) -> None:
         self._visited = visited
 
-    def pre_visit(self) -> None:
-        self.visited = True
+    @property
+    def cc_id(self) -> int:
+        return self._cc_id
 
-    def post_visit(self) -> None:
-        pass
+    @cc_id.setter
+    def cc_id(self, cc_id: int) -> None:
+        self._cc_id = cc_id
+
+    @property
+    def pre(self) -> int:
+        return self._pre
+
+    @pre.setter
+    def pre(self, pre: int) -> None:
+        self._pre = pre
+
+    @property
+    def post(self) -> int:
+        return self._post
+
+    @post.setter
+    def post(self, post: int) -> None:
+        self._post = post
 
 
 class Edge:
@@ -183,6 +204,8 @@ class Graph:
         self._name = name
         self._vertices: ListDict[Vertex] = ListDict()
         self._edges: ListDict[Edge] = ListDict()
+        self._cc_last_id: int = 0
+        self._clock: int = 0
 
     def __str__(self) -> str:
         return self.name
@@ -235,16 +258,27 @@ class Graph:
 
     # Reset all visited flags for Vertices
     def reset_visited(self) -> None:
+        self._cc_last_id = 0
         for vertex in self.vertices.values():
             vertex.visited = False
 
-    # explore a graph
+    def _pre_visit(self, vertex: Vertex) -> None:
+        vertex.visited = True
+        vertex.cc_id = self._cc_last_id
+        vertex.pre = self._clock
+        self._clock += 1
+
+    def _post_visit(self, vertex: Vertex) -> None:
+        vertex.post = self._clock
+        self._clock += 1
+
+    # explore a graph using depth first search
     def explore(self, vertex_id: int) -> List[Vertex]:
-        self._vertices[vertex_id].pre_visit()
-        for edge in self._vertices[vertex_id].edges_out:
+        self._pre_visit(self._vertices[vertex_id])
+        for edge in self.vertices[vertex_id].edges_out:
             if not edge.to_vertex.visited:
                 self.explore(edge.to_vertex.id)
-        self._vertices[vertex_id].post_visit()
+        self._post_visit(self.vertices[vertex_id])
         return self.vertices.to_list()
 
     # Depth first search using explore to explore the whole graph
@@ -255,4 +289,5 @@ class Graph:
         # Explore the graph
         for vertex in vertices:
             if not self._vertices[vertex.id].visited:
+                self._cc_last_id += 1
                 self.explore(vertex.id)

@@ -393,9 +393,9 @@ class TestVertex(TestCase):
         vertex_b = graph.create_vertex(name="vertex_b")
         edge = graph.link_vertices(vertex_a, vertex_b, name="edge")
         self.assertEqual(str(edge), 'Edge: edge')
-        self.assertEqual(repr(edge), 'Edge(42)')
+        self.assertEqual(repr(edge), f'Edge({edge.id})')
         self.assertEqual(str(vertex_a), 'Vertex: vertex_a')
-        self.assertEqual(repr(vertex_a), 'Vertex(69)')
+        self.assertEqual(repr(vertex_a), f'Vertex({vertex_a.id})')
         self.assertEqual(str(graph), 'The Graph')
         self.assertEqual(repr(graph), 'Graph(The Graph)')
 
@@ -468,24 +468,6 @@ class TestVertex(TestCase):
         vertex_b = graph.create_vertex()
         self.assertEqual(vertex_a.id, 59)
         self.assertEqual(vertex_b.id, 60)
-
-    def test_pre_visit(self):
-        graph = Graph()
-        vertex_a = graph.create_vertex()
-        vertex_b = graph.create_vertex()
-        self.assertEqual(vertex_a.pre_visit(), None)
-        self.assertEqual(vertex_b.pre_visit(), None)
-        self.assertEqual(vertex_a.pre_visit(), None)
-        self.assertEqual(vertex_b.pre_visit(), None)
-
-    def test_post_visit(self):
-        graph = Graph()
-        vertex_a = graph.create_vertex()
-        vertex_b = graph.create_vertex()
-        self.assertEqual(vertex_a.post_visit(), None)
-        self.assertEqual(vertex_b.post_visit(), None)
-        self.assertEqual(vertex_a.post_visit(), None)
-        self.assertEqual(vertex_b.post_visit(), None)
 
     def test_from_vertex(self):
         graph = Graph()
