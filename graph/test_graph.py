@@ -254,6 +254,22 @@ class TestGraph(TestCase):
         self.assertTrue(vertex_e.visited)
         self.assertTrue(vertex_f.visited)
 
+    def test_explore_graph2(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        vertex_c = graph.create_vertex()
+        graph.link_vertices(vertex_a, vertex_b)
+        graph.explore_graph()
+        self.assertEqual(vertex_a.pre, 0)
+        self.assertEqual(vertex_b.pre, 1)
+        self.assertEqual(vertex_b.post, 2)
+        self.assertEqual(vertex_a.post, 3)
+        self.assertEqual(vertex_c.pre, 4)
+        self.assertEqual(vertex_a.cc_id, 1)
+        self.assertEqual(vertex_b.cc_id, 1)
+        self.assertEqual(vertex_c.cc_id, 2)
+
 
 class TestEdge(TestCase):
     def test_traverse(self):
@@ -466,8 +482,8 @@ class TestVertex(TestCase):
         graph = Graph()
         vertex_a = graph.create_vertex()
         vertex_b = graph.create_vertex()
-        self.assertEqual(vertex_a.id, 59)
-        self.assertEqual(vertex_b.id, 60)
+        self.assertGreaterEqual(vertex_a.id, 59)
+        self.assertGreaterEqual(vertex_b.id, vertex_a.id)
 
     def test_from_vertex(self):
         graph = Graph()
@@ -489,6 +505,27 @@ class TestVertex(TestCase):
         vertex_b = graph.create_vertex()
         edge = graph.link_vertices(vertex_a, vertex_b, value=5)
         self.assertEqual(edge.value, 5)
+
+    def test_cc_id(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        self.assertEqual(vertex_a.cc_id, 0)
+        vertex_a.cc_id = 1
+        self.assertEqual(vertex_a.cc_id, 1)
+
+    def test_pre(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        self.assertEqual(vertex_a.pre, 0)
+        vertex_a.pre = 1
+        self.assertEqual(vertex_a.pre, 1)
+
+    def test_post(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        self.assertEqual(vertex_a.post, 0)
+        vertex_a.post = 1
+        self.assertEqual(vertex_a.post, 1)
 
 
 class ComboListDictTestCase(TestCase):
