@@ -45,7 +45,7 @@ class ComboListDictTestCase(TestCase):
         self.assertEqual(result, [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
                                   {'name': 'Bob', 'age': 40}, {'age': 20}])
 
-    def test_values(self):
+    def test_to_list(self):
         self.assertEqual(self.dict.to_list(), [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
                                                {'name': 'Bob', 'age': 40}, {'age': 20}])
 
@@ -68,6 +68,105 @@ class ComboListDictTestCase(TestCase):
     def test_clear(self):
         self.dict.clear()
         self.assertEqual(len(self.dict), 0)
+
+    def test_str(self) -> None:
+        self.assertEqual(str(self.dict),
+                         "[{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25}, {'name': 'Bob', 'age': 40}, "
+                         "{'age': 20}]")
+
+    def test_repr(self) -> None:
+        self.assertEqual(repr(self.dict),
+                         "[{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25}, {'name': 'Bob', 'age': 40}, "
+                         "{'age': 20}]")
+
+    def test_eq(self):
+        list_dict1 = ListDict()
+        list_dict1[0] = 1
+        list_dict1[1] = 2
+        list_dict1[2] = 3
+
+        list_dict2 = ListDict()
+        list_dict2[0] = 1
+        list_dict2[1] = 2
+        list_dict2[2] = 3
+
+        list_dict3 = ListDict()
+        list_dict3[0] = 1
+        list_dict3[1] = 2
+
+        self.assertTrue(list_dict1 == list_dict2)
+        self.assertFalse(list_dict1 == list_dict3)
+        self.assertFalse(list_dict1 == "not a ListDict")
+
+    def test_ne_returns_false_if_same(self):
+        ld1 = ListDict()
+        ld1[0] = 'foo'
+        ld2 = ListDict()
+        ld2[0] = 'foo'
+        self.assertFalse(ld1 != ld2)
+
+    def test_ne_returns_true_if_different(self):
+        ld1 = ListDict()
+        ld1[0] = 'foo'
+        ld2 = ListDict()
+        ld2[0] = 'bar'
+        self.assertTrue(ld1 != ld2)
+
+    def test_values(self):
+        ld = ListDict()
+        ld[1] = "one"
+        ld[2] = "two"
+        ld[3] = "three"
+        self.assertEqual(ld.values(), ["one", "two", "three"])
+
+    def test_items(self):
+        lst_dict = ListDict()
+        lst_dict[1] = "hello"
+        lst_dict[2] = "world"
+        lst_dict[3] = "python"
+        items = lst_dict.items()
+        self.assertIsInstance(items, list)
+        self.assertEqual(len(items), 3)
+        self.assertEqual(items[0], (1, "hello"))
+        self.assertEqual(items[1], (2, "world"))
+        self.assertEqual(items[2], (3, "python"))
+
+    # def test_pop_existing_key(self):
+    #     ld = ListDict()
+    #     ld[0] = 'a'
+    #     ld[1] = 'b'
+    #     ld[2] = 'c'
+    #     self.assertEqual(len(ld), 3)
+    #     self.assertEqual(ld.pop(1), 'b')
+    #     self.assertEqual(len(ld), 2)
+    #     self.assertEqual(ld[0], 'a')
+    #     self.assertEqual(ld[1], 'c')
+    #
+    # def test_pop_non_existing_key(self):
+    #     ld = ListDict()
+    #     ld[0] = 'a'
+    #     ld[1] = 'b'
+    #     ld[2] = 'c'
+    #     self.assertEqual(ld.pop(3, 'default'), 'default')
+    #     self.assertEqual(len(ld), 3)
+    #
+    # def test_pop_empty(self):
+    #     ld = ListDict()
+    #     self.assertEqual(ld.pop(0, 'default'), 'default')
+    #
+    # def test_popitem_existing_items(self):
+    #     ld = ListDict()
+    #     ld[0] = 'a'
+    #     ld[1] = 'b'
+    #     ld[2] = 'c'
+    #     self.assertEqual(ld.popitem(), 'c')
+    #     self.assertEqual(len(ld), 2)
+    #     self.assertEqual(ld[0], 'a')
+    #     self.assertEqual(ld[1], 'b')
+    #
+    # def test_popitem_empty(self):
+    #     ld = ListDict()
+    #     self.assertEqual(ld.popitem('default'), 'default')
 
     # def test_get(self):
     #     self.assertEqual(self.dict.get(1), {'name': 'John', 'age': 30})

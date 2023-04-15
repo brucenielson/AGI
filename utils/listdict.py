@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Dict, TypeVar, Any, Type, get_origin
+from typing import List, Union, Dict, TypeVar, Any, Type, get_origin, Tuple
 
 T = TypeVar('T')
 
@@ -13,7 +13,7 @@ class ListDict:
     def __init__(self) -> None:
         # The __init__ method should save the type T being used for this ListDict.
         self._values: List[T] = []
-        self._id_map: Dict[int, int] = {}
+        self._id_map: Dict[Union[int, str], int] = {}
         self._item_type: Type[T] = get_origin(T)
 
     def __getitem__(self, key: int) -> T:
@@ -83,46 +83,40 @@ class ListDict:
         self._values = []
         self._id_map = {}
 
-    # def id(self, index: int) -> int:
-    #     if index < 0 or index >= len(self._values):
-    #         raise ListDictError(f'Index {index} out of range')
-    #     return self._id_map[index]
-    #
-    #
-    # def __str__(self):
-    #     return str(self._values)
-    #
-    # def __repr__(self):
-    #     return str(self._values)
-    #
-    # def __eq__(self, other):
-    #     if not isinstance(other, ListDict):
-    #         return False
-    #     if len(self) != len(other):
-    #         return False
-    #     for i in range(len(self)):
-    #         if self[i] != other[i]:
-    #             return False
-    #     return True
-    #
-    # def __ne__(self, other):
-    #     return not self.__eq__(other)
-    #
-    # def get(self, key: int, default: T = None) -> T:
-    #     if key in self._id_map:
-    #         return self[key]
-    #     else:
-    #         return default
-    #
-    # def values(self) -> List[T]:
-    #     return self._values
-    #
-    # def items(self) -> List[Tuple[int, T]]:
-    #     result: List[Tuple[int, T]] = []
-    #     for key in self._id_map:
-    #         result.append((key, self[key]))
-    #     return result
-    #
+    def __str__(self):
+        return str(self._values)
+
+    def __repr__(self):
+        return str(self._values)
+
+    def __eq__(self, other):
+        if not isinstance(other, ListDict):
+            return False
+        if len(self) != len(other):
+            return False
+        for i in range(len(self)):
+            if self[i] != other[i]:
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def get(self, key: int, default: T = None) -> T:
+        if key in self._id_map:
+            return self[key]
+        else:
+            return default
+
+    def values(self) -> List[T]:
+        return self._values
+
+    def items(self) -> List[Tuple[int, T]]:
+        result: List[Tuple[int, T]] = []
+        for key in self._id_map:
+            result.append((key, self[key]))
+        return result
+
     # def pop(self, key: int, default: T = None) -> T:
     #     if key in self._id_map:
     #         index = self._id_map[key]
@@ -137,7 +131,7 @@ class ListDict:
     #         return default
     #     key = list(self._id_map.keys())[-1]
     #     return self.pop(key, default)
-    #
+
     # def update(self, other: Union[ListDict[T], List[Dict[str, Any]]]):
     #     if isinstance(other, ListDict):
     #         for key in other.keys():
