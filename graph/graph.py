@@ -1,65 +1,11 @@
 from __future__ import annotations
-from typing import Optional, List, Union, Dict, TypeVar, Any
+from typing import Optional, List, Union
+from utils.listdict import ListDict
 
 
 class GraphError(Exception):
     def __init__(self, message):
         super().__init__(message)
-
-
-T = TypeVar('T')
-
-
-class ListDict:
-    def __init__(self):
-        self._values: List[T] = []
-        self._id_map: Dict[int, int] = {}
-
-    def __getitem__(self, key: int) -> T:
-        index = self._id_map[key]
-        return self._values[index]
-
-    def __setitem__(self, key: int, value: T) -> None:
-        if key in self._id_map:
-            index = self._id_map[key]
-            self._values[index] = value
-        else:
-            self._id_map[key] = len(self._values)
-            self._values.append(value)
-
-    def __delitem__(self, key: int) -> None:
-        index = self._id_map[key]
-        del self._id_map[key]
-        del self._values[index]
-
-    def __contains__(self, key: T) -> bool:
-        return key in self._values
-
-    def __len__(self) -> int:
-        return len(self._values)
-
-    def __iter__(self):
-        return iter(self._values)
-
-    def filter(self, value: Any, attr_name: str = 'name', ) -> Union[List[T], T]:
-        result: List[T] = []
-        for item in self._values:
-            if hasattr(item, attr_name) and getattr(item, attr_name) == value:
-                result.append(item)
-            elif isinstance(item, dict) and attr_name in item and item[attr_name] == value:
-                result.append(item)
-        return result
-
-    def to_list(self):
-        result: List[T] = []
-        for item in self._values:
-            result.append(item)
-        return result
-
-    def index(self, index: int) -> T:
-        if index < 0 or index >= len(self._values):
-            raise GraphError(f'Index {index} out of range')
-        return self._values[index]
 
 
 class Vertex:

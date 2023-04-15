@@ -1,5 +1,5 @@
 from unittest import TestCase
-from graph.graph import Graph, Edge, Vertex, ListDict, GraphError
+from graph.graph import Graph, Edge, Vertex
 
 
 class TestGraph(TestCase):
@@ -527,64 +527,3 @@ class TestVertex(TestCase):
         vertex_a.post = 1
         self.assertEqual(vertex_a.post, 1)
 
-
-class ComboListDictTestCase(TestCase):
-    def setUp(self):
-        self.dict = ListDict()
-        self.dict[1] = {'name': 'John', 'age': 30}
-        self.dict[2] = {'name': 'Alice', 'age': 25}
-        self.dict[3] = {'name': 'Bob', 'age': 40}
-        self.dict[4] = {'age': 20}
-        self.not_in = {'name': 'Bob', 'age': 44}
-
-    def test_getitem(self):
-        self.assertEqual(self.dict[1], {'name': 'John', 'age': 30})
-        self.assertEqual(self.dict[2], {'name': 'Alice', 'age': 25})
-        self.assertEqual(self.dict[3], {'name': 'Bob', 'age': 40})
-        self.assertEqual(self.dict[4], {'age': 20})
-
-    def test_setitem(self):
-        self.dict[1] = {'name': 'Mary', 'age': 35}
-        self.assertEqual(self.dict[1], {'name': 'Mary', 'age': 35})
-        self.assertEqual(len(self.dict), 4)
-
-    def test_delitem(self):
-        del self.dict[1]
-        self.assertNotIn(1, self.dict._id_map)
-        self.assertNotIn({'name': 'John', 'age': 30}, self.dict)
-        self.assertEqual(len(self.dict), 3)
-
-    def test_contains(self):
-        self.assertTrue(self.dict[1] in self.dict)
-        self.assertTrue(self.dict[3] in self.dict)
-        self.assertFalse(self.not_in in self.dict)
-
-    def test_len(self):
-        self.assertEqual(len(self.dict), 4)
-
-    def test_iter(self):
-        result = []
-        for item in self.dict:
-            result.append(item)
-        self.assertEqual(result, [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
-                                  {'name': 'Bob', 'age': 40}, {'age': 20}])
-
-    def test_values(self):
-        self.assertEqual(self.dict.to_list(), [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
-                                               {'name': 'Bob', 'age': 40}, {'age': 20}])
-
-    def test_filter(self):
-        self.assertEqual(self.dict.filter('John', attr_name='name')[0], self.dict[1])
-        self.assertEqual(self.dict.filter(20, attr_name='age'), [{'age': 20}])
-        self.assertEqual(self.dict.filter('David', attr_name='name'), [])
-
-    def test_to_list(self):
-        self.assertEqual(self.dict.to_list(), [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
-                                               {'name': 'Bob', 'age': 40}, {'age': 20}])
-
-    def test_index(self):
-        self.assertEqual(self.dict.index(0), {'name': 'John', 'age': 30})
-        self.assertEqual(self.dict.index(1), {'name': 'Alice', 'age': 25})
-        self.assertEqual(self.dict.index(2), {'name': 'Bob', 'age': 40})
-        self.assertEqual(self.dict.index(3), {'age': 20})
-        self.assertRaises(GraphError, self.dict.index, 4)
