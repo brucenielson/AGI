@@ -4,7 +4,7 @@ from utils.listdict import ListDict, ListDictError
 
 class ComboListDictTestCase(TestCase):
     def setUp(self):
-        self.dict = ListDict()
+        self.dict: ListDict[dict] = ListDict()
         self.dict[1] = {'name': 'John', 'age': 30}
         self.dict[2] = {'name': 'Alice', 'age': 25}
         self.dict[3] = {'name': 'Bob', 'age': 40}

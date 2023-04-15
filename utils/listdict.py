@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Dict, TypeVar, Any, Optional, Type
+from typing import List, Union, Dict, TypeVar, Any, Type, get_origin
 
 T = TypeVar('T')
 
@@ -10,10 +10,11 @@ class ListDictError(Exception):
 
 
 class ListDict:
-    def __init__(self, item_type: Optional[Type[T]] = None) -> None:
+    def __init__(self) -> None:
+        # The __init__ method should save the type T being used for this ListDict.
         self._values: List[T] = []
         self._id_map: Dict[int, int] = {}
-        self._item_type: Optional[Type[T]] = item_type
+        self._item_type: Type[T] = get_origin(T)
 
     def __getitem__(self, key: int) -> T:
         try:
@@ -22,13 +23,18 @@ class ListDict:
             raise KeyError(f"Key {key} not found")
         return self._values[index]
 
+    # implement __setitem__ but check that the right type is being set.
     def __setitem__(self, key: int, value: T) -> None:
+        if self._item_type is None:
+            self._item_type = type(value)
+        elif type(value) is not self._item_type:
+            raise ListDictError(f'Invalid type for value: {type(value)}. Needs to be {self._item_type}')
         if key in self._id_map:
             index = self._id_map[key]
             self._values[index] = value
         else:
-            self._id_map[key] = len(self._values)
             self._values.append(value)
+            self._id_map[key] = len(self._values) - 1
 
     def __delitem__(self, key: int) -> None:
         index = self._id_map[key]
@@ -208,5 +214,3 @@ class ListDict:
     #     for i in range(other - 1):
     #         self.extend(self)
     #     return self
-
-

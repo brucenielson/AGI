@@ -526,4 +526,3 @@ class TestVertex(TestCase):
         self.assertEqual(vertex_a.post, 0)
         vertex_a.post = 1
         self.assertEqual(vertex_a.post, 1)
-
