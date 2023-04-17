@@ -341,12 +341,12 @@ class TestIterDict(TestCase):
         self.assertEqual(self.d, IterDict({'a': 1, 'b': 2, 'c': 3, 'd': 4}))
 
     def test_update_list(self):
-        self.d.update([{'id': 'd', 'value': 4}])
-        self.assertEqual(self.d, IterDict({'a': 1, 'b': 2, 'c': 3, 'd': {'id': 'd', 'value': 4}}))
+        self.d.update([('d', 4)])
+        self.assertEqual(self.d, IterDict({'a': 1, 'b': 2, 'c': 3, 'd': 4}))
 
     def test_update_list_missing_id(self):
-        with self.assertRaises(KeyError):
-            self.d.update([{'value': 4}])
+        with self.assertRaises(ValueError):
+            self.d.update([('d', 4, 5)])
 
     def test_update_other_type(self):
         with self.assertRaises(TypeError):

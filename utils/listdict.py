@@ -295,15 +295,5 @@ class IterDict(Dict[Union[int, str], T], Generic[T]):
     def copy(self) -> IterDict[T]:
         return IterDict(self)
 
-    def update(self, other: Union[Dict[int, T], Dict[str, T], T, List[T]]) -> None:
-        if isinstance(other, dict):
-            for key in other.keys():
-                self[key] = other[key]
-        elif isinstance(other, list):
-            for item in other:
-                if 'id' in item:
-                    self[item['id']] = item
-                else:
-                    raise KeyError('Missing "id" key in item')
-        else:
-            raise TypeError('Unsupported type for "other" argument')
+    def update(self, other: Any, **kwargs: Any) -> None:
+        super().update(other, **kwargs)
