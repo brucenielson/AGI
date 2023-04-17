@@ -287,3 +287,23 @@ class Graph:
             if edge.is_back_edge:
                 return True
         return False
+
+    def is_dag(self, allow_explore=True) -> bool:
+        return not self.is_cyclic(allow_explore=allow_explore)
+
+    def is_tree(self, allow_explore=True) -> bool:
+        # If the graph has not been explored yet, explore it
+        if allow_explore and not self._explored:
+            self.explore_graph()
+        # Throw an error if the graph has not been explored yet
+        if not self._explored:
+            raise GraphError('Graph has not been explored yet so we cannot determine if it is a tree or not.')
+        for edge in self.edges:
+            if not edge.is_tree_edge:
+                return False
+        return True
+    
+
+
+
+
