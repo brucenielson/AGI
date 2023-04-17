@@ -277,7 +277,10 @@ class Graph:
         self._explored = True
 
     @property
-    def is_cyclic(self) -> bool:
+    def is_cyclic(self, allow_explore=False) -> bool:
+        # If the graph has not been explored yet, explore it
+        if allow_explore and not self._explored:
+            self.explore_graph()
         # Throw an error if the graph has not been explored yet
         if not self._explored:
             raise GraphError('Graph has not been explored yet so we cannot determine if it is cyclic or not.')
