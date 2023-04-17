@@ -280,12 +280,12 @@ class TestGraph(TestCase):
         graph.link_vertices(vertex_b, vertex_c)
         graph.link_vertices(vertex_c, vertex_d)
         with self.assertRaises(GraphError):
-            _ = (lambda: graph.is_cyclic)()
+            _ = (lambda: graph.is_cyclic(allow_explore=False))()
         graph.explore_graph()
-        self.assertFalse(graph.is_cyclic)
+        self.assertFalse(graph.is_cyclic())
         graph.link_vertices(vertex_d, vertex_b)
         graph.explore_graph()
-        self.assertTrue(graph.is_cyclic)
+        self.assertTrue(graph.is_cyclic())
 
 
 class TestEdge(TestCase):

@@ -276,8 +276,7 @@ class Graph:
         # Mark the graph as explored
         self._explored = True
 
-    @property
-    def is_cyclic(self, allow_explore=False) -> bool:
+    def is_cyclic(self, allow_explore=True) -> bool:
         # If the graph has not been explored yet, explore it
         if allow_explore and not self._explored:
             self.explore_graph()
