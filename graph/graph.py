@@ -139,6 +139,39 @@ class Edge:
     def id(self) -> int:
         return self._id
 
+    @property
+    def is_back_edge(self) -> bool:
+        return self.to_vertex.pre < self.from_vertex.pre and self.to_vertex.post > self.from_vertex.post
+
+    @property
+    def is_tree_or_forward_edge(self) -> bool:
+        return self.to_vertex.pre > self.from_vertex.pre and self.to_vertex.post < self.from_vertex.post
+
+    @property
+    def is_forward_edge(self) -> bool:
+        return self.is_tree_or_forward_edge and not self.is_tree_edge
+
+    @property
+    def is_cross_edge(self) -> bool:
+        return self.to_vertex.pre < self.from_vertex.pre and self.to_vertex.post < self.from_vertex.pre
+
+    @property
+    def is_tree_edge(self) -> bool:
+        if self.is_tree_or_forward_edge:
+            # A tree edge is a forward edge that has a to_vertex with an edge into it that is not this one
+            # that matches the following criteria:
+            # 1. This edge is a forward edge
+            # 2. There is an edge into the to_vertex that is not this one
+            # 3. The other edge's from_vertex into this to_vertex has a higher pre than this edge's from_vertex
+            # 4. The other edge's from_vertex into this to_vertex has a lower post than this edge's from_vertex
+            for edge in self.to_vertex.edges_in:
+                if edge is not self and edge.is_tree_or_forward_edge and \
+                        edge.from_vertex.pre > self.from_vertex.pre and edge.from_vertex.post < self.from_vertex.post:
+                    return False
+            return True
+        else:
+            return False
+
 
 class Graph:
     name: str
@@ -216,7 +249,11 @@ class Graph:
         self._clock += 1
 
     # explore a graph using depth first search
-    def explore(self, vertex_id: int) -> List[Vertex]:
+    def explore(self, vertex: Union[int, Vertex]) -> List[Vertex]:
+        if isinstance(vertex, int):
+            vertex_id = vertex
+        else:
+            vertex_id = vertex.id
         self._pre_visit(self._vertices[vertex_id])
         for edge in self.vertices[vertex_id].edges_out:
             if not edge.to_vertex.visited:

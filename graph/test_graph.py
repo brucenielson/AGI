@@ -280,6 +280,65 @@ class TestEdge(TestCase):
         self.assertEqual(timmy, bobby.edges_out.filter('friend').to_vertex)
         self.assertEqual(bobby, timmy.edges_out.filter('friend').to_vertex)
 
+    def test_is_edge_types_basic(self):
+        # Create a graph with 3 vertices and 2 edges forming a directed cycle
+        graph = Graph()
+        vertex_1 = graph.create_vertex()
+        vertex_2 = graph.create_vertex()
+        vertex_3 = graph.create_vertex()
+        graph.link_vertices(vertex_1, vertex_2)
+        graph.link_vertices(vertex_2, vertex_3)
+        graph.link_vertices(vertex_3, vertex_1)
+        # Explore the graph to set pre- and post-values for all vertices and edges
+        graph.explore(vertex_1.id)
+        # Test that the two back edges have the correct is_back_edge() value
+        back_edges = [edge for edge in graph.edges if edge.is_back_edge]
+        self.assertEqual(len(back_edges), 1)
+        self.assertTrue(all([edge.is_back_edge for edge in back_edges]))
+        # Test that the two forward edges have the correct is_forward_edge() value
+        forward_edges = [edge for edge in graph.edges if edge.is_forward_edge]
+        self.assertEqual(len(forward_edges), 0)
+        self.assertTrue(all([edge.is_forward_edge for edge in forward_edges]))
+        # Test that the two cross edges have the correct is_cross_edge() value
+        tree_edges = [edge for edge in graph.edges if edge.is_tree_edge]
+        self.assertEqual(len(tree_edges), 2)
+        self.assertTrue(all([edge.is_tree_edge for edge in tree_edges]))
+        # No cross edges should exist
+        cross_edges = [edge for edge in graph.edges if edge.is_cross_edge]
+        self.assertEqual(len(cross_edges), 0)
+        self.assertTrue(all([edge.is_cross_edge for edge in cross_edges]))
+
+    def test_is_edge_types_advance(self):
+        # Create a graph with 3 vertices and 2 edges forming a directed cycle
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        vertex_c = graph.create_vertex()
+        vertex_d = graph.create_vertex()
+        tree1 = graph.link_vertices(vertex_a, vertex_b)
+        tree2 = graph.link_vertices(vertex_b, vertex_c)
+        tree3 = graph.link_vertices(vertex_b, vertex_d)
+        forward = graph.link_vertices(vertex_a, vertex_d)
+        cross = graph.link_vertices(vertex_d, vertex_c)
+        back = graph.link_vertices(vertex_c, vertex_a)
+        # Explore the graph to set pre- and post-values for all vertices and edges
+        graph.explore(vertex_a.id)
+        # Test everything
+        self.assertTrue(tree1.is_tree_edge)
+        self.assertFalse(tree1.is_forward_edge)
+        self.assertTrue(tree1.is_tree_or_forward_edge)
+        self.assertTrue(tree2.is_tree_edge)
+        self.assertFalse(tree2.is_forward_edge)
+        self.assertTrue(tree3.is_tree_or_forward_edge)
+        self.assertTrue(tree3.is_tree_edge)
+        self.assertFalse(tree3.is_forward_edge)
+        self.assertTrue(tree3.is_tree_or_forward_edge)
+        self.assertTrue(forward.is_forward_edge)
+        self.assertFalse(forward.is_tree_edge)
+        self.assertTrue(forward.is_tree_or_forward_edge)
+        self.assertTrue(cross.is_cross_edge)
+        self.assertTrue(back.is_back_edge)
+
 
 class TestVertex(TestCase):
     def test_edges_out(self):
