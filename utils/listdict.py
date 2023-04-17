@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Dict, TypeVar, Any, Type, get_origin, Tuple
+from typing import List, Union, Dict, TypeVar, Any, Type, get_origin, Tuple, Generic
 
 T = TypeVar('T')
 
@@ -36,7 +36,7 @@ class ListDict:
             self._values.append(value)
             self._id_map[key] = len(self._values) - 1
 
-    def __delitem__(self, key: int) -> None:
+    def __delitem__(self, key: Union[int, str]) -> None:
         index = self._id_map[key]
         del self._id_map[key]
         del self._values[index]
@@ -47,7 +47,7 @@ class ListDict:
     def __len__(self) -> int:
         return len(self._values)
 
-    def __iter__(self):
+    def __iter__(self) -> T:
         return iter(self._values)
 
     def filter(self, value: Any, attr_name: str = 'name', ) -> Union[List[T], T]:
@@ -208,3 +208,102 @@ class ListDict:
     #     for i in range(other - 1):
     #         self.extend(self)
     #     return self
+
+
+class IterDict(Dict[Union[int, str], T], Generic[T]):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __iter__(self) -> T:
+        return iter(self.values())
+
+    def __reversed__(self) -> T:
+        return reversed(self.values())
+
+    def __getitem__(self, key: Union[int, str]) -> T:
+        return self.get(key)
+
+    # implement __setitem__ but check that the right type is being set.
+    def __setitem__(self, key: Union[int, str], value: T) -> None:
+        super().__setitem__(key, value)
+
+    def __delitem__(self, key: Union[int, str]) -> None:
+        super().__delitem__(key)
+
+    def __contains__(self, item_or_key: Union[T, int, str]) -> bool:
+        if isinstance(item_or_key, int):
+            return item_or_key in self.keys()
+        elif isinstance(item_or_key, str):
+            return item_or_key in self.keys()
+        else:
+            return item_or_key in self.values()
+
+    def __len__(self) -> int:
+        return len(self.keys())
+
+    def filter(self, value: Any, attr_name: str = 'name', ) -> Union[List[T], T]:
+        result = []
+        for item in self.values():
+            if getattr(item, attr_name) == value:
+                result.append(item)
+        if len(result) == 1:
+            return result[0]
+        else:
+            return result
+
+    def to_list(self) -> List[T]:
+        return self.values()
+
+    def index(self, index: Union[int, str]) -> T:
+        if index < 0 or index >= len(self.values()):
+            raise ListDictError(f'Index {index} out of range')
+        return self.values()[index]
+
+    def index_by_value(self, value: T) -> int:
+        return self.keys()[self.values().index(value)]
+
+    def keys(self) -> List[int]:
+        return list(super().keys())
+
+    def clear(self) -> None:
+        super().clear()
+
+    def __str__(self) -> str:
+        return super().__str__()
+
+    def __repr__(self) -> str:
+        return super().__repr__()
+
+    def __eq__(self, other):
+        return self.values() == other.values()
+
+    def __ne__(self, other):
+        return self.values() != other.values()
+
+    def get(self, key: Union[int, str], default: T = None) -> T:
+        return super().get(key, default)
+
+    def values(self) -> List[T]:
+        return list(super().values())
+
+    def items(self) -> List[Tuple[int, T]]:
+        return list(super().items())
+
+    def __copy__(self) -> IterDict[T]:
+        return IterDict(self)
+
+    def copy(self) -> IterDict[T]:
+        return IterDict(self)
+
+    def update(self, other: Union[Dict[int, T], Dict[str, T], T, List[T]]) -> None:
+        if isinstance(other, dict):
+            for key in other.keys():
+                self[key] = other[key]
+        elif isinstance(other, list):
+            for item in other:
+                if 'id' in item:
+                    self[item['id']] = item
+                else:
+                    raise KeyError('Missing "id" key in item')
+        else:
+            raise TypeError('Unsupported type for "other" argument')

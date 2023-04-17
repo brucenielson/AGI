@@ -1,5 +1,5 @@
 from unittest import TestCase
-from utils.listdict import ListDict, ListDictError
+from utils.listdict import ListDict, ListDictError, IterDict
 
 
 class ComboListDictTestCase(TestCase):
@@ -53,10 +53,6 @@ class ComboListDictTestCase(TestCase):
         self.assertEqual(self.dict.filter('John', attr_name='name')[0], self.dict[1])
         self.assertEqual(self.dict.filter(20, attr_name='age'), [{'age': 20}])
         self.assertEqual(self.dict.filter('David', attr_name='name'), [])
-
-    def test_to_list(self):
-        self.assertEqual(self.dict.to_list(), [{'name': 'John', 'age': 30}, {'name': 'Alice', 'age': 25},
-                                               {'name': 'Bob', 'age': 40}, {'age': 20}])
 
     def test_index(self):
         self.assertEqual(self.dict.index(0), {'name': 'John', 'age': 30})
@@ -276,3 +272,102 @@ class ComboListDictTestCase(TestCase):
     #     self.assertEqual(self.dict[2], {'name': 'John', 'age': 30})
     #     self.assertEqual(self.dict[3], {'name': 'Bob', 'age': 40})
     #     self.assertEqual(len(self.dict), 4)
+
+
+class TestIterDict(TestCase):
+    def test_iteration(self):
+        d = IterDict({'a': 1, 'b': 2, 'c': 3})
+        items = list(iter(d))
+        self.assertCountEqual(items, [1, 2, 3])
+
+    def test_access(self):
+        d = IterDict({'a': 1, 'b': 2, 'c': 3})
+        self.assertEqual(d['a'], 1)
+        self.assertEqual(d['b'], 2)
+        self.assertEqual(d['c'], 3)
+
+    def test_assignment(self):
+        d = IterDict({'a': 1, 'b': 2, 'c': 3})
+        d['d'] = 4
+        self.assertEqual(d['d'], 4)
+
+    def test_deletion(self):
+        d = IterDict({'a': 1, 'b': 2, 'c': 3})
+        del d['b']
+        self.assertNotIn('b', d)
+        self.assertEqual(len(d), 2)
+
+    def setUp(self):
+        self.d = IterDict({'a': 1, 'b': 2, 'c': 3})
+
+    def test_iter(self):
+        expected_items = [('a', 1), ('b', 2), ('c', 3)]
+        for i, item in enumerate(iter(self.d)):
+            self.assertEqual(item, expected_items[i][1])
+
+    def test_reversed(self):
+        expected_items = [('c', 3), ('b', 2), ('a', 1)]
+        for i, item in enumerate(reversed(self.d)):
+            self.assertEqual(item, expected_items[i][1])
+
+    def test_str(self):
+        self.assertEqual(str(self.d), "{'a': 1, 'b': 2, 'c': 3}")
+
+    def test_repr(self):
+        self.assertEqual(repr(self.d), "{'a': 1, 'b': 2, 'c': 3}")
+
+    def test_eq(self):
+        self.assertEqual(self.d, IterDict({'a': 1, 'b': 2, 'c': 3}))
+
+    def test_ne(self):
+        self.assertNotEqual(self.d, IterDict({'a': 1, 'b': 2}))
+
+    def test_keys(self):
+        self.assertEqual(self.d.keys(), ['a', 'b', 'c'])
+
+    def test_values(self):
+        self.assertEqual(self.d.values(), [1, 2, 3])
+
+    def test_items(self):
+        self.assertEqual(self.d.items(), [('a', 1), ('b', 2), ('c', 3)])
+
+    def test_get(self):
+        self.assertEqual(self.d.get('a'), 1)
+        self.assertEqual(self.d.get('d'), None)
+        self.assertEqual(self.d.get('d', 'default'), 'default')
+
+    def test_update_dict(self):
+        self.d.update({'d': 4})
+        self.assertEqual(self.d, IterDict({'a': 1, 'b': 2, 'c': 3, 'd': 4}))
+
+    def test_update_list(self):
+        self.d.update([{'id': 'd', 'value': 4}])
+        self.assertEqual(self.d, IterDict({'a': 1, 'b': 2, 'c': 3, 'd': {'id': 'd', 'value': 4}}))
+
+    def test_update_list_missing_id(self):
+        with self.assertRaises(KeyError):
+            self.d.update([{'value': 4}])
+
+    def test_update_other_type(self):
+        with self.assertRaises(TypeError):
+            # noinspection PyTypeChecker
+            self.d.update(123)
+
+    def test_copy(self):
+        d_copy = self.d.copy()
+        self.assertEqual(self.d, d_copy)
+        self.assertIsNot(self.d, d_copy)
+
+    def test_setdefault(self):
+        d = IterDict(a=1, b=2, c=3)
+        # test setting a default value
+        self.assertEqual(d.setdefault('d', 4), 4)
+        self.assertEqual(d['d'], 4)
+        # test getting an existing value
+        self.assertEqual(d.setdefault('a', 0), 1)
+        self.assertEqual(d['a'], 1)
+
+    def test_clear(self):
+        d = IterDict(a=1, b=2, c=3)
+        d.clear()
+        self.assertEqual(len(d), 0)

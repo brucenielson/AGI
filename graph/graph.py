@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional, List, Union
-from utils.listdict import ListDict
+from utils.listdict import IterDict
 
 
 class GraphError(Exception):
@@ -13,8 +13,8 @@ class Vertex:
 
     def __init__(self, name: Optional[str] = None) -> None:
         self._name: Optional[str] = name
-        self._edges_out: ListDict[Edge] = ListDict()
-        self._edges_in: ListDict[Edge] = ListDict()
+        self._edges_out: IterDict[Edge] = IterDict()
+        self._edges_in: IterDict[Edge] = IterDict()
         self._id = Vertex._id
         self._visited: bool = False
         self._cc_id: int = 0
@@ -43,11 +43,11 @@ class Vertex:
         self._name = name
 
     @property
-    def edges_out(self) -> ListDict[Edge]:
+    def edges_out(self) -> IterDict[Edge]:
         return self._edges_out
 
     @property
-    def edges_in(self) -> ListDict[Edge]:
+    def edges_in(self) -> IterDict[Edge]:
         return self._edges_in
 
     @property
@@ -145,8 +145,8 @@ class Graph:
 
     def __init__(self, name: Optional[str] = None) -> None:
         self._name = name
-        self._vertices: ListDict[Vertex] = ListDict()
-        self._edges: ListDict[Edge] = ListDict()
+        self._vertices: IterDict[Vertex] = IterDict()
+        self._edges: IterDict[Edge] = IterDict()
         self._cc_last_id: int = 0
         self._clock: int = 0
 
@@ -157,11 +157,11 @@ class Graph:
         return f'Graph({self._name})'
 
     @property
-    def vertices(self) -> ListDict[Vertex]:
+    def vertices(self) -> IterDict[Vertex]:
         return self._vertices
 
     @property
-    def edges(self) -> ListDict[Edge]:
+    def edges(self) -> IterDict[Edge]:
         return self._edges
 
     @property
@@ -228,7 +228,7 @@ class Graph:
     def explore_graph(self) -> None:
         self.reset_visited()
         # Get a list of vertices ids
-        vertices: ListDict[Vertex] = self.vertices
+        vertices: IterDict[Vertex] = self.vertices
         # Explore the graph
         for vertex in vertices:
             if not self._vertices[vertex.id].visited:
