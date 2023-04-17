@@ -1,5 +1,5 @@
 from unittest import TestCase
-from graph.graph import Graph, Edge, Vertex
+from graph.graph import Graph, Edge, Vertex, GraphError
 
 
 class TestGraph(TestCase):
@@ -279,6 +279,8 @@ class TestGraph(TestCase):
         graph.link_vertices(vertex_a, vertex_b)
         graph.link_vertices(vertex_b, vertex_c)
         graph.link_vertices(vertex_c, vertex_d)
+        with self.assertRaises(GraphError):
+            _ = (lambda: graph.is_cyclic)()
         graph.explore_graph()
         self.assertFalse(graph.is_cyclic)
         graph.link_vertices(vertex_d, vertex_b)

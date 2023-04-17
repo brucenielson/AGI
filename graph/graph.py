@@ -182,6 +182,7 @@ class Graph:
         self._edges: IterDict[Edge] = IterDict()
         self._cc_last_id: int = 0
         self._clock: int = 0
+        self._explored: bool = False
 
     def __str__(self) -> str:
         return self.name
@@ -234,6 +235,7 @@ class Graph:
 
     # Reset all visited flags for Vertices
     def reset_visited(self) -> None:
+        self._explored = False
         self._cc_last_id = 0
         for vertex in self.vertices:
             vertex.visited = False
@@ -271,9 +273,14 @@ class Graph:
             if not self._vertices[vertex.id].visited:
                 self._cc_last_id += 1
                 self.explore(vertex.id)
+        # Mark the graph as explored
+        self._explored = True
 
     @property
     def is_cyclic(self) -> bool:
+        # Throw an error if the graph has not been explored yet
+        if not self._explored:
+            raise GraphError('Graph has not been explored yet so we cannot determine if it is cyclic or not.')
         for edge in self.edges:
             if edge.is_back_edge:
                 return True
