@@ -295,5 +295,6 @@ class IterDict(Dict[Union[int, str], T], Generic[T]):
     def copy(self) -> IterDict[T]:
         return IterDict(self)
 
-    def update(self, other: Any, **kwargs: Any) -> None:
+    def update(self, other: Union[Dict[int, T], Dict[str, T], T, List[T]],
+               **kwargs: Union[Dict[int, T], Dict[str, T], T, List[T]]) -> None:
         super().update(other, **kwargs)
