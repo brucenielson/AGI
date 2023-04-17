@@ -270,6 +270,21 @@ class TestGraph(TestCase):
         self.assertEqual(vertex_b.cc_id, 1)
         self.assertEqual(vertex_c.cc_id, 2)
 
+    def test_is_cyclic(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex()
+        vertex_b = graph.create_vertex()
+        vertex_c = graph.create_vertex()
+        vertex_d = graph.create_vertex()
+        graph.link_vertices(vertex_a, vertex_b)
+        graph.link_vertices(vertex_b, vertex_c)
+        graph.link_vertices(vertex_c, vertex_d)
+        graph.explore_graph()
+        self.assertFalse(graph.is_cyclic)
+        graph.link_vertices(vertex_d, vertex_b)
+        graph.explore_graph()
+        self.assertTrue(graph.is_cyclic)
+
 
 class TestEdge(TestCase):
     def test_traverse(self):

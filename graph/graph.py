@@ -271,3 +271,10 @@ class Graph:
             if not self._vertices[vertex.id].visited:
                 self._cc_last_id += 1
                 self.explore(vertex.id)
+
+    @property
+    def is_cyclic(self) -> bool:
+        for edge in self.edges:
+            if edge.is_back_edge:
+                return True
+        return False
