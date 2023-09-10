@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import List, Union, Dict, TypeVar, Any, Type, get_origin, Tuple, Generic
+import uuid
 
 T = TypeVar('T')
 
@@ -13,10 +14,10 @@ class ListDict:
     def __init__(self) -> None:
         # The __init__ method should save the type T being used for this ListDict.
         self._values: List[T] = []
-        self._id_map: Dict[Union[int, str], int] = {}
+        self._id_map: Dict[Union[uuid.UUID, str], int] = {}
         self._item_type: Type[T] = get_origin(T)
 
-    def __getitem__(self, key: int) -> T:
+    def __getitem__(self, key: uuid.UUID) -> T:
         try:
             index = self._id_map[key]
         except KeyError:
@@ -24,7 +25,7 @@ class ListDict:
         return self._values[index]
 
     # implement __setitem__ but check that the right type is being set.
-    def __setitem__(self, key: int, value: T) -> None:
+    def __setitem__(self, key: uuid.UUID, value: T) -> None:
         if self._item_type is None:
             self._item_type = type(value)
         elif type(value) is not self._item_type:
@@ -36,7 +37,7 @@ class ListDict:
             self._values.append(value)
             self._id_map[key] = len(self._values) - 1
 
-    def __delitem__(self, key: Union[int, str]) -> None:
+    def __delitem__(self, key: Union[uuid.UUID, str]) -> None:
         index = self._id_map[key]
         del self._id_map[key]
         del self._values[index]
@@ -70,13 +71,13 @@ class ListDict:
             raise ListDictError(f'Index {index} out of range')
         return self._values[index]
 
-    def index_by_value(self, value: T) -> int:
+    def index_by_value(self, value: T) -> uuid.UUID:
         for key in self.keys():
             if self[key] == value:
                 return key
         raise ListDictError(f'Value {value} not found')
 
-    def keys(self) -> List[int]:
+    def keys(self) -> List[uuid.UUID]:
         return list(self._id_map.keys())
 
     def clear(self):
@@ -95,14 +96,14 @@ class ListDict:
         if len(self) != len(other):
             return False
         for i in range(len(self)):
-            if self[i] != other[i]:
+            if self._values[i] != other._values[i]:
                 return False
         return True
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def get(self, key: int, default: T = None) -> T:
+    def get(self, key: uuid.UUID, default: T = None) -> T:
         if key in self._id_map:
             return self[key]
         else:
@@ -111,14 +112,14 @@ class ListDict:
     def values(self) -> List[T]:
         return self._values
 
-    def items(self) -> List[Tuple[int, T]]:
-        result: List[Tuple[int, T]] = []
+    def items(self) -> List[Tuple[uuid.UUID, T]]:
+        result: List[Tuple[uuid.UUID, T]] = []
         for key in self._id_map:
             result.append((key, self[key]))
         return result
 
 
-class IterDict(Dict[Union[int, str], T], Generic[T]):
+class IterDict(Dict[Union[uuid.UUID, str], T], Generic[T]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -128,17 +129,17 @@ class IterDict(Dict[Union[int, str], T], Generic[T]):
     def __reversed__(self) -> T:
         return reversed(self.values())
 
-    def __getitem__(self, key: Union[int, str]) -> T:
+    def __getitem__(self, key: Union[uuid.UUID, str]) -> T:
         return self.get(key)
 
     # implement __setitem__ but check that the right type is being set.
-    def __setitem__(self, key: Union[int, str], value: T) -> None:
+    def __setitem__(self, key: Union[uuid.UUID, str], value: T) -> None:
         super().__setitem__(key, value)
 
-    def __delitem__(self, key: Union[int, str]) -> None:
+    def __delitem__(self, key: Union[uuid.UUID, str]) -> None:
         super().__delitem__(key)
 
-    def __contains__(self, item_or_key: Union[T, int, str]) -> bool:
+    def __contains__(self, item_or_key: Union[T, uuid.UUID, str]) -> bool:
         if isinstance(item_or_key, int):
             return item_or_key in self.keys()
         elif isinstance(item_or_key, str):

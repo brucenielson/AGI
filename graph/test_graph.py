@@ -1,6 +1,6 @@
 from unittest import TestCase
 from graph.graph import Graph, Edge, Vertex, GraphError
-
+import uuid
 
 class TestGraph(TestCase):
     def test_create_vertex(self):
@@ -151,13 +151,13 @@ class TestGraph(TestCase):
 
     def test_vertex_id(self):
         vertex = Vertex()
-        self.assertIsInstance(vertex.id, int)
+        self.assertIsInstance(vertex.id, uuid.UUID)
 
     def test_edge_id(self):
         vertex_a = Vertex()
         vertex_b = Vertex()
         edge = Edge(vertex_a, vertex_b)
-        self.assertIsInstance(edge.id, int)
+        self.assertIsInstance(edge.id, uuid.UUID)
 
     def test_assigning_properties(self):
         v1 = Vertex("A")
@@ -415,14 +415,14 @@ class TestVertex(TestCase):
     def test_vertex_id(self):
         graph = Graph()
         vertex = graph.create_vertex()
-        self.assertIsInstance(vertex.id, int)
+        self.assertIsInstance(vertex.id, uuid.UUID)
 
     def test_edge_id(self):
         graph = Graph()
         vertex_a = graph.create_vertex()
         vertex_b = graph.create_vertex()
         edge = graph.link_vertices(vertex_a, vertex_b)
-        self.assertIsInstance(edge.id, int)
+        self.assertIsInstance(edge.id, uuid.UUID)
 
     def test_assigning_properties(self):
         graph = Graph()
@@ -558,8 +558,11 @@ class TestVertex(TestCase):
         graph = Graph()
         vertex_a = graph.create_vertex()
         vertex_b = graph.create_vertex()
-        self.assertGreaterEqual(vertex_a.id, 59)
-        self.assertGreaterEqual(vertex_b.id, vertex_a.id)
+        vertex_c = vertex_a
+        self.assertIsInstance(vertex_a.id, uuid.UUID)
+        self.assertIsInstance(vertex_b.id, uuid.UUID)
+        self.assertIsInstance(vertex_c.id, uuid.UUID)
+        self.assertEqual(vertex_a.id, vertex_c.id)
 
     def test_from_vertex(self):
         graph = Graph()

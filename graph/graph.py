@@ -1,6 +1,23 @@
 from __future__ import annotations
 from typing import Optional, List, Union
 from utils.listdict import IterDict
+import uuid
+import numpy as np
+
+
+# def graph_to_adjacency_matrix(graph: Graph) -> np.ndarray:
+#     """
+#     Converts a graph to an adjacency matrix.
+#     :param graph: The graph to convert.
+#     :return: The adjacency matrix.
+#     """
+#     matrix = np.zeros((len(graph.vertices), len(graph.vertices)))
+#     i: int
+#     for edge in graph.edges:
+#         from_vertex = edge.from_vertex
+#         to_vertex = edge.to_vertex
+#         matrix[from_vertex.index, to_vertex.index] = 1
+#     return matrix
 
 
 class GraphError(Exception):
@@ -9,18 +26,15 @@ class GraphError(Exception):
 
 
 class Vertex:
-    _id: int = 0
-
     def __init__(self, name: Optional[str] = None) -> None:
         self._name: Optional[str] = name
         self._edges_out: IterDict[Edge] = IterDict()
         self._edges_in: IterDict[Edge] = IterDict()
-        self._id = Vertex._id
         self._visited: bool = False
         self._cc_id: int = 0
         self._pre: int = 0
         self._post: int = 0
-        Vertex._id += 1
+        self._id: uuid.UUID = uuid.uuid4()
 
     def __str__(self) -> str:
         if self._name:
@@ -29,7 +43,7 @@ class Vertex:
             return f'Vertex: {self._id}'
 
     def __hash__(self) -> int:
-        return self.id
+        return hash(str(self.id))
 
     def __repr__(self):
         return f'Vertex({self._id})'
@@ -51,7 +65,7 @@ class Vertex:
         return self._edges_in
 
     @property
-    def id(self) -> int:
+    def id(self) -> uuid.UUID:
         return self._id
 
     @property
@@ -88,16 +102,13 @@ class Vertex:
 
 
 class Edge:
-    _id: int = 0
-
     def __init__(self, from_vertex: Vertex, to_vertex: Vertex, name: Optional[str] = None,
                  value: Union[float, int] = 1) -> None:
         self._name: Optional[str] = name
         self._from_vertex: Vertex = from_vertex
         self._to_vertex: Vertex = to_vertex
         self._value: Union[float, int] = value
-        self._id = Edge._id
-        Edge._id += 1
+        self._id: uuid.UUID = uuid.uuid4()
 
     def __str__(self) -> str:
         if self.name:
@@ -109,7 +120,7 @@ class Edge:
         return f'Edge({self._id})'
 
     def __hash__(self) -> int:
-        return self.id
+        return hash(str(self.id))
 
     @property
     def name(self) -> Optional[str]:
@@ -136,7 +147,7 @@ class Edge:
         self._value = value
 
     @property
-    def id(self) -> int:
+    def id(self) -> uuid.UUID:
         return self._id
 
     @property
@@ -251,8 +262,8 @@ class Graph:
         self._clock += 1
 
     # explore a graph using depth first search
-    def explore(self, vertex: Union[int, Vertex]) -> List[Vertex]:
-        if isinstance(vertex, int):
+    def explore(self, vertex: Union[uuid.UUID, Vertex]) -> List[Vertex]:
+        if isinstance(vertex, uuid.UUID):
             vertex_id = vertex
         else:
             vertex_id = vertex.id
