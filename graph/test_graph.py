@@ -1,5 +1,5 @@
 from unittest import TestCase
-from graph.graph import Graph, Edge, Vertex, GraphError, graph_to_adjacency_matrix
+from graph.graph import Graph, Edge, Vertex, GraphError, graph_to_adjacency_matrix, adjacency_matrix_to_graph
 import uuid
 import numpy as np
 
@@ -648,3 +648,58 @@ class TestVertex(TestCase):
         # Assert that the actual matrix matches the expected matrix
         self.assertTrue(np.array_equal(actual_matrix, expected_matrix))
 
+    def test_adjacency_matrix_to_graph(self):
+        # Create a sample adjacency matrix
+        adjacency_matrix = np.array([[0, 1, 0],
+                                     [0, 0, 1],
+                                     [0, 0, 0]])
+
+        # Convert the adjacency matrix to a graph
+        graph = adjacency_matrix_to_graph(adjacency_matrix)
+
+        # Verify the graph's structure
+        self.assertEqual(len(graph.vertices), 3)
+        self.assertEqual(len(graph.edges), 2)
+
+        # Check that the graph's edges match the matrix
+        vertex_a = graph.vertices.index(0)
+        vertex_b = graph.vertices.index(1)
+        vertex_c = graph.vertices.index(2)
+        self.assertTrue(graph.is_connected(vertex_a, vertex_b))
+        self.assertTrue(graph.is_connected(vertex_b, vertex_c))
+        self.assertFalse(graph.is_connected(vertex_b, vertex_a))
+        self.assertFalse(graph.is_connected(vertex_c, vertex_b))
+        self.assertFalse(graph.is_connected(vertex_a, vertex_c))
+        self.assertFalse(graph.is_connected(vertex_c, vertex_a))
+
+        # Now convert back to an adjacency matrix and verify it matches
+        actual_matrix = graph_to_adjacency_matrix(graph)
+        self.assertTrue(np.array_equal(actual_matrix, adjacency_matrix))
+
+        # Now add a similar test but with undirected edges
+        # Create a sample adjacency matrix
+        adjacency_matrix = np.array([[0, 1, 0],
+                                     [1, 0, 1],
+                                     [0, 1, 0]])
+
+        # Convert the adjacency matrix to a graph
+        graph = adjacency_matrix_to_graph(adjacency_matrix)
+
+        # Verify the graph's structure
+        self.assertEqual(len(graph.vertices), 3)
+        self.assertEqual(len(graph.edges), 4)
+
+        # Check that the graph's edges match the matrix
+        vertex_a = graph.vertices.index(0)
+        vertex_b = graph.vertices.index(1)
+        vertex_c = graph.vertices.index(2)
+        self.assertTrue(graph.is_connected(vertex_a, vertex_b))
+        self.assertTrue(graph.is_connected(vertex_b, vertex_c))
+        self.assertTrue(graph.is_connected(vertex_b, vertex_a))
+        self.assertTrue(graph.is_connected(vertex_c, vertex_b))
+        self.assertFalse(graph.is_connected(vertex_a, vertex_c))
+        self.assertFalse(graph.is_connected(vertex_c, vertex_a))
+
+        # Now convert back to an adjacency matrix and verify it matches
+        actual_matrix = graph_to_adjacency_matrix(graph)
+        self.assertTrue(np.array_equal(actual_matrix, adjacency_matrix))

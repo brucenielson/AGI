@@ -21,6 +21,22 @@ def graph_to_adjacency_matrix(graph: Graph) -> np.ndarray:
     return matrix
 
 
+def adjacency_matrix_to_graph(matrix: np.ndarray) -> Graph:
+    """
+    Converts an adjacency matrix to a graph.
+    :param matrix: The adjacency matrix to convert.
+    :return: The graph.
+    """
+    graph: Graph = Graph()
+    for i in range(len(matrix)):
+        graph.create_vertex()
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
+            if matrix[i, j] == 1:
+                graph.link_vertices(graph.vertices.index(i), graph.vertices.index(j))
+    return graph
+
+
 class GraphError(Exception):
     def __init__(self, message):
         super().__init__(message)
@@ -314,3 +330,14 @@ class Graph:
             if not edge.is_tree_edge:
                 return False
         return True
+
+    def is_connected(self, vertex_a: Union[Vertex, int, str], vertex_b: Union[Vertex, int, str]) -> bool:
+        # Check to see if vertex_a is directly connected to vertex_b by an edge
+        if isinstance(vertex_a, (int, str)):
+            vertex_a = self.vertices[vertex_a]
+        if isinstance(vertex_b, (int, str)):
+            vertex_b = self.vertices[vertex_b]
+        for edge in vertex_a.edges_out:
+            if edge.to_vertex == vertex_b:
+                return True
+        return False
