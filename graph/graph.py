@@ -302,4 +302,3 @@ class Graph:
             if not edge.is_tree_edge:
                 return False
         return True
-    
