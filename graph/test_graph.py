@@ -1,6 +1,8 @@
 from unittest import TestCase
-from graph.graph import Graph, Edge, Vertex, GraphError
+from graph.graph import Graph, Edge, Vertex, GraphError, graph_to_adjacency_matrix
 import uuid
+import numpy as np
+
 
 class TestGraph(TestCase):
     def test_create_vertex(self):
@@ -605,3 +607,44 @@ class TestVertex(TestCase):
         self.assertEqual(vertex_a.post, 0)
         vertex_a.post = 1
         self.assertEqual(vertex_a.post, 1)
+
+    def test_graph_to_adjacency_matrix(self):
+        graph = Graph()
+        vertex_a = graph.create_vertex('A')
+        vertex_b = graph.create_vertex('B')
+        vertex_c = graph.create_vertex('C')
+
+        graph.link_vertices(vertex_a, vertex_b)
+        graph.link_vertices(vertex_b, vertex_c)
+
+        # Create the expected adjacency matrix
+        expected_matrix = np.array([[0, 1, 0],
+                                    [0, 0, 1],
+                                    [0, 0, 0]])
+
+        # Get the actual adjacency matrix using your function
+        actual_matrix = graph_to_adjacency_matrix(graph)
+
+        # Assert that the actual matrix matches the expected matrix
+        self.assertTrue(np.array_equal(actual_matrix, expected_matrix))
+
+        # Now add a similar test but with undirected edges
+        graph = Graph()
+        vertex_a = graph.create_vertex('A')
+        vertex_b = graph.create_vertex('B')
+        vertex_c = graph.create_vertex('C')
+
+        graph.link_vertices(vertex_a, vertex_b, two_way=True)
+        graph.link_vertices(vertex_b, vertex_c, two_way=True)
+
+        # Create the expected adjacency matrix
+        expected_matrix = np.array([[0, 1, 0],
+                                    [1, 0, 1],
+                                    [0, 1, 0]])
+
+        # Get the actual adjacency matrix using your function
+        actual_matrix = graph_to_adjacency_matrix(graph)
+
+        # Assert that the actual matrix matches the expected matrix
+        self.assertTrue(np.array_equal(actual_matrix, expected_matrix))
+

@@ -5,19 +5,20 @@ import uuid
 import numpy as np
 
 
-# def graph_to_adjacency_matrix(graph: Graph) -> np.ndarray:
-#     """
-#     Converts a graph to an adjacency matrix.
-#     :param graph: The graph to convert.
-#     :return: The adjacency matrix.
-#     """
-#     matrix = np.zeros((len(graph.vertices), len(graph.vertices)))
-#     i: int
-#     for edge in graph.edges:
-#         from_vertex = edge.from_vertex
-#         to_vertex = edge.to_vertex
-#         matrix[from_vertex.index, to_vertex.index] = 1
-#     return matrix
+def graph_to_adjacency_matrix(graph: Graph) -> np.ndarray:
+    """
+    Converts a graph to an adjacency matrix.
+    :param graph: The graph to convert.
+    :return: The adjacency matrix.
+    """
+    matrix: np.ndarray = np.zeros((len(graph.vertices), len(graph.vertices)))
+    i: int
+    edge: Edge
+    for edge in graph.edges:
+        from_vertex: Vertex = edge.from_vertex
+        to_vertex: Vertex = edge.to_vertex
+        matrix[graph.vertices.index_by_value(from_vertex), graph.vertices.index_by_value(to_vertex)] = 1
+    return matrix
 
 
 class GraphError(Exception):

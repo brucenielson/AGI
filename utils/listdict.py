@@ -71,11 +71,11 @@ class ListDict:
             raise ListDictError(f'Index {index} out of range')
         return self._values[index]
 
-    def index_by_value(self, value: T) -> uuid.UUID:
-        for key in self.keys():
-            if self[key] == value:
-                return key
-        raise ListDictError(f'Value {value} not found')
+    def index_by_value(self, value: T) -> int:
+        try:
+            return self._values.index(value)
+        except ValueError:
+            raise ListDictError(f'Value {value} not found')
 
     def keys(self) -> List[uuid.UUID]:
         return list(self._id_map.keys())
@@ -169,7 +169,7 @@ class IterDict(Dict[Union[uuid.UUID, str], T], Generic[T]):
         return self.values()[index]
 
     def index_by_value(self, value: T) -> int:
-        return self.keys()[self.values().index(value)]
+        return self.values().index(value)
 
     def keys(self) -> List[int]:
         return list(super().keys())
