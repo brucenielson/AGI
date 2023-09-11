@@ -3,7 +3,6 @@ from typing import Optional, List, Union
 from utils.listdict import IterDict
 import uuid
 import numpy as np
-import copy
 
 
 def graph_to_adjacency_matrix(graph: Graph) -> np.ndarray:
