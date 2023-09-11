@@ -3,6 +3,7 @@ from typing import Optional, List, Union
 from utils.listdict import IterDict
 import uuid
 import numpy as np
+import copy
 
 
 def graph_to_adjacency_matrix(graph: Graph) -> np.ndarray:
@@ -211,6 +212,7 @@ class Graph:
         self._cc_last_id: int = 0
         self._clock: int = 0
         self._explored: bool = False
+        self._adjacency_matrix: Optional[np.ndarray] = None
 
     def __str__(self) -> str:
         return self.name
@@ -331,13 +333,31 @@ class Graph:
                 return False
         return True
 
-    def is_connected(self, vertex_a: Union[Vertex, uuid.UUID, str], vertex_b: Union[Vertex, uuid.UUID, str]) -> bool:
+    def is_connected(self, vertex_a: Union[Vertex, uuid.UUID, str, int],
+                     vertex_b: Union[Vertex, uuid.UUID, str, int]) -> bool:
         # Check to see if vertex_a is directly connected to vertex_b by an edge
-        if isinstance(vertex_a, (uuid.UUID, str)):
+        if isinstance(vertex_a, (uuid.UUID, (str, int))):
             vertex_a = self.vertices[vertex_a]
-        if isinstance(vertex_b, (uuid.UUID, str)):
+        if isinstance(vertex_b, (uuid.UUID, (str, int))):
             vertex_b = self.vertices[vertex_b]
         for edge in vertex_a.edges_out:
             if edge.to_vertex == vertex_b:
                 return True
         return False
+
+    def _update_adjacency_matrix(self) -> None:
+        self._adjacency_matrix = graph_to_adjacency_matrix(self)
+
+    # Get a list of linearized vertices
+    def linearize(self, allow_explore: bool = True) -> List[Vertex]:
+        # If the graph has not been explored yet, explore it
+        if allow_explore and not self._explored:
+            self.explore_graph()
+        # Throw an error if the graph has not been explored yet
+        if not self._explored:
+            raise GraphError('Graph has not been explored yet so we cannot linearize it.')
+        # Get a list of vertices ids
+        vertices: IterDict[Vertex] = self.vertices
+        # Sort the vertices by post order
+        vertices.sort(key=lambda x: x.post)
+        return vertices.to_list()

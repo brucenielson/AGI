@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Dict, TypeVar, Any, Type, get_origin, Tuple, Generic
+from typing import List, Union, Dict, TypeVar, Any, Type, get_origin, Tuple, Generic, Callable
 import uuid
 import copy
 
@@ -241,3 +241,6 @@ class IterDict(Dict[Union[uuid.UUID, str, int], T], Generic[T]):
     def update(self, other: Union[Dict[uuid.UUID, T], Dict[int, T], Dict[str, T], T, List[T]],
                **kwargs: Union[Dict[uuid.UUID, T], Dict[int, T], Dict[str, T], T, List[T]]) -> None:
         super().update(other, **kwargs)
+
+    def sort(self, key: Callable[[T], Any] = None, reverse: bool = False) -> None:
+        self.values().sort(key=key, reverse=reverse)

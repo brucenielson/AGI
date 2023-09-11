@@ -733,15 +733,29 @@ class TestVertex(TestCase):
         self.assertFalse(graph.is_connected(vertex_c.id, vertex_a.id))
         self.assertFalse(graph.is_connected(vertex_c.id, vertex_b.id))
 
-        # # Test with strings (names)
-        # self.assertTrue(graph.is_connected(vertex_a.name, vertex_b.name))
-        # self.assertTrue(graph.is_connected(vertex_b.name, vertex_c.name))
-        # self.assertFalse(graph.is_connected(vertex_a.name, vertex_c.name))
-        # self.assertFalse(graph.is_connected(vertex_b.name, vertex_a.name))
-        # self.assertFalse(graph.is_connected(vertex_c.name, vertex_a.name))
-        # self.assertFalse(graph.is_connected(vertex_c.name, vertex_b.name))
+        # Test with integer indices
+        self.assertTrue(graph.is_connected(0, 1))
+        self.assertTrue(graph.is_connected(1, 2))
+        self.assertFalse(graph.is_connected(0, 2))
 
-        # # Test with integer indices
-        # self.assertTrue(graph.is_connected(0, 1))
-        # self.assertTrue(graph.is_connected(1, 2))
-        # self.assertFalse(graph.is_connected(0, 2))
+    def test_linearize(self):
+        # Create a sample directed acyclic graph (DAG)
+        graph = Graph()
+        vertex_a = graph.create_vertex('A')
+        vertex_b = graph.create_vertex('B')
+        vertex_c = graph.create_vertex('C')
+        vertex_d = graph.create_vertex('D')
+
+        graph.link_vertices(vertex_a, vertex_b)
+        graph.link_vertices(vertex_a, vertex_c)
+        graph.link_vertices(vertex_b, vertex_d)
+        graph.link_vertices(vertex_c, vertex_d)
+
+        # Call the linearize method
+        linearized_vertices = graph.linearize()
+
+        # Define the expected linearized order based on the DAG structure
+        expected_order = [vertex_a, vertex_b, vertex_c, vertex_d]
+
+        # Check if the linearized order matches the expected order
+        self.assertEqual(linearized_vertices, expected_order)
