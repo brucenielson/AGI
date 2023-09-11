@@ -1,38 +1,41 @@
 from unittest import TestCase
 from utils.listdict import ListDict, ListDictError, IterDict
+import uuid
 
 
 class ComboListDictTestCase(TestCase):
     def setUp(self):
+        # Generate 4 uuids in a List
+        self.uuids = [uuid.uuid4() for _ in range(4)]
         self.dict: ListDict[dict] = ListDict()
-        self.dict[1] = {'name': 'John', 'age': 30}
-        self.dict[2] = {'name': 'Alice', 'age': 25}
-        self.dict[3] = {'name': 'Bob', 'age': 40}
-        self.dict[4] = {'age': 20}
+        self.dict[self.uuids[0]] = {'name': 'John', 'age': 30}
+        self.dict[self.uuids[1]] = {'name': 'Alice', 'age': 25}
+        self.dict[self.uuids[2]] = {'name': 'Bob', 'age': 40}
+        self.dict[self.uuids[3]] = {'age': 20}
         self.not_in = {'name': 'Bob', 'age': 44}
 
     def test_getitem(self):
-        self.assertEqual(self.dict[1], {'name': 'John', 'age': 30})
-        self.assertEqual(self.dict[2], {'name': 'Alice', 'age': 25})
-        self.assertEqual(self.dict[3], {'name': 'Bob', 'age': 40})
-        self.assertEqual(self.dict[4], {'age': 20})
+        self.assertEqual(self.dict[self.uuids[0]], {'name': 'John', 'age': 30})
+        self.assertEqual(self.dict[self.uuids[1]], {'name': 'Alice', 'age': 25})
+        self.assertEqual(self.dict[self.uuids[2]], {'name': 'Bob', 'age': 40})
+        self.assertEqual(self.dict[self.uuids[3]], {'age': 20})
         self.assertRaises(KeyError, self.dict.__getitem__, 5)
-        self.assertRaises(KeyError, self.dict.__getitem__, 0)
+        self.assertRaises(KeyError, self.dict.__getitem__, -1)
 
     def test_setitem(self):
-        self.dict[1] = {'name': 'Mary', 'age': 35}
-        self.assertEqual(self.dict[1], {'name': 'Mary', 'age': 35})
+        self.dict[self.uuids[0]] = {'name': 'Mary', 'age': 35}
+        self.assertEqual(self.dict[self.uuids[0]], {'name': 'Mary', 'age': 35})
         self.assertEqual(len(self.dict), 4)
 
     def test_delitem(self):
-        del self.dict[1]
+        del self.dict[self.uuids[0]]
         self.assertNotIn(1, self.dict._id_map)
         self.assertNotIn({'name': 'John', 'age': 30}, self.dict)
         self.assertEqual(len(self.dict), 3)
 
     def test_contains(self):
-        self.assertTrue(self.dict[1] in self.dict)
-        self.assertTrue(self.dict[3] in self.dict)
+        self.assertTrue(self.dict[self.uuids[0]] in self.dict)
+        self.assertTrue(self.dict[self.uuids[2]] in self.dict)
         self.assertFalse(self.not_in in self.dict)
 
     def test_len(self):
@@ -50,7 +53,7 @@ class ComboListDictTestCase(TestCase):
                                                {'name': 'Bob', 'age': 40}, {'age': 20}])
 
     def test_filter(self):
-        self.assertEqual(self.dict.filter('John', attr_name='name')[0], self.dict[1])
+        self.assertEqual(self.dict.filter('John', attr_name='name')[0], self.dict[self.uuids[0]])
         self.assertEqual(self.dict.filter(20, attr_name='age'), [{'age': 20}])
         self.assertEqual(self.dict.filter('David', attr_name='name'), [])
 
@@ -77,18 +80,18 @@ class ComboListDictTestCase(TestCase):
 
     def test_eq(self):
         list_dict1 = ListDict()
-        list_dict1[0] = 1
-        list_dict1[1] = 2
-        list_dict1[2] = 3
+        list_dict1[uuid.uuid4()] = 1
+        list_dict1[uuid.uuid4()] = 2
+        list_dict1[uuid.uuid4()] = 3
 
         list_dict2 = ListDict()
-        list_dict2[0] = 1
-        list_dict2[1] = 2
-        list_dict2[2] = 3
+        list_dict2[uuid.uuid4()] = 1
+        list_dict2[uuid.uuid4()] = 2
+        list_dict2[uuid.uuid4()] = 3
 
         list_dict3 = ListDict()
-        list_dict3[0] = 1
-        list_dict3[1] = 2
+        list_dict3[uuid.uuid4()] = 1
+        list_dict3[uuid.uuid4()] = 2
 
         self.assertTrue(list_dict1 == list_dict2)
         self.assertFalse(list_dict1 == list_dict3)
@@ -96,36 +99,36 @@ class ComboListDictTestCase(TestCase):
 
     def test_ne_returns_false_if_same(self):
         ld1 = ListDict()
-        ld1[0] = 'foo'
+        ld1[uuid.uuid4()] = 'foo'
         ld2 = ListDict()
-        ld2[0] = 'foo'
+        ld2[uuid.uuid4()] = 'foo'
         self.assertFalse(ld1 != ld2)
 
     def test_ne_returns_true_if_different(self):
         ld1 = ListDict()
-        ld1[0] = 'foo'
+        ld1[uuid.uuid4()] = 'foo'
         ld2 = ListDict()
-        ld2[0] = 'bar'
+        ld2[uuid.uuid4()] = 'bar'
         self.assertTrue(ld1 != ld2)
 
     def test_values(self):
         ld = ListDict()
-        ld[1] = "one"
-        ld[2] = "two"
-        ld[3] = "three"
+        ld[uuid.uuid4()] = "one"
+        ld[uuid.uuid4()] = "two"
+        ld[uuid.uuid4()] = "three"
         self.assertEqual(ld.values(), ["one", "two", "three"])
 
     def test_items(self):
         lst_dict = ListDict()
-        lst_dict[1] = "hello"
-        lst_dict[2] = "world"
-        lst_dict[3] = "python"
+        lst_dict[self.uuids[0]] = "hello"
+        lst_dict[self.uuids[1]] = "world"
+        lst_dict[self.uuids[2]] = "python"
         items = lst_dict.items()
         self.assertIsInstance(items, list)
         self.assertEqual(len(items), 3)
-        self.assertEqual(items[0], (1, "hello"))
-        self.assertEqual(items[1], (2, "world"))
-        self.assertEqual(items[2], (3, "python"))
+        self.assertEqual(items[0], (self.uuids[0], "hello"))
+        self.assertEqual(items[1], (self.uuids[1], "world"))
+        self.assertEqual(items[2], (self.uuids[2], "python"))
 
 
 class TestIterDict(TestCase):

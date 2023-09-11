@@ -331,11 +331,11 @@ class Graph:
                 return False
         return True
 
-    def is_connected(self, vertex_a: Union[Vertex, int, str], vertex_b: Union[Vertex, int, str]) -> bool:
+    def is_connected(self, vertex_a: Union[Vertex, uuid.UUID, str], vertex_b: Union[Vertex, uuid.UUID, str]) -> bool:
         # Check to see if vertex_a is directly connected to vertex_b by an edge
-        if isinstance(vertex_a, (int, str)):
+        if isinstance(vertex_a, (uuid.UUID, str)):
             vertex_a = self.vertices[vertex_a]
-        if isinstance(vertex_b, (int, str)):
+        if isinstance(vertex_b, (uuid.UUID, str)):
             vertex_b = self.vertices[vertex_b]
         for edge in vertex_a.edges_out:
             if edge.to_vertex == vertex_b:

@@ -17,25 +17,39 @@ class ListDict:
         self._id_map: Dict[Union[uuid.UUID, str], int] = {}
         self._item_type: Type[T] = get_origin(T)
 
-    def __getitem__(self, key: uuid.UUID) -> T:
-        try:
-            index = self._id_map[key]
-        except KeyError:
-            raise KeyError(f"Key {key} not found")
+    def __getitem__(self, key: Union[uuid.UUID, str, int]) -> T:
+        index: int
+        if isinstance(key, (str, uuid.UUID)):
+            try:
+                index = self._id_map[key]
+            except KeyError:
+                raise KeyError(f"Key {key} not found")
+        elif isinstance(key, int):
+            if key < 0 or key >= len(self._values):
+                raise KeyError(f'Index {key} out of range')
+            index = key
+        else:
+            raise TypeError(f'Invalid key type: {type(key)}')
+
         return self._values[index]
 
     # implement __setitem__ but check that the right type is being set.
-    def __setitem__(self, key: uuid.UUID, value: T) -> None:
+    def __setitem__(self, key: Union[uuid.UUID, str, int], value: T) -> None:
         if self._item_type is None:
             self._item_type = type(value)
         elif type(value) is not self._item_type:
             raise ListDictError(f'Invalid type for value: {type(value)}. Needs to be {self._item_type}')
-        if key in self._id_map:
-            index = self._id_map[key]
-            self._values[index] = value
-        else:
-            self._values.append(value)
-            self._id_map[key] = len(self._values) - 1
+        if isinstance(key, (uuid.UUID, str)):
+            if key in self._id_map:
+                index = self._id_map[key]
+                self._values[index] = value
+            else:
+                self._values.append(value)
+                self._id_map[key] = len(self._values) - 1
+        elif isinstance(key, int):
+            if key < 0 or key >= len(self._values):
+                raise ListDictError(f'Index {key} out of range')
+            self._values[key] = value
 
     def __delitem__(self, key: Union[uuid.UUID, str]) -> None:
         index = self._id_map[key]

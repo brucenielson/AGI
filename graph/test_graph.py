@@ -703,3 +703,45 @@ class TestVertex(TestCase):
         # Now convert back to an adjacency matrix and verify it matches
         actual_matrix = graph_to_adjacency_matrix(graph)
         self.assertTrue(np.array_equal(actual_matrix, adjacency_matrix))
+
+    def test_is_connected(self):
+        # Create a graph
+        graph = Graph()
+
+        # Create vertices
+        vertex_a = graph.create_vertex('A')
+        vertex_b = graph.create_vertex('B')
+        vertex_c = graph.create_vertex('C')
+
+        # Create edges
+        graph.link_vertices(vertex_a, vertex_b)
+        graph.link_vertices(vertex_b, vertex_c)
+
+        # Check connected vertices
+        self.assertTrue(graph.is_connected(vertex_a, vertex_b))
+        self.assertTrue(graph.is_connected(vertex_b, vertex_c))
+        self.assertFalse(graph.is_connected(vertex_a, vertex_c))
+        self.assertFalse(graph.is_connected(vertex_b, vertex_a))
+        self.assertFalse(graph.is_connected(vertex_c, vertex_a))
+        self.assertFalse(graph.is_connected(vertex_c, vertex_b))
+
+        # Test with uuids
+        self.assertTrue(graph.is_connected(vertex_a.id, vertex_b.id))
+        self.assertTrue(graph.is_connected(vertex_b.id, vertex_c.id))
+        self.assertFalse(graph.is_connected(vertex_a.id, vertex_c.id))
+        self.assertFalse(graph.is_connected(vertex_b.id, vertex_a.id))
+        self.assertFalse(graph.is_connected(vertex_c.id, vertex_a.id))
+        self.assertFalse(graph.is_connected(vertex_c.id, vertex_b.id))
+
+        # # Test with strings (names)
+        # self.assertTrue(graph.is_connected(vertex_a.name, vertex_b.name))
+        # self.assertTrue(graph.is_connected(vertex_b.name, vertex_c.name))
+        # self.assertFalse(graph.is_connected(vertex_a.name, vertex_c.name))
+        # self.assertFalse(graph.is_connected(vertex_b.name, vertex_a.name))
+        # self.assertFalse(graph.is_connected(vertex_c.name, vertex_a.name))
+        # self.assertFalse(graph.is_connected(vertex_c.name, vertex_b.name))
+
+        # # Test with integer indices
+        # self.assertTrue(graph.is_connected(0, 1))
+        # self.assertTrue(graph.is_connected(1, 2))
+        # self.assertFalse(graph.is_connected(0, 2))
