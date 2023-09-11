@@ -31,7 +31,7 @@ class ListDict:
         else:
             raise TypeError(f'Invalid key type: {type(key)}')
 
-        return self._values[index]
+        return self.get_by_index(index)
 
     # implement __setitem__ but check that the right type is being set.
     def __setitem__(self, key: Union[uuid.UUID, str, int], value: T) -> None:
@@ -94,12 +94,12 @@ class ListDict:
             result.append(item)
         return result
 
-    def index(self, index: int) -> T:
+    def get_by_index(self, index: int) -> T:
         if index < 0 or index >= len(self._values):
             raise ListDictError(f'Index {index} out of range')
         return self._values[index]
 
-    def index_by_value(self, value: T) -> int:
+    def index(self, value: T) -> int:
         try:
             return self._values.index(value)
         except ValueError:
@@ -161,7 +161,7 @@ class IterDict(Dict[Union[uuid.UUID, str, int], T], Generic[T]):
         if isinstance(key, (uuid.UUID, str)):
             return self.get(key)
         elif isinstance(key, int):
-            return self.values()[key]
+            return self.get_by_index(key)
         else:
             raise TypeError(f'Invalid key type: {type(key)}')
 
@@ -196,12 +196,12 @@ class IterDict(Dict[Union[uuid.UUID, str, int], T], Generic[T]):
     def to_list(self) -> List[T]:
         return self.values()
 
-    def index(self, index: Union[int, str]) -> T:
+    def get_by_index(self, index: Union[int, str]) -> T:
         if index < 0 or index >= len(self.values()):
             raise ListDictError(f'Index {index} out of range')
         return self.values()[index]
 
-    def index_by_value(self, value: T) -> int:
+    def index(self, value: T) -> int:
         return self.values().index(value)
 
     def keys(self) -> List[int]:

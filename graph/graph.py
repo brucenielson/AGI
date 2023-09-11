@@ -17,7 +17,7 @@ def graph_to_adjacency_matrix(graph: Graph) -> np.ndarray:
     for edge in graph.edges:
         from_vertex: Vertex = edge.from_vertex
         to_vertex: Vertex = edge.to_vertex
-        matrix[graph.vertices.index_by_value(from_vertex), graph.vertices.index_by_value(to_vertex)] = 1
+        matrix[graph.vertices.index(from_vertex), graph.vertices.index(to_vertex)] = 1
     return matrix
 
 

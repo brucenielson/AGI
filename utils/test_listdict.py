@@ -71,12 +71,12 @@ class ComboListDictTestCase(TestCase):
         self.assertEqual(self.dict.filter(20, attr_name='age'), [{'age': 20}])
         self.assertEqual(self.dict.filter('David', attr_name='name'), [])
 
-    def test_index(self):
-        self.assertEqual(self.dict.index(0), {'name': 'John', 'age': 30})
-        self.assertEqual(self.dict.index(1), {'name': 'Alice', 'age': 25})
-        self.assertEqual(self.dict.index(2), {'name': 'Bob', 'age': 40})
-        self.assertEqual(self.dict.index(3), {'age': 20})
-        self.assertRaises(ListDictError, self.dict.index, 4)
+    def test_get_by_index(self):
+        self.assertEqual(self.dict.get_by_index(0), {'name': 'John', 'age': 30})
+        self.assertEqual(self.dict.get_by_index(1), {'name': 'Alice', 'age': 25})
+        self.assertEqual(self.dict.get_by_index(2), {'name': 'Bob', 'age': 40})
+        self.assertEqual(self.dict.get_by_index(3), {'age': 20})
+        self.assertRaises(ListDictError, self.dict.get_by_index, 4)
 
     def test_clear(self):
         self.dict.clear()
