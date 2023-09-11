@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import List, Union, Dict, TypeVar, Any, Type, get_origin, Tuple, Generic
 import uuid
+import copy
 
 T = TypeVar('T')
 
@@ -198,7 +199,7 @@ class IterDict(Dict[Union[uuid.UUID, str, int], T], Generic[T]):
 
     def get_by_index(self, index: Union[int, str]) -> T:
         if index < 0 or index >= len(self.values()):
-            raise ListDictError(f'Index {index} out of range')
+            raise IndexError(f'Index {index} out of range')
         return self.values()[index]
 
     def index(self, value: T) -> int:
@@ -235,8 +236,8 @@ class IterDict(Dict[Union[uuid.UUID, str, int], T], Generic[T]):
         return IterDict(self)
 
     def copy(self) -> IterDict[T]:
-        return IterDict(self)
+        return copy.deepcopy(IterDict(self))
 
-    def update(self, other: Union[Dict[int, T], Dict[str, T], T, List[T]],
-               **kwargs: Union[Dict[int, T], Dict[str, T], T, List[T]]) -> None:
+    def update(self, other: Union[Dict[uuid.UUID, T], Dict[int, T], Dict[str, T], T, List[T]],
+               **kwargs: Union[Dict[uuid.UUID, T], Dict[int, T], Dict[str, T], T, List[T]]) -> None:
         super().update(other, **kwargs)

@@ -144,6 +144,73 @@ class ComboListDictTestCase(TestCase):
         self.assertEqual(items[1], (self.uuids[1], "world"))
         self.assertEqual(items[2], (self.uuids[2], "python"))
 
+    def test_index(self):
+        # Test indexing a value that exists in the ListDict
+        self.assertEqual(self.dict.index({'name': 'Alice', 'age': 25}), 1)
+
+        # Test indexing a value that does not exist in the ListDict
+        with self.assertRaises(ListDictError):
+            self.dict.index({'name': 'David', 'age': 30})
+
+    def test_keys(self):
+        # Test getting keys from a non-empty ListDict
+        keys = self.dict.keys()
+        self.assertIsInstance(keys, list)
+        self.assertEqual(len(keys), len(self.dict))
+        for key in keys:
+            self.assertIsInstance(key, uuid.UUID)
+            self.assertIn(key, self.dict._id_map)
+
+        # Test getting keys from an empty ListDict
+        empty_dict = ListDict()
+        self.assertEqual(empty_dict.keys(), [])
+
+    def test_clear_advanced(self):
+        # Test clearing a non-empty ListDict
+        initial_length = len(self.dict)
+        self.dict.clear()
+        self.assertEqual(len(self.dict), 0)
+        self.assertEqual(len(self.dict._values), 0)
+        self.assertEqual(len(self.dict._id_map), 0)
+
+        # Test clearing an already empty ListDict
+        empty_dict = ListDict()
+        empty_dict.clear()
+        self.assertEqual(len(empty_dict), 0)
+        self.assertEqual(len(empty_dict._values), 0)
+        self.assertEqual(len(empty_dict._id_map), 0)
+
+
+class AdditionalListDictTestCase(TestCase):
+    def setUp(self):
+        self.dict = ListDict()
+        self.uuid1 = uuid.uuid4()
+        self.uuid2 = uuid.uuid4()
+        self.uuid3 = uuid.uuid4()
+        self.uuid4 = uuid.uuid4()
+        self.dict[self.uuid1] = {'name': 'John', 'age': 30}
+
+    def test_getitem_nonexistent_key(self):
+        with self.assertRaises(KeyError):
+            _ = self.dict[self.uuid2]  # Accessing a key that does not exist should raise KeyError
+
+    def test_delitem_nonexistent_key(self):
+        with self.assertRaises(KeyError):
+            del self.dict[self.uuid2]  # Deleting a key that does not exist should raise KeyError
+
+    def test_setitem_existing_key(self):
+        self.dict[self.uuid1] = {'name': 'Mary', 'age': 35}
+        self.assertEqual(self.dict[self.uuid1], {'name': 'Mary', 'age': 35})  # Existing item should be updated
+
+    def test_setitem_duplicate_key(self):
+        # Setting over an existing key should overwrite the existing item
+        self.dict[self.uuid1] = {'name': 'David', 'age': 28}
+        self.assertEqual(self.dict[self.uuid1], {'name': 'David', 'age': 28})  # Original item should remain
+
+    def test_setitem_different_data_type(self):
+        with self.assertRaises(ListDictError):
+            self.dict[self.uuid1] = 42  # Setting a different data type should raise ListDictError
+
 
 class TestIterDict(TestCase):
     def test_iteration(self):
@@ -242,3 +309,41 @@ class TestIterDict(TestCase):
         d = IterDict(a=1, b=2, c=3)
         d.clear()
         self.assertEqual(len(d), 0)
+
+    def test_contains(self):
+        d = IterDict({'a': 1, 'b': 2, 'c': 3})
+        self.assertTrue('a' in d)
+        self.assertFalse('d' in d)
+
+    def test_get_by_index(self):
+        d = IterDict({'a': 1, 'b': 2, 'c': 3})
+        self.assertEqual(d.get_by_index(0), 1)
+        self.assertEqual(d.get_by_index(2), 3)
+        with self.assertRaises(IndexError):
+            _ = d.get_by_index(3)  # Accessing an out-of-range index should raise IndexError
+
+    def test_index(self):
+        d = IterDict({'a': 1, 'b': 2, 'c': 3})
+        self.assertEqual(d.index(1), 0)
+        self.assertEqual(d.index(3), 2)
+        with self.assertRaises(ValueError):
+            _ = d.index(4)  # Accessing a value that does not exist should raise ValueError
+
+    def test_update_with_kwargs(self):
+        d = IterDict({'a': 1, 'b': 2, 'c': 3})
+        d.update({'d': 4, 'e': 5})
+        self.assertEqual(d, IterDict({'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}))
+
+    def test_setdefault_2(self):
+        d = IterDict({'a': 1, 'b': 2, 'c': 3})
+        self.assertEqual(d.setdefault('d', 4), 4)
+        self.assertEqual(d['d'], 4)
+        self.assertEqual(d.setdefault('a', 0), 1)
+        self.assertEqual(d['a'], 1)
+
+    def test_copy_method(self):
+        d = IterDict({'a': {'x': 1}, 'b': {'y': 2}})
+        d_copy = d.copy()
+        self.assertEqual(d, d_copy)
+        self.assertIsNot(d, d_copy)  # Ensure it's a deep copy
+        self.assertIsNot(d['a'], d_copy['a'])  # Ensure nested dictionaries are also deep copied
