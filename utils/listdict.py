@@ -147,7 +147,7 @@ class ListDict:
         return result
 
 
-class IterDict(Dict[Union[uuid.UUID, str], T], Generic[T]):
+class IterDict(Dict[Union[uuid.UUID, str, int], T], Generic[T]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -157,14 +157,19 @@ class IterDict(Dict[Union[uuid.UUID, str], T], Generic[T]):
     def __reversed__(self) -> T:
         return reversed(self.values())
 
-    def __getitem__(self, key: Union[uuid.UUID, str]) -> T:
-        return self.get(key)
+    def __getitem__(self, key: Union[uuid.UUID, str, int]) -> T:
+        if isinstance(key, (uuid.UUID, str)):
+            return self.get(key)
+        elif isinstance(key, int):
+            return self.values()[key]
+        else:
+            raise TypeError(f'Invalid key type: {type(key)}')
 
     # implement __setitem__ but check that the right type is being set.
-    def __setitem__(self, key: Union[uuid.UUID, str], value: T) -> None:
+    def __setitem__(self, key: Union[uuid.UUID, str, int], value: T) -> None:
         super().__setitem__(key, value)
 
-    def __delitem__(self, key: Union[uuid.UUID, str]) -> None:
+    def __delitem__(self, key: Union[uuid.UUID, str, int]) -> None:
         super().__delitem__(key)
 
     def __contains__(self, item_or_key: Union[T, uuid.UUID, str]) -> bool:
@@ -217,7 +222,7 @@ class IterDict(Dict[Union[uuid.UUID, str], T], Generic[T]):
     def __ne__(self, other):
         return self.values() != other.values()
 
-    def get(self, key: Union[int, str], default: T = None) -> T:
+    def get(self, key: Union[uuid.UUID, str, int], default: T = None) -> T:
         return super().get(key, default)
 
     def values(self) -> List[T]:

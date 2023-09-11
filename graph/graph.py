@@ -33,7 +33,7 @@ def adjacency_matrix_to_graph(matrix: np.ndarray) -> Graph:
     for i in range(len(matrix)):
         for j in range(len(matrix)):
             if matrix[i, j] == 1:
-                graph.link_vertices(graph.vertices.index(i), graph.vertices.index(j))
+                graph.link_vertices(graph.vertices[i], graph.vertices[j])
     return graph
 
 

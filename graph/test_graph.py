@@ -42,8 +42,8 @@ class TestGraph(TestCase):
         self.assertEqual(1, len(graph.edges))
         self.assertEqual(bobby, graph.vertices.filter('Bobby'))
         self.assertEqual(timmy, graph.vertices.filter('Timmy'))
-        self.assertEqual('friend', bobby.edges_out.index(0).name)
-        self.assertEqual(2.0, bobby.edges_out.index(0).value)
+        self.assertEqual('friend', bobby.edges_out[0].name)
+        self.assertEqual(2.0, bobby.edges_out[0].value)
         # We didn't actually link these vertices so no edge here
         self.assertEqual(0, len(timmy.edges_out))
         # However, we should find it in Timmy's edges_in
@@ -55,11 +55,11 @@ class TestGraph(TestCase):
         self.assertEqual(1, len(graph.edges))
         self.assertEqual(bobby, graph.vertices.filter('Bobby'))
         self.assertEqual(timmy, graph.vertices.filter('Timmy'))
-        self.assertEqual('friend', bobby.edges_out.index(0).name)
+        self.assertEqual('friend', bobby.edges_out[0].name)
         self.assertEqual(0, len(timmy.edges_out))
         self.assertEqual(edge, timmy.edges_in.to_list()[0])
         self.assertEqual(1, len(timmy.edges_in))
-        self.assertEqual('Timmy', bobby.edges_out.index(0).to_vertex.name)
+        self.assertEqual('Timmy', bobby.edges_out[0].to_vertex.name)
 
     def test_link_vertices(self):
         graph = Graph()
@@ -141,8 +141,8 @@ class TestGraph(TestCase):
         vertex_a = graph.create_vertex()
         vertex_b = graph.create_vertex()
         graph.link_vertices(vertex_a, vertex_b, two_way=True)
-        edge1 = vertex_a.edges_out.index(0)
-        edge2 = vertex_b.edges_out.index(0)
+        edge1 = vertex_a.edges_out[0]
+        edge2 = vertex_b.edges_out[0]
         self.assertIn(edge1, vertex_b.edges_in.to_list())
         self.assertIn(edge2, vertex_a.edges_in.to_list())
 
@@ -366,9 +366,9 @@ class TestVertex(TestCase):
         timmy = graph.create_vertex('Timmy')
         graph.link_vertices(bobby, timmy, 'friend', two_way=True)
         self.assertEqual(1, len(timmy.edges_out))
-        self.assertEqual(graph.edges.to_list()[1], timmy.edges_out.index(0))
+        self.assertEqual(graph.edges.to_list()[1], timmy.edges_out[0])
         self.assertEqual(1, len(bobby.edges_out))
-        self.assertEqual(graph.edges.to_list()[0], bobby.edges_out.index(0))
+        self.assertEqual(graph.edges.to_list()[0], bobby.edges_out[0])
 
     def test_edges_in(self):
         graph = Graph()
@@ -662,9 +662,9 @@ class TestVertex(TestCase):
         self.assertEqual(len(graph.edges), 2)
 
         # Check that the graph's edges match the matrix
-        vertex_a = graph.vertices.index(0)
-        vertex_b = graph.vertices.index(1)
-        vertex_c = graph.vertices.index(2)
+        vertex_a = graph.vertices[0]
+        vertex_b = graph.vertices[1]
+        vertex_c = graph.vertices[2]
         self.assertTrue(graph.is_connected(vertex_a, vertex_b))
         self.assertTrue(graph.is_connected(vertex_b, vertex_c))
         self.assertFalse(graph.is_connected(vertex_b, vertex_a))
@@ -690,9 +690,9 @@ class TestVertex(TestCase):
         self.assertEqual(len(graph.edges), 4)
 
         # Check that the graph's edges match the matrix
-        vertex_a = graph.vertices.index(0)
-        vertex_b = graph.vertices.index(1)
-        vertex_c = graph.vertices.index(2)
+        vertex_a = graph.vertices[0]
+        vertex_b = graph.vertices[1]
+        vertex_c = graph.vertices[2]
         self.assertTrue(graph.is_connected(vertex_a, vertex_b))
         self.assertTrue(graph.is_connected(vertex_b, vertex_c))
         self.assertTrue(graph.is_connected(vertex_b, vertex_a))
