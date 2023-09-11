@@ -51,9 +51,23 @@ class ListDict:
                 raise ListDictError(f'Index {key} out of range')
             self._values[key] = value
 
-    def __delitem__(self, key: Union[uuid.UUID, str]) -> None:
-        index = self._id_map[key]
+    def __delitem__(self, key: Union[uuid.UUID, str, int]) -> None:
+        if isinstance(key, (uuid.UUID, str)):
+            index = self._id_map[key]
+        elif isinstance(key, int):
+            index = key
+            # Find the key for this value
+            for k, i in self._id_map.items():
+                if i == index:
+                    key = k
+                    break
+        else:
+            raise TypeError(f'Invalid key type: {type(key)}')
         del self._id_map[key]
+        # Update the indexes in the id map
+        for k, i in self._id_map.items():
+            if i > index:
+                self._id_map[k] = i - 1
         del self._values[index]
 
     def __contains__(self, key: T) -> bool:

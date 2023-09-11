@@ -19,6 +19,11 @@ class ComboListDictTestCase(TestCase):
         self.assertEqual(self.dict[self.uuids[1]], {'name': 'Alice', 'age': 25})
         self.assertEqual(self.dict[self.uuids[2]], {'name': 'Bob', 'age': 40})
         self.assertEqual(self.dict[self.uuids[3]], {'age': 20})
+        self.assertEqual(self.dict[0], {'name': 'John', 'age': 30})
+        self.assertEqual(self.dict[1], {'name': 'Alice', 'age': 25})
+        self.assertEqual(self.dict[2], {'name': 'Bob', 'age': 40})
+        self.assertEqual(self.dict[3], {'age': 20})
+
         self.assertRaises(KeyError, self.dict.__getitem__, 5)
         self.assertRaises(KeyError, self.dict.__getitem__, -1)
 
@@ -26,12 +31,21 @@ class ComboListDictTestCase(TestCase):
         self.dict[self.uuids[0]] = {'name': 'Mary', 'age': 35}
         self.assertEqual(self.dict[self.uuids[0]], {'name': 'Mary', 'age': 35})
         self.assertEqual(len(self.dict), 4)
+        self.dict[0] = {'name': 'Judy', 'age': 29}
+        self.assertEqual(self.dict[0], {'name': 'Judy', 'age': 29})
+        self.assertEqual(len(self.dict), 4)
 
     def test_delitem(self):
         del self.dict[self.uuids[0]]
-        self.assertNotIn(1, self.dict._id_map)
+        self.assertNotIn(self.uuids[0], self.dict._id_map)
         self.assertNotIn({'name': 'John', 'age': 30}, self.dict)
         self.assertEqual(len(self.dict), 3)
+        self.assertNotIn(self.uuids[0], self.dict._id_map)
+        del self.dict[0]
+        self.assertEqual(len(self.dict), 2)
+        self.assertNotIn(self.uuids[1], self.dict._id_map)
+        self.assertIn(self.uuids[2], self.dict._id_map)
+        self.assertIn(self.uuids[3], self.dict._id_map)
 
     def test_contains(self):
         self.assertTrue(self.dict[self.uuids[0]] in self.dict)
