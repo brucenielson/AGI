@@ -357,7 +357,7 @@ class Graph:
         if not self._explored:
             raise GraphError('Graph has not been explored yet so we cannot linearize it.')
         # Verify this is a dag or throw an error
-        if not self.is_dag(allow_explore=False):
+        if not self.is_dag(allow_explore=allow_explore):
             raise GraphError('Graph is not a DAG so we cannot linearize it.')
         # Get a list of vertices ids
         vertices: IterDict[Vertex] = self.vertices
