@@ -759,3 +759,18 @@ class TestVertex(TestCase):
 
         # Check if the linearized order matches the expected order
         self.assertEqual(linearized_vertices, expected_order)
+
+        # Now create a cyclic graph and verify that an exception is raised
+        graph = Graph()
+        vertex_a = graph.create_vertex('A')
+        vertex_b = graph.create_vertex('B')
+        vertex_c = graph.create_vertex('C')
+        vertex_d = graph.create_vertex('D')
+
+        graph.link_vertices(vertex_a, vertex_b)
+        graph.link_vertices(vertex_b, vertex_c)
+        graph.link_vertices(vertex_c, vertex_d)
+        graph.link_vertices(vertex_d, vertex_a)
+
+        with self.assertRaises(GraphError):
+            graph.linearize()
