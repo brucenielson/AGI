@@ -1,6 +1,7 @@
 from unittest import TestCase
-from utils.listdict import ListDict, ListDictError, IterDict
+from utils.listdict import ListDict, ListDictError
 import uuid
+from utils.iterdict import IterDict
 
 
 class ComboListDictTestCase(TestCase):
@@ -168,6 +169,8 @@ class ComboListDictTestCase(TestCase):
     def test_clear_advanced(self):
         # Test clearing a non-empty ListDict
         initial_length = len(self.dict)
+        self.assertEqual(initial_length, 4)
+
         self.dict.clear()
         self.assertEqual(len(self.dict), 0)
         self.assertEqual(len(self.dict._values), 0)
