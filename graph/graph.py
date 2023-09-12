@@ -212,6 +212,7 @@ class Graph:
         self._clock: int = 0
         self._explored: bool = False
         self._adjacency_matrix: Optional[np.ndarray] = None
+        self._reversed_graph: Optional[Graph] = None
 
     def __str__(self) -> str:
         return self.name
@@ -332,8 +333,8 @@ class Graph:
                 return False
         return True
 
-    def is_connected(self, vertex_a: Union[Vertex, uuid.UUID, str, int],
-                     vertex_b: Union[Vertex, uuid.UUID, str, int]) -> bool:
+    def is_adjacent(self, vertex_a: Union[Vertex, uuid.UUID, str, int],
+                    vertex_b: Union[Vertex, uuid.UUID, str, int]) -> bool:
         # Check to see if vertex_a is directly connected to vertex_b by an edge
         if isinstance(vertex_a, (uuid.UUID, (str, int))):
             vertex_a = self.vertices[vertex_a]
@@ -363,3 +364,23 @@ class Graph:
         # Sort the vertices by post order
         vertices.sort(key=lambda x: x.post)
         return vertices.to_list()
+
+    # Create a reversed version of this graph
+    def reverse(self) -> Graph:
+        # Create a new graph
+        graph: Graph = Graph()
+        # Add all the vertices
+        for vertex in self.vertices:
+            graph.create_vertex(vertex)
+        # Add all the edges
+        for edge in self.edges:
+            vertex_a = self.vertices[edge.to_vertex.id]
+            vertex_b = self.vertices[edge.from_vertex.id]
+            graph.link_vertices(vertex_a, vertex_b, name=edge.name, value=edge.value)
+
+            # graph.link_vertices(graph.vertices[edge.to_vertex.id], graph.vertices[edge.from_vertex.id],
+            #                     name=edge.name, value=edge.value)
+        # Store the reversed graph
+        self._reversed_graph = graph
+        # Return the reversed graph
+        return graph

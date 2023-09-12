@@ -226,6 +226,12 @@ class IterDict(Dict[Union[uuid.UUID, str, int], T], Generic[T]):
     def get(self, key: Union[uuid.UUID, str, int], default: T = None) -> T:
         return super().get(key, default)
 
+    def get_by_name(self, name: str, default: T = None) -> T:
+        for item in self.values():
+            if item.name == name:
+                return item
+        return default
+
     def values(self) -> List[T]:
         return list(super().values())
 

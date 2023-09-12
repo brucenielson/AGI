@@ -665,12 +665,12 @@ class TestVertex(TestCase):
         vertex_a = graph.vertices[0]
         vertex_b = graph.vertices[1]
         vertex_c = graph.vertices[2]
-        self.assertTrue(graph.is_connected(vertex_a, vertex_b))
-        self.assertTrue(graph.is_connected(vertex_b, vertex_c))
-        self.assertFalse(graph.is_connected(vertex_b, vertex_a))
-        self.assertFalse(graph.is_connected(vertex_c, vertex_b))
-        self.assertFalse(graph.is_connected(vertex_a, vertex_c))
-        self.assertFalse(graph.is_connected(vertex_c, vertex_a))
+        self.assertTrue(graph.is_adjacent(vertex_a, vertex_b))
+        self.assertTrue(graph.is_adjacent(vertex_b, vertex_c))
+        self.assertFalse(graph.is_adjacent(vertex_b, vertex_a))
+        self.assertFalse(graph.is_adjacent(vertex_c, vertex_b))
+        self.assertFalse(graph.is_adjacent(vertex_a, vertex_c))
+        self.assertFalse(graph.is_adjacent(vertex_c, vertex_a))
 
         # Now convert back to an adjacency matrix and verify it matches
         actual_matrix = graph_to_adjacency_matrix(graph)
@@ -693,12 +693,12 @@ class TestVertex(TestCase):
         vertex_a = graph.vertices[0]
         vertex_b = graph.vertices[1]
         vertex_c = graph.vertices[2]
-        self.assertTrue(graph.is_connected(vertex_a, vertex_b))
-        self.assertTrue(graph.is_connected(vertex_b, vertex_c))
-        self.assertTrue(graph.is_connected(vertex_b, vertex_a))
-        self.assertTrue(graph.is_connected(vertex_c, vertex_b))
-        self.assertFalse(graph.is_connected(vertex_a, vertex_c))
-        self.assertFalse(graph.is_connected(vertex_c, vertex_a))
+        self.assertTrue(graph.is_adjacent(vertex_a, vertex_b))
+        self.assertTrue(graph.is_adjacent(vertex_b, vertex_c))
+        self.assertTrue(graph.is_adjacent(vertex_b, vertex_a))
+        self.assertTrue(graph.is_adjacent(vertex_c, vertex_b))
+        self.assertFalse(graph.is_adjacent(vertex_a, vertex_c))
+        self.assertFalse(graph.is_adjacent(vertex_c, vertex_a))
 
         # Now convert back to an adjacency matrix and verify it matches
         actual_matrix = graph_to_adjacency_matrix(graph)
@@ -718,25 +718,25 @@ class TestVertex(TestCase):
         graph.link_vertices(vertex_b, vertex_c)
 
         # Check connected vertices
-        self.assertTrue(graph.is_connected(vertex_a, vertex_b))
-        self.assertTrue(graph.is_connected(vertex_b, vertex_c))
-        self.assertFalse(graph.is_connected(vertex_a, vertex_c))
-        self.assertFalse(graph.is_connected(vertex_b, vertex_a))
-        self.assertFalse(graph.is_connected(vertex_c, vertex_a))
-        self.assertFalse(graph.is_connected(vertex_c, vertex_b))
+        self.assertTrue(graph.is_adjacent(vertex_a, vertex_b))
+        self.assertTrue(graph.is_adjacent(vertex_b, vertex_c))
+        self.assertFalse(graph.is_adjacent(vertex_a, vertex_c))
+        self.assertFalse(graph.is_adjacent(vertex_b, vertex_a))
+        self.assertFalse(graph.is_adjacent(vertex_c, vertex_a))
+        self.assertFalse(graph.is_adjacent(vertex_c, vertex_b))
 
         # Test with uuids
-        self.assertTrue(graph.is_connected(vertex_a.id, vertex_b.id))
-        self.assertTrue(graph.is_connected(vertex_b.id, vertex_c.id))
-        self.assertFalse(graph.is_connected(vertex_a.id, vertex_c.id))
-        self.assertFalse(graph.is_connected(vertex_b.id, vertex_a.id))
-        self.assertFalse(graph.is_connected(vertex_c.id, vertex_a.id))
-        self.assertFalse(graph.is_connected(vertex_c.id, vertex_b.id))
+        self.assertTrue(graph.is_adjacent(vertex_a.id, vertex_b.id))
+        self.assertTrue(graph.is_adjacent(vertex_b.id, vertex_c.id))
+        self.assertFalse(graph.is_adjacent(vertex_a.id, vertex_c.id))
+        self.assertFalse(graph.is_adjacent(vertex_b.id, vertex_a.id))
+        self.assertFalse(graph.is_adjacent(vertex_c.id, vertex_a.id))
+        self.assertFalse(graph.is_adjacent(vertex_c.id, vertex_b.id))
 
         # Test with integer indices
-        self.assertTrue(graph.is_connected(0, 1))
-        self.assertTrue(graph.is_connected(1, 2))
-        self.assertFalse(graph.is_connected(0, 2))
+        self.assertTrue(graph.is_adjacent(0, 1))
+        self.assertTrue(graph.is_adjacent(1, 2))
+        self.assertFalse(graph.is_adjacent(0, 2))
 
     def test_linearize(self):
         # Create a sample directed acyclic graph (DAG)
@@ -774,3 +774,63 @@ class TestVertex(TestCase):
 
         with self.assertRaises(GraphError):
             graph.linearize()
+
+    def test_reverse_simple_graph(self):
+        # Create a simple directed graph
+        graph = Graph()
+        vertex_a = graph.create_vertex('A')
+        vertex_b = graph.create_vertex('B')
+        graph.link_vertices(vertex_a, vertex_b, name='AB')
+
+        # Reverse the graph
+        reversed_graph = graph.reverse()
+
+        # Verify the reversed graph's structure
+        reversed_vertices = reversed_graph.vertices
+        reversed_edges = reversed_graph.edges
+
+        self.assertIn(vertex_a, reversed_vertices)
+        self.assertIn(vertex_b, reversed_vertices)
+        self.assertEqual(len(reversed_edges), 1)
+        reversed_edge = reversed_edges.popitem()[1]  # Get the reversed edge
+
+        # Check that the reversed edge has the correct direction
+        self.assertEqual(reversed_edge.from_vertex, vertex_b)
+        self.assertEqual(reversed_edge.to_vertex, vertex_a)
+        self.assertEqual(reversed_edge.name, 'AB')
+
+    def test_reverse_complex_graph(self):
+        # Create a more complex directed graph
+        graph = Graph()
+        vertex_a = graph.create_vertex('A')
+        vertex_b = graph.create_vertex('B')
+        vertex_c = graph.create_vertex('C')
+        graph.link_vertices(vertex_a, vertex_b, name='AB')
+        graph.link_vertices(vertex_b, vertex_c, name='BC')
+        graph.link_vertices(vertex_c, vertex_a, name='CA')
+
+        # Reverse the graph
+        reversed_graph = graph.reverse()
+
+        # Verify the reversed graph's structure
+        reversed_vertices = reversed_graph.vertices
+        reversed_edges = reversed_graph.edges
+
+        self.assertIn(vertex_a, reversed_vertices)
+        self.assertIn(vertex_b, reversed_vertices)
+        self.assertIn(vertex_c, reversed_vertices)
+        self.assertEqual(len(reversed_edges), 3)
+
+        # Check that the reversed edges have the correct direction and names
+        reversed_edge_ab = reversed_edges.get_by_name('AB')
+        reversed_edge_bc = reversed_edges.get_by_name('BC')
+        reversed_edge_ca = reversed_edges.get_by_name('CA')
+
+        self.assertEqual(reversed_edge_ab.from_vertex, vertex_b)
+        self.assertEqual(reversed_edge_ab.to_vertex, vertex_a)
+
+        self.assertEqual(reversed_edge_bc.from_vertex, vertex_c)
+        self.assertEqual(reversed_edge_bc.to_vertex, vertex_b)
+
+        self.assertEqual(reversed_edge_ca.from_vertex, vertex_a)
+        self.assertEqual(reversed_edge_ca.to_vertex, vertex_c)
