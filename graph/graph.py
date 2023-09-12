@@ -38,12 +38,56 @@ def adjacency_matrix_to_graph(matrix: np.ndarray) -> Graph:
 
 
 class GraphError(Exception):
+    """
+    Custom exception class for errors related to graph operations.
+
+    This exception is raised when there is an issue with operations involving
+    graphs, such as adding nodes, edges, or performing graph traversals.
+
+    Args:
+        message (str): A human-readable error message describing the issue.
+    """
+
     def __init__(self, message):
+        """
+        Initialize a new GraphError instance.
+
+        Args:
+            message (str): A human-readable error message describing the issue.
+        """
         super().__init__(message)
 
 
 class Vertex:
+    """
+    Represents a vertex in a graph.
+
+    A vertex is a fundamental element in a graph and may have a name, outgoing
+    edges, incoming edges, and attributes related to graph algorithms and
+    traversal.
+
+    Args:
+        name (Optional[str], optional): The name of the vertex (default is None).
+
+    Attributes:
+        _name (Optional[str]): The name of the vertex.
+        _edges_out (IterDict[Edge]): Outgoing edges from the vertex.
+        _edges_in (IterDict[Edge]): Incoming edges to the vertex.
+        _visited (bool): Flag indicating whether the vertex has been visited.
+        _cc_id (int): Connected component identifier for algorithms like
+            connected components.
+        _pre (int): Pre-order number for algorithms like depth-first search.
+        _post (int): Post-order number for algorithms like depth-first search.
+        _id (uuid.UUID): A unique identifier for the vertex.
+    """
+
     def __init__(self, name: Optional[str] = None) -> None:
+        """
+        Initialize a new Vertex instance.
+
+        Args:
+            name (Optional[str], optional): The name of the vertex (default is None).
+        """
         self._name: Optional[str] = name
         self._edges_out: IterDict[Edge] = IterDict()
         self._edges_in: IterDict[Edge] = IterDict()
@@ -54,67 +98,163 @@ class Vertex:
         self._id: uuid.UUID = uuid.uuid4()
 
     def __str__(self) -> str:
+        """
+        Get a string representation of the vertex.
+
+        Returns:
+            str: A string representation of the vertex, including its name or ID.
+        """
         if self._name:
             return f'Vertex: {self._name}'
         else:
             return f'Vertex: {self._id}'
 
     def __hash__(self) -> int:
+        """
+        Get the hash value of the vertex.
+
+        Returns:
+            int: The hash value of the vertex based on its ID.
+        """
         return hash(str(self.id))
 
     def __repr__(self):
+        """
+        Get a string representation of the vertex for debugging.
+
+        Returns:
+            str: A string representation of the vertex, including its ID.
+        """
         return f'Vertex({self._id})'
 
     @property
     def name(self) -> Optional[str]:
+        """
+        Get or set the name of the vertex.
+
+        Returns:
+            Optional[str]: The name of the vertex.
+        """
         return self._name
 
     @name.setter
     def name(self, name: Optional[str]) -> None:
+        """
+        Set the name of the vertex.
+
+        Args:
+            name (Optional[str]): The new name of the vertex.
+        """
         self._name = name
 
     @property
     def edges_out(self) -> IterDict[Edge]:
+        """
+        Get the outgoing edges from the vertex.
+
+        Returns:
+            IterDict[Edge]: An IterDict of outgoing edges.
+        """
         return self._edges_out
 
     @property
     def edges_in(self) -> IterDict[Edge]:
+        """
+        Get the incoming edges to the vertex.
+
+        Returns:
+            IterDict[Edge]: An IterDict of incoming edges.
+        """
         return self._edges_in
 
     @property
     def id(self) -> uuid.UUID:
+        """
+        Get the unique identifier of the vertex.
+
+        Returns:
+            uuid.UUID: The unique identifier of the vertex.
+        """
         return self._id
 
     @property
     def visited(self) -> bool:
+        """
+        Get or set the visited status of the vertex.
+
+        Returns:
+            bool: True if the vertex has been visited; otherwise, False.
+        """
         return self._visited
 
     @visited.setter
     def visited(self, visited: bool) -> None:
+        """
+        Set the visited status of the vertex.
+
+        Args:
+            visited (bool): True to mark the vertex as visited; False to mark it as not visited.
+        """
         self._visited = visited
 
     @property
     def cc_id(self) -> int:
+        """
+        Get or set the connected component identifier of the vertex.
+
+        Returns:
+            int: The connected component identifier of the vertex.
+        """
         return self._cc_id
 
     @cc_id.setter
     def cc_id(self, cc_id: int) -> None:
+        """
+        Set the connected component identifier of the vertex.
+
+        Args:
+            cc_id (int): The new connected component identifier.
+        """
         self._cc_id = cc_id
 
     @property
     def pre(self) -> int:
+        """
+        Get or set the pre-order number of the vertex.
+
+        Returns:
+            int: The pre-order number of the vertex.
+        """
         return self._pre
 
     @pre.setter
     def pre(self, pre: int) -> None:
+        """
+        Set the pre-order number of the vertex.
+
+        Args:
+            pre (int): The new pre-order number.
+        """
         self._pre = pre
 
     @property
     def post(self) -> int:
+        """
+        Get or set the post-order number of the vertex.
+
+        Returns:
+            int: The post-order number of the vertex.
+        """
         return self._post
 
     @post.setter
     def post(self, post: int) -> None:
+        """
+        Set the post-order number of the vertex.
+
+        Args:
+            post (int): The new post-order number.
+        """
         self._post = post
 
 
