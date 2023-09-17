@@ -236,6 +236,9 @@ class IterDict(Dict[Union[uuid.UUID, str, int], T], Generic[T]):
         Returns:
             T: The value associated with the name or the default value if the name is not found.
         """
+        # Verify that the name attribute exists for the values in the IterDict.
+        if not hasattr(self.values()[0], 'name'):
+            raise AttributeError(f'Attribute "name" not found for values in IterDict')
         for item in self.values():
             if item.name == name:
                 return item
