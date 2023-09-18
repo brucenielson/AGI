@@ -81,7 +81,7 @@ class Vertex:
         _id (uuid.UUID): A unique identifier for the vertex.
     """
 
-    def __init__(self, name: Optional[str] = None) -> None:
+    def __init__(self, name: Optional[str] = None, vertex_id: Optional[uuid.UUID] = None) -> None:
         """
         Initialize a new Vertex instance.
 
@@ -95,7 +95,12 @@ class Vertex:
         self._cc_id: int = 0
         self._pre: int = 0
         self._post: int = 0
-        self._id: uuid.UUID = uuid.uuid4()
+        # Set the ID of the vertex using either id or a new uuid
+        self._id: uuid.UUID
+        if vertex_id:
+            self._id = vertex_id
+        else:
+            self._id = uuid.uuid4()
 
     def __str__(self) -> str:
         """
@@ -260,12 +265,16 @@ class Vertex:
 
 class Edge:
     def __init__(self, from_vertex: Vertex, to_vertex: Vertex, name: Optional[str] = None,
-                 value: Union[float, int] = 1) -> None:
+                 edge_id: Optional[uuid.UUID] = None, value: Union[float, int] = 1) -> None:
         self._name: Optional[str] = name
         self._from_vertex: Vertex = from_vertex
         self._to_vertex: Vertex = to_vertex
         self._value: Union[float, int] = value
-        self._id: uuid.UUID = uuid.uuid4()
+        self._id: uuid.UUID
+        if edge_id:
+            self._id = edge_id
+        else:
+            self._id: uuid.UUID = uuid.uuid4()
 
     def __str__(self) -> str:
         if self.name:
@@ -372,9 +381,9 @@ class Graph:
     def name(self) -> Optional[str]:
         return self._name
 
-    def create_vertex(self, name: Optional[str] = None) -> Vertex:
+    def create_vertex(self, name: Optional[str] = None, vertex_id: Optional[uuid.UUID] = None) -> Vertex:
         # Create a vertex
-        vertex = Vertex(name)
+        vertex = Vertex(name=name, vertex_id=vertex_id)
         # Save it in the graph
         self.vertices[vertex.id] = vertex
         return vertex
@@ -514,13 +523,34 @@ class Graph:
             graph.create_vertex(vertex)
         # Add all the edges
         for edge in self.edges:
-            vertex_a = self.vertices[edge.to_vertex.id]
-            vertex_b = self.vertices[edge.from_vertex.id]
-            graph.link_vertices(vertex_a, vertex_b, name=edge.name, value=edge.value)
-
-            # graph.link_vertices(graph.vertices[edge.to_vertex.id], graph.vertices[edge.from_vertex.id],
-            #                     name=edge.name, value=edge.value)
+            graph.link_vertices(self.vertices[edge.to_vertex.id], self.vertices[edge.from_vertex.id],
+                                name=edge.name, value=edge.value)
         # Store the reversed graph
         self._reversed_graph = graph
         # Return the reversed graph
+        return graph
+
+    # Create a strongly connected components graph
+    def strongly_connected_components(self) -> Graph:
+        # Create a reversed version of this graph
+        self.reverse()
+        # Explore the reversed graph
+        self._reversed_graph.explore_graph()
+        # Get a list of vertices ids
+        vertices: IterDict[Vertex] = self._reversed_graph.vertices
+        # Sort the vertices by post order
+        vertices.sort(key=lambda x: x.post, reverse=True)
+        # Reset the visited flags
+        self._reversed_graph.reset_visited()
+        # Create a new graph
+        graph: Graph = Graph()
+        # Add all the vertices
+        for vertex in vertices:
+            graph.create_vertex(name=vertex.name, vertex_id=vertex.id)
+        # Explore the graph
+        for vertex in vertices:
+            if not graph.vertices[vertex.id].visited:
+                self._cc_last_id += 1
+                self._reversed_graph.explore(vertex.id)
+        # Return the strongly connected components graph
         return graph

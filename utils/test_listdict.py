@@ -221,6 +221,14 @@ class TestIterDict(TestCase):
         items = list(iter(d))
         self.assertCountEqual(items, [1, 2, 3])
 
+    def test_indexing(self):
+        d = IterDict({'a': 1, 'b': 2, 'c': 3})
+        self.assertEqual(d[0], 1)
+        self.assertEqual(d[1], 2)
+        self.assertEqual(d[2], 3)
+        with self.assertRaises(IndexError):
+            _ = d[3]
+
     def test_access(self):
         d = IterDict({'a': 1, 'b': 2, 'c': 3})
         self.assertEqual(d['a'], 1)
